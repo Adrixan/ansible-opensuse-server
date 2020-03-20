@@ -1,0 +1,139 @@
+---
+# tasks file for shell_environment
+
+ - name: Add repository for hstr
+   zypper_repository:
+       name: hstr
+       repo: 'https://download.opensuse.org/repositories/home:nad1r/openSUSE_Leap_15.1/'
+       auto_import_keys: yes 
+       state: present
+
+ - name: Add repository for yadm
+   zypper_repository:
+       name: yadm
+       repo: 'https://download.opensuse.org/repositories/home:TheLocehiliosan:yadm/openSUSE_Leap_15.1/'
+       auto_import_keys: yes 
+       state: present
+
+ - name: Add repository for ripmime
+   zypper_repository:
+       name: ripmime
+       repo: 'https://download.opensuse.org/repositories/server:mail/openSUSE_Leap_15.1/'
+       auto_import_keys: yes 
+       state: present
+
+ - name: Add repository for tmuxinator
+   zypper_repository:
+       name: tmuxinator
+       repo: 'https://download.opensuse.org/repositories/devel:languages:ruby:extensions/openSUSE_Leap_15.1/'
+       auto_import_keys: yes 
+       state: present
+
+ - name: Install shell packages
+   zypper:
+    name: "{{shell_packages}}"
+
+ - name: Make python3 default
+   alternatives:
+    name: python
+    link: /usr/bin/python
+    path: /usr/bin/python3
+
+ - name: Make pip3 default
+   alternatives:
+    name: pip
+    link: /usr/bin/pip
+    path: /usr/bin/pip3
+
+ - name: Install rainbowstream
+   pip:
+    name: rainbowstream
+
+ - name: Install manly
+   pip:
+    name: manly
+
+ - name: Install khal
+   pip:
+    name: khal
+
+ - name: Install khard
+   pip:
+    name: khard
+
+ - name: Install rebound
+   pip:
+    name: rebound
+
+ - name: Install bro
+   gem:
+    name: bropages
+    state: latest
+    user_install: no
+
+ - name: Install tldr
+   npm:
+    name: tldr
+    global: yes
+
+ - name: upload cheat downloader
+   copy:
+    src: cheat-downloader.sh
+    dest: /usr/local/bin/cheat-downloader.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+ - name: download cheat
+   command: /usr/local/bin/cheat-downloader.sh
+   args:
+    creates: cheat-linux-amd64.gz
+
+ - name: extract cheat
+   command: 'gunzip /tmp/cheat-linux-amd64.gz'
+   args:
+    creates: cheat-linux-amd64
+
+ - name: move cheat to /usr/local/bin
+   command: 'mv /tmp/cheat-linux-amd64 /usr/local/bin/cheat'
+
+ - name: make cheat executable
+   file:
+    path: /usr/local/bin/cheat
+    mode: '0755'
+
+ - name: upload topgrade downloader
+   copy:
+    src: topgrade-downloader.sh
+    dest: /usr/local/bin/topgrade-downloader.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+ - name: download topgrade
+   command: /usr/local/bin/topgrade-downloader.sh
+   args:
+    creates: topgrade-*-x86_64*
+
+ - name: extract topgrade
+   command: 'tar xfv /tmp/topgrade.tar.gz'
+   args:
+    creates: topgrade
+
+ - name: move topgrade to /usr/local/bin
+   command: 'mv topgrade /usr/local/bin/topgrade'
+
+ - name: make topgrade executable
+   file:
+    path: /usr/local/bin/topgrade
+    mode: '0755'
+
+ - name: clone tintin++ repository
+   git:
+    repo: 'https://github.com/scandum/tintin.git'
+    dest: /tmp/tintin
+
+ - name: build and install tintin++
+   command: ./configure ; make ; make install
+   args:
+       chdir: "/tmp/tintin/src"
