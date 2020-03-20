@@ -1,0 +1,8 @@
+---
+# defaults file for base_software
+base_packages:
+    - tmux
+    - neovim
+    - mosh
+    - htop
+    - restic
