@@ -11,6 +11,6 @@
 #     - wireguard-server 
 #     - plex-server
 #     - { role: plex-server, tags: plex-server}
-#     - irc-bouncer
-#     - { role: irc-bouncer, tags: irc-bouncer }
+     - irc-bouncer
+     - { role: irc-bouncer, tags: irc-bouncer }
 
