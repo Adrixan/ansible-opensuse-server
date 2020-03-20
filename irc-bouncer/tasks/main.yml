@@ -1,0 +1,64 @@
+---
+# tasks file for irc-bouncer
+
+ - name: Install znc packages
+   zypper:
+    name: "{{znc_packages}}"
+    state: present
+
+ - name: Add znc service user
+   user:
+    name: znc
+    shell: /sbin/nologin
+    home: /var/lib/znc
+
+ - name: get clientbuffer sources
+   git:
+    repo: 'https://github.com/CyberShadow/znc-clientbuffer.git'
+    dest: /srv/znc-clientbuffer
+
+ - name: build clientbuffer module
+   shell: znc-buildmod /srv/znc-clientbuffer/clientbuffer.cpp
+   args: 
+    chdir: /usr/lib64/znc
+
+ - name: get playback sources
+   git:
+    repo: 'https://github.com/jpnurmi/znc-playback.git'
+    dest: /srv/znc-playback
+
+ - name: build playback module
+   shell: znc-buildmod /srv/znc-playback/playback.cpp
+   args: 
+    chdir: /usr/lib64/znc
+
+ - name: get backlog sources
+   git:
+    repo: 'https://github.com/fruitiex/znc-backlog/'
+    dest: /srv/znc-backlog
+
+ - name: build backlog module
+   shell: znc-buildmod /srv/znc-backlog/backlog.cpp
+   args: 
+    chdir: /usr/lib64/znc
+
+
+ - name: copy znc config
+   copy:
+    src: znc
+    dest: /var/lib
+    owner: znc
+    group: znc
+ 
+ - name: copy znc service file
+   copy:
+    src: znc.service
+    dest: /etc/systemd/system/znc.service
+ 
+ - name: enable znc service
+   systemd:
+    name: znc.service
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+

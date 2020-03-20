@@ -1,0 +1,11 @@
+---
+# defaults file for irc-bouncer
+znc_packages:
+    - znc
+    - znc-python3
+    - znc-devel
+    - znc-tcl
+    - znc-perl
+    - cmake
+    - libicu-devel
+    - libopenssl-devel
