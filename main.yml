@@ -1,0 +1,16 @@
+---
+- hosts: opensuse-servers
+  remote_user: Adrixan
+  become: yes
+  roles:
+     - base_software
+#    - shell_environment
+#     - { role: shell_environment, tags: shell_environment }
+#     - docker-host
+#     - docker-pi-hole
+#     - wireguard-server 
+#     - plex-server
+#     - { role: plex-server, tags: plex-server}
+#     - irc-bouncer
+#     - { role: irc-bouncer, tags: irc-bouncer }
+
