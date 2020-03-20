@@ -4,8 +4,8 @@
   become: yes
   roles:
      - base_software
-#    - shell_environment
-#     - { role: shell_environment, tags: shell_environment }
+     - shell_environment
+     - { role: shell_environment, tags: shell_environment }
 #     - docker-host
 #     - docker-pi-hole
 #     - wireguard-server 
