@@ -28,6 +28,8 @@ shell_packages:
     - python3-pip
     - w3m
     - powerline
+    - tmux-powerline
+    - vim-plugin-powerline
     - ripmime
     - urlscan
     - ripgrep
