@@ -1,0 +1,26 @@
+---
+# tasks file for docker-pi-hole
+- name: Create a directory if it does not exist
+   file:
+    path: /etc/docker-compose/pi-hole
+    state: directory
+    mode: '0755'
+
+ - name: upload pi-hole docker-compose script
+   template:
+    src: docker-compose.yml
+    dest: /etc/docker-compose/pi-hole/docker-compose.yml
+
+ - name: Add recurring task for docker-compose refresh
+   cron:
+    name: "docker-compose-refresh"
+    minute: "0"
+    hour: "4"
+    job: "/bin/systemctl reload docker-compose@*.service"
+
+ - name: start pi-hole
+   systemd:
+    name: docker-compose@pi-hole
+    state: started
+    enabled: yes
+
