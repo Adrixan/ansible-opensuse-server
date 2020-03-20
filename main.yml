@@ -13,4 +13,5 @@
 #     - { role: plex-server, tags: plex-server}
      - irc-bouncer
      - { role: irc-bouncer, tags: irc-bouncer }
-
+     - transmission-daemon
+     - { role: transmission-daemon, tags: transmission-daemon }
