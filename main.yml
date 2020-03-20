@@ -6,8 +6,8 @@
      - base_software
      - shell_environment
      - { role: shell_environment, tags: shell_environment }
-#     - docker-host
-#     - docker-pi-hole
+     - docker-pi-hole
+     - { role: docker-pi-hole, tags: docker-pi-hole }
 #     - wireguard-server 
 #     - plex-server
 #     - { role: plex-server, tags: plex-server}
