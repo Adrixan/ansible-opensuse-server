@@ -1,0 +1,34 @@
+---
+  - name: install transmission-daemon
+    zypper:
+     name: "{{transmission_packages}}"
+     state: present
+
+  - name: Disable transmission-daemon
+    systemd:
+        name: transmission-daemon
+        enabled: yes
+        state: stopped
+
+  - name: Create transmission directory
+    file:
+        path: /var/lib/transmission/.config/transmission
+        owner: transmission
+        group: transmission
+        mode: '0755'
+        state: directory
+
+  - name: copy config
+    template:
+        src: settings.json
+        dest: /var/lib/transmission/.config/transmission/settings.json
+        owner: transmission
+        group: transmission
+    notify: start-transmission
+
+  - name: Enable transmission-daemon
+    systemd:
+        name: transmission-daemon
+        enabled: yes
+        state: started
+  
