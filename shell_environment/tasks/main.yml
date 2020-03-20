@@ -78,6 +78,11 @@
    pip:
     name: rebound
 
+ - name: Install docker-compose
+   pip:
+    name: docker-compose
+
+
  - name: Install bro
    gem:
     name: bropages
@@ -150,3 +155,9 @@
    command: ./configure ; make ; make install
    args:
        chdir: "/tmp/tintin/src"
+
+ - name: start docker service
+   systemd:
+    name: docker
+    state: started
+    enabled: yes

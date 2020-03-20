@@ -46,3 +46,4 @@ shell_packages:
     - libgnutls-devel
     - zlib-devel
     - pcre-devel
+    - docker
