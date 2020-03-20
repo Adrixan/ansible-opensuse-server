@@ -18,13 +18,12 @@ shell_packages:
     - aria2
     - progress
     - gpg
-    - offlineimap
-    - vdirsyncer
     - speedtest-cli
     - youtube-dl
     - glances
     - ruby2.5-rubygem-tmuxinator
     - reptyr
+    - python2-pip
     - python3
     - python3-pip
     - w3m
