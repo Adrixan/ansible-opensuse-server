@@ -49,6 +49,19 @@
    pip:
     name: rainbowstream
 
+ - name: Install rfc6555 
+   pip:
+    name: rfc6555
+
+ - name: Install offlineimap 
+   pip:
+    name: offlineimap
+    executable: pip2
+
+ - name: Install vdirsyncer
+   pip:
+    name: vdirsyncer
+
  - name: Install manly
    pip:
     name: manly
