@@ -12,8 +12,8 @@
      - { role: docker-pi-hole, tags: docker-pi-hole }
 #     - wireguard-server 
 #     - { role: wireguard-server, tags: wireguard-server}
-#     - plex-server
-#     - { role: plex-server, tags: plex-server}
+     - plex-server
+     - { role: plex-server, tags: plex-server}
 #     - irc-bouncer
 #     - { role: irc-bouncer, tags: irc-bouncer }
      - transmission-daemon
