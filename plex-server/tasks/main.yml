@@ -1,0 +1,13 @@
+---
+# tasks file for plex-server
+ - name: Add repository for plex
+   zypper_repository:
+       name: PlexRepo
+       repo: 'https://downloads.plex.tv/repo/rpm/x86_64/'
+       auto_import_keys: yes 
+       state: present
+
+ - name: Install plexmediaserver
+   zypper:
+    name: plexmediaserver
+
