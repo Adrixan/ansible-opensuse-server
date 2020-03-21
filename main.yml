@@ -6,6 +6,8 @@
      - base_software
      - shell_environment
      - { role: shell_environment, tags: shell_environment }
+     - syncthing-daemon
+     - { role: syncthing-daemon, tags: syncthing-daemon }
      - docker-pi-hole
      - { role: docker-pi-hole, tags: docker-pi-hole }
 #     - wireguard-server 
