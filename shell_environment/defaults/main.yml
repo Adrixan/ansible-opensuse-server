@@ -29,7 +29,6 @@ shell_packages:
     - w3m
     - powerline
     - tmux-powerline
-    - vim-plugin-powerline
     - ripmime
     - urlscan
     - ripgrep

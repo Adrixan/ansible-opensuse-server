@@ -3,6 +3,8 @@
 base_packages:
     - tmux
     - neovim
+    - python3-neovim
     - mosh
     - htop
     - restic
+    - firewalld
