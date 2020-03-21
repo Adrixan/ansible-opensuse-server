@@ -8,8 +8,8 @@
      - { role: shell_environment, tags: shell_environment }
      - syncthing-daemon
      - { role: syncthing-daemon, tags: syncthing-daemon }
-     - docker-pi-hole
-     - { role: docker-pi-hole, tags: docker-pi-hole }
+#     - docker-pi-hole
+#     - { role: docker-pi-hole, tags: docker-pi-hole }
 #     - wireguard-server 
 #     - { role: wireguard-server, tags: wireguard-server}
      - plex-server
@@ -20,4 +20,4 @@
      - { role: transmission-daemon, tags: transmission-daemon }
 #     - rclone-backup
 #     - { role: rclone-backup, tags: rclone-backup}
- 
+
