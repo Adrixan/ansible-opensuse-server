@@ -1,0 +1,55 @@
+---
+# tasks file for syncthing-daemon
+ - name: install syncthing
+   zypper:
+       name: syncthing
+       state: present
+
+ - name: copy syncthing service template
+   copy:
+    src: syncthing@.service
+    dest: /etc/systemd/system/syncthing@.service
+
+ - name: reload services from disk
+   systemd:
+    daemon_reload: yes
+ 
+ - name: start syncthing
+   systemd:
+    name: syncthing@Adrixan
+    state: started
+    enabled: yes
+
+ - name: Add repository for syncthing-relay
+   zypper_repository:
+       name: syncthing-relay
+       repo: 'https://download.opensuse.org/repositories/network/openSUSE_Leap_15.1/'
+       auto_import_keys: yes 
+       state: present
+
+ - name: install syncthing-relay
+   zypper:
+       name: syncthing-relaysrv
+       state: present
+
+ - name: Add syncthing-relay service user
+   user:
+    name: relaysrv
+    shell: /sbin/nologin
+    home: /etc/relaysrv
+
+ - name: copy syncthingrelay service template
+   copy:
+    src: strelaysrv@.service
+    dest: /etc/systemd/system/strelaysrv@.service
+
+ - name: reload services from disk
+   systemd:
+    daemon_reload: yes
+ 
+ - name: start syncthing-relay
+   systemd:
+    name: strelaysrv@relaysrv
+    state: started
+    enabled: yes
+
