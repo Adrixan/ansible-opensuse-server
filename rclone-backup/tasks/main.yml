@@ -1,0 +1,37 @@
+---
+# tasks file for base_software
+ - name: Install rclone
+   zypper:
+    name: rclone
+    state: present
+
+ - name: copy backup script
+   copy:
+    src: rclone-pcloud
+    dest: .
+    mode: u+rwx,g+rx,o+rx
+   become: yes
+   become_user: Adrixan     
+
+ - name: create config directory
+   file:
+       path: .config/rclone
+       state: directory
+   become: yes
+   become_user: Adrixan
+
+ - name: upload pcloud token
+   template:
+    src: rclone.conf
+    dest: .config/rclone/rclone.conf
+   become: yes
+   become_user: Adrixan
+
+ - name: Add recurring task for pcloud backup
+   cron:
+    name: "pcloud-backup"
+    minute: "0"
+    hour: "3"
+    job: "/bin/bash /home/Adrixan/rclone-pcloud >/dev/null 2>&1"
+   become: yes
+   become_user: Adrixan
