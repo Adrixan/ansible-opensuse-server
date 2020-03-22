@@ -1,0 +1,10 @@
+#!/bin/bash
+rclone copy -vL /home/Adrixan/bin/ pcloud:bin/
+rclone copy -vL /home/Adrixan/Documents/ pcloud:Documents/
+rclone copy -vL /home/Adrixan/Downloads/ pcloud:Downloads/
+rclone copy -vL /home/Adrixan/Music/ pcloud:Music/
+rclone copy -vL /home/Adrixan/Patricia/ pcloud:Patricia/
+rclone copy -vL /home/Adrixan/Pictures/ pcloud:Pictures/
+rclone copy -vL /home/Adrixan/Retrogaming/ pcloud:Retrogaming/
+rclone copy -vL /home/Adrixan/Software/ pcloud:Software/
+rclone copy -vL /home/Adrixan/tmp/ pcloud:tmp/
