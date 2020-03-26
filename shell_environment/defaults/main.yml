@@ -49,3 +49,4 @@ shell_packages:
     - pcre-devel
     - docker
     - python3-jedi
+    - archivemail
