@@ -1,0 +1,29 @@
+---
+# tasks file for graphical-environment
+
+ - name: Add gamehub repository
+   zypper_repository:
+    name: gamehub
+    repo: 'https://download.opensuse.org/repositories/X11:Pantheon:Apps/openSUSE_Tumbleweed/'
+    state: present
+    auto_import_keys: yes
+
+ - name: Add signal repository
+   zypper_repository:
+    name: signal
+    repo: 'https://download.opensuse.org/repositories/network:im:signal/openSUSE_Leap_15.1/'
+    state: present
+    auto_import_keys: yes
+
+ - name: Install graphical packages
+   zypper:
+    name: "{{graphical_packages}}"
+    update_cache: yes
+
+ - name: get default runlevel
+   command: systemctl get-default
+   register: runlevel
+
+ - name: Set graphical runlevel
+   command: systemctl set-default graphical.target
+   when: runlevel.stdout != "graphical.target"
