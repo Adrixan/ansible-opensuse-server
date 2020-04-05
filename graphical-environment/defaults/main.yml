@@ -62,3 +62,4 @@ graphical_packages:
     - vlc-vdpau
     - x264
     - x265
+    - pavucontrol
