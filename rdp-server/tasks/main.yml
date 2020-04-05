@@ -1,0 +1,17 @@
+---
+# tasks file for rdp-server
+ - name: Install xrdp server
+   zypper:
+    name: xrdp
+
+ - name: copy xrdp config
+   copy:
+    src: xrdp.ini
+    dest: /etc/xrdp/
+ 
+ - name: enable xrdp
+   systemd:
+    name: xrdp
+    state: started
+    enabled: yes
+

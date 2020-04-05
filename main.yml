@@ -17,5 +17,9 @@
      - transmission-daemon
      - { role: transmission-daemon, tags: transmission-daemon }
      - rclone-backup
-     - { role: rclone-backup, tags: rclone-backup}
+     - { role: rclone-backup, tags: rclone-backup }
+     - graphical-environment
+     - { role: graphical-environment, tags: graphical-environment }
+     - rdp-server
+     - { role: rdp-server, tags: rdp-server }
 

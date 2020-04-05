@@ -1,5 +1,12 @@
 ---
 # tasks file for shell_environment
+ - name: Add packman repository
+   zypper_repository:
+    name: packman
+    repo: 'http://packman.inode.at/suse/openSUSE_Leap_15.1/'
+    state: present
+    priority: 50
+    auto_import_keys: yes
 
  - name: Add repository for hstr
    zypper_repository:
