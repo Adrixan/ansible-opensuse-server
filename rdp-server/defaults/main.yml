@@ -1,2 +1,9 @@
 ---
 # defaults file for rdp-server
+libraries:
+    - libtool-ltdl-devel
+    - intltool
+    - libsndfile-devel
+    - speex-devel
+    - libcap-devel
+

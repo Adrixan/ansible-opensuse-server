@@ -9,6 +9,41 @@
     src: xrdp.ini
     dest: /etc/xrdp/
  
+ - name: copy wm config for i3
+   copy:
+    src: startwm.sh
+    dest: /etc/xrdp/
+
+ - name: install libraries for audio support
+   zypper:
+    name: "{{libraries}}"
+
+ - name: Download pulseaudio sources
+   get_url:
+    url: https://freedesktop.org/software/pulseaudio/releases/pulseaudio-11.1.tar.gz
+    dest: /tmp/pulseaudio-11.1.tar.gz
+
+ - name: Unarchive pulseaudio sources
+   unarchive:
+    src: /tmp/pulseaudio-11.1.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+ - name: configure pulseaudio sources
+   command: ./configure
+   args:
+    chdir: "/tmp/pulseaudio-11.1"
+
+ - name: clone xrdp audio driver
+   git:
+    repo: 'https://github.com/neutrinolabs/pulseaudio-module-xrdp.git'
+    dest: /tmp/pulseaudio-module-xrdp
+
+ - name: configure and install xrdp audio driver
+   command: "./bootstrap && ./configure PULSE_DIR=/tmp/pulseaudio-11.1 && make && make install"
+   args:
+    chdir: "/tmp/pulseaudio-module-xrdp"
+
  - name: enable xrdp
    systemd:
     name: xrdp
