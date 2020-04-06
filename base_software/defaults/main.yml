@@ -8,3 +8,28 @@ base_packages:
     - htop
     - restic
     - firewalld
+    - bind-utils
+    - ca-certificates
+    - ca-certificates-mozilla
+    - cifs-utils
+    - exfat-utils
+    - findutils
+    - fuseiso
+    - fwupd
+    - git
+    - gutenprint
+    - hplip
+    - hplip-hpijs
+    - hplip-sane
+    - lsof
+    - ntfs-3g
+    - ntfsprogs
+    - ntfsprogs-extra
+    - openvpn
+    - p7zip
+    - p7zip-full
+    - powertop
+    - tlp
+    - unrar
+    - unzip
+    - wireguard-tools

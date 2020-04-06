@@ -50,3 +50,4 @@ shell_packages:
     - docker
     - python3-jedi
     - archivemail
+    - syncthing
