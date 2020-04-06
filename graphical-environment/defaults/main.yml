@@ -44,12 +44,8 @@ graphical_packages:
 #    - gstreamer-plugins-libav
     - gstreamer-plugins-vaapi
     - guayadeque
-    - gutenprint
     - gutenprint-gimpplugin
     - gzdoom
-    - hplip
-    - hplip-hpijs
-    - hplip-sane
     - libreoffice
     - lutris
     - redshift
@@ -63,3 +59,9 @@ graphical_packages:
     - x264
     - x265
     - pavucontrol
+    - intel-hybrid-driver
+    - intel-media-driver
+    - intel-vaapi-driver
+    - ipw-firmware
+    - xf86-video-intel
+    - xf86-video-intel-32bit
