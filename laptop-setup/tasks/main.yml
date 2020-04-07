@@ -1,0 +1,87 @@
+---
+# tasks file for laptop-setup
+
+ - name: start tlp
+   systemd:
+    name: tlp
+    state: started
+    enabled: yes
+
+ - name: start powertop
+   systemd:
+    name: powertop
+    state: started
+    enabled: yes
+
+ - name: upload user key
+   copy:
+        src: printers.conf
+        dest: /etc/cups/printers.conf
+
+ - name: restart cups
+   systemd:
+    name: cups
+    state: restarted
+    enabled: yes
+
+ - name: Ensure ext4 volumes use noatime and commits less often
+   mount:
+    path: "{{ item.mount }}"
+    src: "{{ item.device }}"
+    fstype: "{{ item.fstype }}"
+    opts: "defaults,noatime,commit=1800,nodiratime,discard,acl,user_xattr"
+    state: mounted
+   loop: "{{ansible_mounts}}"
+   when: item.mount == "/" 
+
+ - name: Add the 'discard' option to any existing options for all devices
+   crypttab:
+    name: cr_mmcblk0p2
+    state: present
+    opts:  discard
+    password: /.root.key
+
+ - name: Allow discards from lvm
+   lineinfile:
+    path: /etc/lvm/lvm.conf
+    regexp: 'issue_discards ='
+    line: issue_discards = 1
+
+ - name: create root.key
+   command: dd if=/dev/urandom of=/.root.key bs=1024 count=1 
+   args: 
+    creates: /.root.key
+
+ - name: add root.key to dracut
+   copy:
+        src: 99-root-key.conf
+        dest: /etc/dracut.conf.d/99-root-key.conf
+
+ - name: Install shell packages
+   zypper:
+    name: "python3-pexpect"
+
+# - name: add luks keyfile
+#   expect:
+#    command: cryptsetup luksAddKey /dev/mmcblk0p2 /.root.key
+#    responses:
+#      (?i)Enter: "EnterMe"
+#   no_log: true
+
+ - name: set kernel boot options
+   lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT'
+    line: GRUB_CMDLINE_LINUX_DEFAULT="resume=/dev/system/swap rd.luks.options=discard elevator=deadline nmi_watchdog=0 drm.vblankoffdelay=1 cryptkey=rootfs:/.root.key"
+
+ - name: run mkinitrd
+   command: mkinitrd
+
+ - name: turn screen for GPD Pocket
+   copy:
+    src: "{{ item }}"
+    dest: /etc/X11/xorg.conf.d
+    owner: root
+    mode: 644
+   with_fileglob:
+    - xorg.conf.d/*

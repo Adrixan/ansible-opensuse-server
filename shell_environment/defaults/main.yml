@@ -21,7 +21,7 @@ shell_packages:
     - speedtest-cli
     - youtube-dl
     - glances
-    - ruby2.5-rubygem-tmuxinator
+    - ruby2.6-rubygem-tmuxinator
     - reptyr
     - python2-pip
     - python3
@@ -33,7 +33,6 @@ shell_packages:
     - urlscan
     - ripgrep
     - irssi
-    - python-jrnl
     - ddgr
     - hstr
     - gcc
