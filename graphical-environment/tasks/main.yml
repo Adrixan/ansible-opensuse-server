@@ -11,7 +11,7 @@
  - name: Add signal repository
    zypper_repository:
     name: signal
-    repo: 'https://download.opensuse.org/repositories/network:im:signal/openSUSE_Leap_15.1/'
+    repo: 'https://download.opensuse.org/repositories/network:im:signal/openSUSE_Tumbleweed/'
     state: present
     auto_import_keys: yes
 

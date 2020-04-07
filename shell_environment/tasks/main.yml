@@ -3,7 +3,7 @@
  - name: Add packman repository
    zypper_repository:
     name: packman
-    repo: 'http://packman.inode.at/suse/openSUSE_Leap_15.1/'
+    repo: 'http://packman.inode.at/suse/openSUSE_Tumbleweed/'
     state: present
     priority: 50
     auto_import_keys: yes
@@ -11,28 +11,28 @@
  - name: Add repository for hstr
    zypper_repository:
        name: hstr
-       repo: 'https://download.opensuse.org/repositories/home:nad1r/openSUSE_Leap_15.1/'
+       repo: 'https://download.opensuse.org/repositories/home:nad1r/openSUSE_Tumbleweed/'
        auto_import_keys: yes 
        state: present
 
  - name: Add repository for yadm
    zypper_repository:
        name: yadm
-       repo: 'https://download.opensuse.org/repositories/home:TheLocehiliosan:yadm/openSUSE_Leap_15.1/'
+       repo: 'https://download.opensuse.org/repositories/home:TheLocehiliosan:yadm/openSUSE_Tumbleweed/'
        auto_import_keys: yes 
        state: present
 
  - name: Add repository for ripmime
    zypper_repository:
        name: ripmime
-       repo: 'https://download.opensuse.org/repositories/server:mail/openSUSE_Leap_15.1/'
+       repo: 'https://download.opensuse.org/repositories/server:mail/openSUSE_Tumbleweed/'
        auto_import_keys: yes 
        state: present
 
  - name: Add repository for tmuxinator
    zypper_repository:
        name: tmuxinator
-       repo: 'https://download.opensuse.org/repositories/devel:languages:ruby:extensions/openSUSE_Leap_15.1/'
+       repo: 'https://download.opensuse.org/repositories/devel:languages:ruby:extensions/openSUSE_Tumbleweed/'
        auto_import_keys: yes 
        state: present
 
@@ -59,6 +59,7 @@
  - name: Install rfc6555 
    pip:
     name: rfc6555
+    executable: pip2
 
  - name: Install offlineimap 
    pip:
@@ -89,6 +90,9 @@
    pip:
     name: docker-compose
 
+ - name: Install jrnl
+   pip:
+    name: jrnl
 
  - name: Install bro
    gem:
