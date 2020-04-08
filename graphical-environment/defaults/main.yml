@@ -30,7 +30,7 @@ graphical_packages:
     - ffmpeg
     - mpv
     - filezilla
-#    - gamehub
+    - gamehub
     - gimp
     - gimp-plugin-aa
     - gimp-plugins-python
@@ -41,7 +41,7 @@ graphical_packages:
     - gstreamer-plugins-base
     - gstreamer-plugins-good
     - gstreamer-plugins-good-extra
-#    - gstreamer-plugins-libav
+    - gstreamer-plugins-libav
     - gstreamer-plugins-vaapi
     - guayadeque
     - gutenprint-gimpplugin
@@ -65,3 +65,19 @@ graphical_packages:
     - ipw-firmware
     - xf86-video-intel
     - xf86-video-intel-32bit
+    - xf86-input-evdev
+    - xf86-input-joystick
+    - xf86-input-keyboard
+    - xf86-input-libinput
+    - xf86-input-mouse
+    - xf86-input-synaptics
+    - xf86-input-wacom
+    - NetworkManager-applet
+    - pulseaudio-utils
+    - arandr
+    - xbacklight
+    - telegram-desktop
+    - xhost
+    - i3lock
+    - xorg-x11
+    - xclip
