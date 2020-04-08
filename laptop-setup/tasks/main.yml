@@ -7,12 +7,6 @@
     state: started
     enabled: yes
 
- - name: start powertop
-   systemd:
-    name: powertop
-    state: started
-    enabled: yes
-
  - name: upload user key
    copy:
         src: printers.conf
