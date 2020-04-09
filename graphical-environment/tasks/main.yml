@@ -20,6 +20,12 @@
     name: "{{graphical_packages}}"
     update_cache: yes
 
+ - name: Install kde environment
+   zypper:
+    name: kde_plasma
+    type: pattern
+    update_cache: yes
+
  - name: get default runlevel
    command: systemctl get-default
    register: runlevel
@@ -27,3 +33,9 @@
  - name: Set graphical runlevel
    command: systemctl set-default graphical.target
    when: runlevel.stdout != "graphical.target"
+
+ - name: set kightdm as default displaymanager
+   alternatives:
+       name: default-displaymanager
+       path: /usr/lib/X11/displaymanager/lightdm
+
