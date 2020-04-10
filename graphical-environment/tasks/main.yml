@@ -39,3 +39,10 @@
        name: default-displaymanager
        path: /usr/lib/X11/displaymanager/lightdm
 
+ - name: Allow discards from lvm
+   lineinfile:
+    path: /etc/systemd/logind.conf
+    regexp: 'HandleLidSwitch'
+    line: HandleLidSwitch=ignore
+
+
