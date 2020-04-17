@@ -80,4 +80,7 @@ graphical_packages:
     - cups-backends
     - cups-pdf
     - partitionmanager
+    - gwenview
+    - ark
+    - pmount
 
