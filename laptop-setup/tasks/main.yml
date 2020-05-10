@@ -7,7 +7,7 @@
     state: started
     enabled: yes
 
- - name: upload user key
+ - name: upload cups config
    copy:
         src: printers.conf
         dest: /etc/cups/printers.conf
