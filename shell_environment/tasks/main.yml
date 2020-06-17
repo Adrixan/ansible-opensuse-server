@@ -61,6 +61,11 @@
     name: rfc6555
     executable: pip2
 
+ - name: Install six 
+   pip:
+    name: six
+    executable: pip2
+
  - name: Install offlineimap 
    pip:
     name: offlineimap
