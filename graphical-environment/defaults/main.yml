@@ -84,3 +84,6 @@ graphical_packages:
     - ark
     - pmount
     - clipit
+    - udiskie
+    - libyui-qt-pkg12
+    - pulseaudio-module-x11
