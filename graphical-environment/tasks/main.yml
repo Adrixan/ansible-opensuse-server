@@ -34,12 +34,12 @@
    command: systemctl set-default graphical.target
    when: runlevel.stdout != "graphical.target"
 
- - name: set kightdm as default displaymanager
+ - name: set lightdm as default displaymanager
    alternatives:
        name: default-displaymanager
-       path: /usr/lib/X11/displaymanager/lightdm
+       path: /usr/lib/X11/displaymanagers/lightdm
 
- - name: Allow discards from lvm
+ - name: Disable lid actions
    lineinfile:
     path: /etc/systemd/logind.conf
     regexp: 'HandleLidSwitch'
