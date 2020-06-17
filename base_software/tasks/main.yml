@@ -20,18 +20,18 @@
         src: authorized_keys
         dest: /home/Adrixan/.ssh/authorized_keys
 
- - name: sshd configuration file update
-   template:
-        src: sshd_config
-        dest: /etc/ssh/sshd_config
-        backup: yes
-        owner: 0
-        group: 0
-        mode: 0644
-        validate: '/usr/sbin/sshd -T -f %s'
+        # - name: sshd configuration file update
+        #   template:
+        #        src: sshd_config
+        #        dest: /etc/ssh/sshd_config
+        #        backup: yes
+        #        owner: 0
+        #        group: 0
+        #        mode: 0644
+        #       validate: '/usr/sbin/sshd -T -f %s'
 
- - name: restart sshd
-   systemd:
-        name: sshd
-        enabled: yes
-        state: restarted
+        # - name: restart sshd
+        #   systemd:
+        #        name: sshd
+        #        enabled: yes
+        #        state: restarted
