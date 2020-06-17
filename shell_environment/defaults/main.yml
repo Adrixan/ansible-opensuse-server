@@ -51,3 +51,4 @@ shell_packages:
     - archivemail
     - syncthing
     - ansible
+    - python-xml
