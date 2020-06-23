@@ -87,3 +87,10 @@ graphical_packages:
     - udiskie
     - libyui-qt-pkg12
     - pulseaudio-module-x11
+    - okular
+    - libreoffice-base
+    - libreoffice-calc
+    - libreoffice-draw
+    - libreoffice-impress
+    - libreoffice-math
+    - libreoffice-writer
