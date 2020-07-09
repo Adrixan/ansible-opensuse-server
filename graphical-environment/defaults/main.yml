@@ -94,3 +94,4 @@ graphical_packages:
     - libreoffice-impress
     - libreoffice-math
     - libreoffice-writer
+    - xclip
