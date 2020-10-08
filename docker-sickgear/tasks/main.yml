@@ -1,0 +1,38 @@
+---
+# tasks file for docker-pi-hole
+ - name: Create a directory if it does not exist
+   file:
+    path: /etc/docker-compose/sickgear
+    state: directory
+    mode: '0755'
+
+ - name: Create data directory if it does not exist
+   file:
+    path: /etc/docker-compose/sickgear/data
+    state: directory
+    mode: '0755'
+
+ - name: copy config.ini
+   copy:
+    src: config.ini
+    dest: /etc/docker-compose/sickgear/data
+    mode: u+rwx,g+rx
+ 
+ - name: upload sickgear docker-compose script
+   template:
+    src: docker-compose.yml
+    dest: /etc/docker-compose/sickgear/docker-compose.yml
+
+ - name: Add recurring task for docker-compose refresh
+   cron:
+    name: "docker-compose-refresh"
+    minute: "0"
+    hour: "4"
+    job: "/bin/systemctl reload docker-compose@*.service"
+
+ - name: start sickgear
+   systemd:
+    name: docker-compose@sickgear
+    state: started
+    enabled: yes
+
