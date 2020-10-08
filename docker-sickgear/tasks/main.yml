@@ -18,6 +18,12 @@
     dest: /etc/docker-compose/sickgear/data
     mode: u+rwx,g+rx
  
+ - name: copy nginx config
+   copy:
+    src: sc.conf
+    dest: /etc/nginx/vhosts.d
+    mode: u+rwx,g+rx
+
  - name: upload sickgear docker-compose script
    template:
     src: docker-compose.yml
