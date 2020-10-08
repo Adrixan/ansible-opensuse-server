@@ -68,15 +68,6 @@
     regexp: '^GRUB_CMDLINE_LINUX_DEFAULT'
     line: GRUB_CMDLINE_LINUX_DEFAULT="resume=/dev/system/swap rd.luks.options=discard elevator=deadline nmi_watchdog=0 drm.vblankoffdelay=1 cryptkey=rootfs:/.root.key"
 
-   #- name: turn screen for GPD Pocket
-   #   copy:
-   #    src: "{{ item }}"
-   #    dest: /etc/X11/xorg.conf.d
-   #   owner: root
-   #   mode: 644
-   #   with_fileglob:
-   #    - xorg.conf.d/*
-
  - name: fix resume not enabled
    copy:
         src: 95-user-level-resume.conf 
