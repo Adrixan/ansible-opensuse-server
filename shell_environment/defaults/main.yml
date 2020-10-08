@@ -48,7 +48,7 @@ shell_packages:
     - pcre-devel
     - docker
     - python3-jedi
-    - archivemail
+      #    - archivemail
     - syncthing
     - ansible
     - python-xml
