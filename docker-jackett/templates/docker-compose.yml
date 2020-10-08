@@ -1,0 +1,18 @@
+---
+version: "2.1"
+services:
+  jackett:
+    image: linuxserver/jackett
+    container_name: jackett
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Vienna
+      - AUTO_UPDATE=true #optional
+        #      - RUN_OPTS=<run options here> #optional
+    volumes:
+      - /etc/docker-compose/jackett/data:/config
+      - /etc/docker-compose/jackett/downloads:/downloads
+    ports:
+      - 8084:9117
+    restart: unless-stopped

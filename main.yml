@@ -10,6 +10,10 @@
      - { role: syncthing-daemon, tags: syncthing-daemon }
 #     - docker-pi-hole
 #     - { role: docker-pi-hole, tags: docker-pi-hole }
+     - docker-sickgear
+     - { role: docker-sickgear, tags: docker-sickgear }
+      - docker-jackett
+     - { role: docker-jackett, tags: docker-jackett }
      - plex-server
      - { role: plex-server, tags: plex-server}
 #     - irc-bouncer
