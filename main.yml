@@ -12,8 +12,10 @@
 #     - { role: docker-pi-hole, tags: docker-pi-hole }
      - docker-sickgear
      - { role: docker-sickgear, tags: docker-sickgear }
-      - docker-jackett
+     - docker-jackett
      - { role: docker-jackett, tags: docker-jackett }
+     - docker-radarr
+     - { role: docker-radarr, tags: docker-radarr }
      - plex-server
      - { role: plex-server, tags: plex-server}
 #     - irc-bouncer

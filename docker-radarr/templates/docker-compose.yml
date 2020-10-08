@@ -1,0 +1,15 @@
+version: "3"
+services:
+  radarr:
+    container_name: radarr
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Vienna
+    image: linuxserver/radarr
+    ports:
+      - 8083:7878/tcp
+    volumes:
+      - /etc/docker-compose/radarr/data:/config
+      - /home/Adrixan/tmp/movies:/movies
+      - /home/Adrixan/tmp/bittorrent:/home/Adrixan/tmp/bittorrent

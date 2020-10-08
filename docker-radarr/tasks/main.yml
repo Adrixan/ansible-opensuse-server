@@ -1,0 +1,44 @@
+---
+# tasks file for docker-pi-hole
+ - name: Create a directory if it does not exist
+   file:
+    path: /etc/docker-compose/radarr
+    state: directory
+    mode: '0755'
+
+ - name: Create data directory if it does not exist
+   file:
+    path: /etc/docker-compose/radarr/data
+    state: directory
+    mode: '0755'
+
+- name: copy config.xml
+   copy:
+    src: config.xml
+    dest: /etc/docker-compose/radarr/data
+    mode: u+rwx,g+rx
+ 
+ - name: copy nginx config
+   copy:
+    src: ra.conf
+    dest: /etc/nginx/vhosts.d
+    mode: u+rwx,g+rx
+
+ - name: upload radarr docker-compose script
+   template:
+    src: docker-compose.yml
+    dest: /etc/docker-compose/radarr/docker-compose.yml
+
+ - name: Add recurring task for docker-compose refresh
+   cron:
+    name: "docker-compose-refresh"
+    minute: "0"
+    hour: "4"
+    job: "/bin/systemctl reload docker-compose@*.service"
+
+ - name: start radarr
+   systemd:
+    name: docker-compose@radarr
+    state: started
+    enabled: yes
+
