@@ -1,0 +1,16 @@
+version: "3"
+services:
+  sickgear:
+    container_name: sickgear
+    environment:
+      - APP_UID=0
+      - APP_GID=0
+      - TZ=Europe/Vienna
+    image: sickgear/sickgear
+    ports:
+      - 8082:8081/tcp
+    volumes:
+      - /etc/docker-compose/sickgear/data:/data
+      - /home/Adrixan/tmp/tv:/tv
+      - /home/Adrixan/tmp/bittorrent:/incoming
+      - /home/Adrixan/tmp/bittorrent:/home/Adrixan/tmp/bittorrent
