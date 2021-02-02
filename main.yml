@@ -28,4 +28,6 @@
      - { role: graphical-environment, tags: graphical-environment }
      - rdp-server
      - { role: rdp-server, tags: rdp-server }
+     - docker-bitwardenrs
+     - { role: docker-bitwardenrs, tags: docker-bitwardenrs }
 

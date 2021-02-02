@@ -1,0 +1,44 @@
+---
+# tasks file for docker-pi-hole
+ - name: Create a directory if it does not exist
+   file:
+    path: /etc/docker-compose/bitwardenrs
+    state: directory
+    mode: '0755'
+
+ - name: upload bitwardenrs docker-compose script
+   template:
+    src: docker-compose.yml
+    dest: /etc/docker-compose/bitwardenrs/docker-compose.yml
+
+ - name: start bitwardenrs
+   systemd:
+    name: docker-compose@bitwardenrs
+    state: started
+    enabled: yes
+
+ - name: copy nginx config
+   copy:
+    src: bitwardenrs.conf
+    dest: /etc/nginx/vhosts.d
+    mode: u+rwx,g+rx
+
+ - name: restart nginx
+   systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+ - name: copy backup script
+   copy:
+    src: backup-bitwarden.sh
+    dest: /usr/local/bin
+    mode: u+rwx,g+rx
+
+ - name: Add recurring task for backup
+   cron:
+    name: "backup bitwarden"
+    minute: "0"
+    hour: "1"
+    job: "/usr/local/bin/backup-bitwarden.sh"
+
