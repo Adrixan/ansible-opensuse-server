@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  bitwarden:
+    image: bitwardenrs/server:latest
+    restart: always
+    volumes:
+      - ./bw-data:/data
+    ports:
+      - 8085:80
+    environment:
+      WEBSOCKET_ENABLED: 'true'
+      SIGNUPS_ALLOWED: 'true'
+      ADMIN_TOKEN: '{{ADMIN_TOKEN}}'
+      DOMAIN: 'https://bw.code-alongsi.de'
+
