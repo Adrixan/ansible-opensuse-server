@@ -12,7 +12,7 @@
     state: directory
     mode: '0755'
 
-- name: copy config.xml
+ - name: copy config.xml
    copy:
     src: config.xml
     dest: /etc/docker-compose/radarr/data
