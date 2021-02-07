@@ -1,20 +1,17 @@
 ---
 # defaults file for graphical-environment
 graphical_packages:
-    - i3
-    - i3status
-    - rxvt-unicode
-    - urxvt-font-size
-    - rofi
+#    - i3
+#    - i3status
+#    - rofi
     - lightdm
-    - flameshot
+#    - flameshot
     - adobe-sourcecodepro-fonts
     - adobe-sourcesanspro-fonts
     - adobe-sourceserifpro-fonts
-    - mupdf
-    - xsel
-    - lxappearance
-    - dunst
+#    - xsel
+#    - lxappearance
+#    - dunst
     - vlc
     - vlc-codecs
     - MozillaFirefox
@@ -28,7 +25,7 @@ graphical_packages:
     - faac
     - faad2
     - ffmpeg
-    - mpv
+#    - mpv
     - filezilla
 #    - gamehub
     - gimp
@@ -50,7 +47,6 @@ graphical_packages:
     - lutris
     - redshift
     - pulseaudio-utils
-    - signal-desktop
     - steam
     - steamtricks
     - transmission-gtk

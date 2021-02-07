@@ -22,12 +22,12 @@
        auto_import_keys: yes 
        state: present
 
- - name: Add repository for ripmime
-   zypper_repository:
-       name: ripmime
-       repo: 'https://download.opensuse.org/repositories/server:mail/openSUSE_Leap_15.1/'
-       auto_import_keys: yes 
-       state: present
+# - name: Add repository for ripmime
+#   zypper_repository:
+#       name: ripmime
+#       repo: 'https://download.opensuse.org/repositories/server:mail/openSUSE_Leap_15.1/'
+#       auto_import_keys: yes 
+#       state: present
 
  - name: Add repository for tmuxinator
    zypper_repository:
@@ -52,34 +52,34 @@
     link: /usr/bin/pip
     path: /usr/bin/pip3
 
- - name: Install rainbowstream
-   pip:
-    name: rainbowstream
+# - name: Install rainbowstream
+#   pip:
+#    name: rainbowstream
 
- - name: Install rfc6555 
-   pip:
-    name: rfc6555
+# - name: Install rfc6555 
+#   pip:
+#    name: rfc6555
 
- - name: Install offlineimap 
-   pip:
-    name: offlineimap
-    executable: pip2
+# - name: Install offlineimap 
+#   pip:
+#    name: offlineimap
+#    executable: pip2
 
- - name: Install vdirsyncer
-   pip:
-    name: vdirsyncer
+# - name: Install vdirsyncer
+#   pip:
+#    name: vdirsyncer
 
  - name: Install manly
    pip:
     name: manly
 
- - name: Install khal
-   pip:
-    name: khal
+# - name: Install khal
+#   pip:
+#    name: khal
 
- - name: Install khard
-   pip:
-    name: khard
+# - name: Install khard
+#   pip:
+#    name: khard
 
  - name: Install rebound
    pip:
