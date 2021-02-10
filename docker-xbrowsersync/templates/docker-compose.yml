@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  db:
+    container_name: "xbs-db"
+    environment:
+      - "MONGO_INITDB_DATABASE=xbrowsersync"
+      - "MONGO_INITDB_ROOT_PASSWORD={{XBS_DB_PASSWORD}}"
+      - "MONGO_INITDB_ROOT_USERNAME={{XBS_DB_USERNAME}}"
+    image: "mongo:4.2.6"
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - "xbs-net"
+    restart: "always"
+    volumes:
+      - "./xbs-db-data:/data/db"
+      - "./data/mongoconfig.js:/docker-entrypoint-initdb.d/mongoconfig.js"
+  api:
+    container_name: "xbs-api"
+    depends_on:
+      - "db"
+    environment:
+      - "XBROWSERSYNC_DB_PWD={{XBS_DB_PASSWORD}}"
+      - "XBROWSERSYNC_DB_USER={{XBS_DB_USERNAME}}"
+    image: "xbrowsersync/api:1.1.12"
+    networks:
+      - "xbs-net"
+    restart: "always"
+    volumes:
+      - "./data/settings.json:/usr/src/api/config/settings.json"
+    ports:
+      - 8086:8080
+ 
+networks:
+  xbs-net:

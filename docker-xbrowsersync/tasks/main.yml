@@ -1,0 +1,56 @@
+---
+# tasks file for docker-xbrowsersync
+ - name: Create a directory if it does not exist
+   file:
+    path: /etc/docker-compose/xbrowsersync
+    state: directory
+    mode: '0755'
+
+ - name: Create data directory if it does not exist
+   file:
+    path: /etc/docker-compose/xbrowsersync/data
+    state: directory
+    mode: '0755'
+
+ - name: Create Jackett directory if it does not exist
+   file:
+    path: /etc/docker-compose/xbrowsersync/data/
+    state: directory
+    mode: '0755'
+
+ - name: copy mongoconfig.js
+   copy:
+    src: mongoconfig.js
+    dest: /etc/docker-compose/xbrowsersync/data/
+    mode: u+rwx,g+rx
+ 
+ - name: copy settings.json
+   copy:
+    src: settings.json
+    dest: /etc/docker-compose/xbrowsersync/data/
+    mode: u+rwx,g+rx
+
+ - name: copy nginx config
+   copy:
+    src: xbrowsersync.conf
+    dest: /etc/nginx/vhosts.d
+    mode: u+rwx,g+rx
+
+ - name: upload xbrowsersync docker-compose script
+   template:
+    src: docker-compose.yml
+    dest: /etc/docker-compose/xbrowsersync/docker-compose.yml
+
+ - name: Add recurring task for docker-compose refresh
+   cron:
+    name: "docker-compose-refresh"
+    minute: "0"
+    hour: "4"
+    job: "/bin/systemctl reload docker-compose@*.service"
+
+ - name: start xbrowsersync
+   systemd:
+    name: docker-compose@xbrowsersync
+    state: started
+    enabled: yes
+

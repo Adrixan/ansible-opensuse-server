@@ -30,4 +30,6 @@
      - { role: rdp-server, tags: rdp-server }
      - docker-bitwardenrs
      - { role: docker-bitwardenrs, tags: docker-bitwardenrs }
+     - docker-xbrowsersync
+     - { role: docker-xbrowsersync, tags: docker-xbrowsersync }
 
