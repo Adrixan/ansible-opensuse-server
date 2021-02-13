@@ -1,12 +1,12 @@
 #!/bin/bash
-rclone copy -vL /home/Adrixan/bin/ pcloud:bin/
-rclone copy -vL /home/Adrixan/Documents/ pcloud:Documents/
-rclone copy -vL /home/Adrixan/Downloads/ pcloud:Downloads/
-rclone copy -vL /home/Adrixan/external/ pcloud:external/
-rclone copy -vL /home/Adrixan/Music/ pcloud:Music/
-rclone copy -vL /home/Adrixan/Patricia/ pcloud:Patricia/
-rclone copy -vL /home/Adrixan/Pictures/ pcloud:Pictures/
-rclone copy -vL /home/Adrixan/Retrogaming/ pcloud:Retrogaming/
-rclone copy -vL /home/Adrixan/Software/ pcloud:Software/
-rclone copy -vL /home/Adrixan/tmp/ pcloud:tmp/
-rclone copy -vL /home/Adrixan/bw-data/ pcloud:bw-data/
+rclone sync -vL /home/Adrixan/bin/ pcloud:bin/
+rclone sync -vL /home/Adrixan/Documents/ pcloud:Documents/
+rclone sync -vL /home/Adrixan/Downloads/ pcloud:Downloads/
+rclone sync -vL /home/Adrixan/external/ pcloud:external/
+rclone sync -vL /home/Adrixan/Music/ pcloud:Music/
+rclone sync -vL /home/Adrixan/Patricia/ pcloud:Patricia/
+rclone sync -vL /home/Adrixan/Pictures/ pcloud:Pictures/
+rclone sync -vL /home/Adrixan/Retrogaming/ pcloud:Retrogaming/
+rclone sync -vL /home/Adrixan/Software/ pcloud:Software/
+rclone sync -vL /home/Adrixan/tmp/ pcloud:tmp/
+rclone sync -vL /home/Adrixan/bw-data/ pcloud:bw-data/
