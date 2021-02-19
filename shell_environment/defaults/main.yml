@@ -51,3 +51,4 @@ shell_packages:
     - python3-jedi
 #    - archivemail
     - syncthing
+    - cmake
