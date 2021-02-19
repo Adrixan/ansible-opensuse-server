@@ -52,3 +52,4 @@ shell_packages:
 #    - archivemail
     - syncthing
     - cmake
+    - go
