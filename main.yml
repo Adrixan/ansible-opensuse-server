@@ -32,4 +32,6 @@
      - { role: docker-bitwardenrs, tags: docker-bitwardenrs }
      - docker-xbrowsersync
      - { role: docker-xbrowsersync, tags: docker-xbrowsersync }
+     - minecraft-server
+     - { role: minecraft-server, tags: minecraft-server }
 

@@ -1,0 +1,93 @@
+---
+# tasks file for minecraft-server
+- name: Install screen
+  zypper:
+    name: screen
+
+- name: Create minecraft group
+  ansible.builtin.group:
+    name: minecraft
+
+- name: Create minecraft user
+  ansible.builtin.user:
+    name: minecraft
+    group: minecraft
+    home: /opt/minecraft
+
+- name: Create minecraft server directory
+  file:
+    path: /opt/minecraft
+    state: directory
+    owner: minecraft
+    group: minecraft
+    mode: 0775
+
+- name: copy minecraft service template
+  copy:
+    src: minecraft@.service
+    dest: /etc/systemd/system/minecraft@.service
+
+- name: Create mcforge-1.16.5 server directory
+  file:
+    path: /opt/minecraft/mcforge-1.16.5
+    state: directory
+    owner: minecraft
+    group: minecraft
+    mode: 0775
+
+- name: Download mcforge
+  get_url:
+    url: https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.16.5-36.0.42/forge-1.16.5-36.0.42-installer.jar
+    dest: /opt/minecraft/mcforge-1.16.5/mcforge-1.16.5-installer.jar
+    owner: minecraft
+    group: minecraft
+
+- name: Run mcrofge install routine
+  shell: java -jar mcforge-1.16.5-installer.jar --installServer
+  args:
+    chdir: /opt/minecraft/mcforge-1.16.5
+
+- name: accept eula
+  lineinfile:
+    path: /opt/minecraft/mcforge-1.16.5/eula.txt
+    line: 'eula=true'
+    state: present
+    create: true
+    owner: minecraft
+    group: minecraft
+
+- name: copy server.properties
+  copy:
+    src: server.properties
+    dest: /opt/minecraft/mcforge-1.16.5/server.properties
+    owner: minecraft
+    group: minecraft
+
+- name: start mcforge
+  systemd:
+    name: minecraft@mcforge-1.16.5
+    state: started
+    enabled: yes
+
+- name: Create minecraft backup directory
+  file:
+    path: /home/Adrixan/minecraftbackups
+    state: directory
+    owner: Adrixan
+    group: users
+    mode: 0775
+
+- name: copy backup script
+  copy:
+    src: mcbackup.sh
+    dest: /opt/minecraft/mcbackup.sh
+    owner: minecraft
+    group: minecraft
+    mode: 0775
+
+- name: backup minecraft worlds
+  cron:
+    name: "backup minecraft worlds"
+    minute: "0"
+    hour: "4"
+    job: "/opt/minecraft/mcbackup.sh"
