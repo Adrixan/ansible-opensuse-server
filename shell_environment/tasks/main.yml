@@ -73,6 +73,10 @@
    pip:
     name: manly
 
+ - name: Install bpytop
+   pip:
+    name: bpytop
+
 # - name: Install khal
 #   pip:
 #    name: khal
