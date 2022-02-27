@@ -3,7 +3,7 @@
  - name: Add packman repository
    zypper_repository:
     name: packman
-    repo: 'http://packman.inode.at/suse/openSUSE_Tumbleweed/'
+    repo: 'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/'
     state: present
     priority: 50
     auto_import_keys: yes
@@ -19,13 +19,6 @@
    zypper_repository:
        name: yadm
        repo: 'https://download.opensuse.org/repositories/home:TheLocehiliosan:yadm/openSUSE_Tumbleweed/'
-       auto_import_keys: yes 
-       state: present
-
- - name: Add repository for ripmime
-   zypper_repository:
-       name: ripmime
-       repo: 'https://download.opensuse.org/repositories/server:mail/openSUSE_Tumbleweed/'
        auto_import_keys: yes 
        state: present
 
@@ -52,58 +45,13 @@
     link: /usr/bin/pip
     path: /usr/bin/pip3
 
- - name: Install rainbowstream
-   pip:
-    name: rainbowstream
-
- - name: Install rfc6555 
-   pip:
-    name: rfc6555
-    executable: pip2
-
- - name: Install six 
-   pip:
-    name: six
-    executable: pip2
-
- - name: Install offlineimap 
-   pip:
-    name: offlineimap
-    executable: pip2
-
- - name: Install vdirsyncer
-   pip:
-    name: vdirsyncer
-
  - name: Install manly
    pip:
     name: manly
 
- - name: Install khal
-   pip:
-    name: khal
-
- - name: Install khard
-   pip:
-    name: khard
-
- - name: Install rebound
-   pip:
-    name: rebound
-
  - name: Install docker-compose
    pip:
     name: docker-compose
-
- - name: Install jrnl
-   pip:
-    name: jrnl
-
- - name: Install bro
-   gem:
-    name: bropages
-    state: latest
-    user_install: no
 
  - name: Install tldr
    npm:
@@ -187,4 +135,8 @@
    systemd:
     daemon_reload: yes
    
- 
+  - name: Install tmuxp
+   pip:
+    name: tmuxp
+
+
