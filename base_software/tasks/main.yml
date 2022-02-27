@@ -12,7 +12,7 @@
 
  - name: create key directory
    file:
-        path: /home/pi/.ssh
+        path: /home/Adrixan/.ssh
         state: directory
 
  - name: upload user key

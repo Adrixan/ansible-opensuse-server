@@ -28,12 +28,12 @@
    loop: "{{ansible_mounts}}"
    when: item.mount == "/" 
 
-   # - name: Add the 'discard' option to any existing options for all devices
-   #   crypttab:
-   #    name: nvme0n1p5
-   #    state: present
-   #    opts:  discard
-   #    password: /.root.key
+     #- name: Add the 'discard' option to any existing options for all devices
+     #crypttab:
+     #name: nvme0n1p5
+     #state: present
+     #opts:  discard
+     #password: /.root.key
 
  - name: Allow discards from lvm
    lineinfile:
@@ -55,12 +55,12 @@
    zypper:
     name: "python3-pexpect"
 
-    # - name: add luks keyfile
-    #   expect:
-    #    command: cryptsetup luksAddKey /dev/nvme0n1p5 /.root.key
-    #    responses:
-    #      (?i)Enter: "EnterMe"
-    #   no_log: true
+ - name: add luks keyfile
+   expect:
+    command: cryptsetup luksAddKey /dev/nvme0n1p5 /.root.key
+    responses:
+      (?i)Enter: "EnterMe"
+   no_log: true
 
  - name: set kernel boot options
    lineinfile:

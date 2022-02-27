@@ -1,0 +1,7 @@
+[all:vars]
+ansible_connection=local
+ansible_user=Adrixan
+ansible_ssh_pass=aufner02
+
+[opensuse-laptops]
+localhost

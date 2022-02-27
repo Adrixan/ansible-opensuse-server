@@ -7,10 +7,10 @@ base_packages:
     - mosh
     - htop
     - restic
-    - firewalld
-    - bind-utils
-    - ca-certificates
-    - ca-certificates-mozilla
+    #    - firewalld
+    #- bind-utils
+    #- ca-certificates
+    #- ca-certificates-mozilla
     - cifs-utils
     - exfat-utils
     - findutils
@@ -32,4 +32,4 @@ base_packages:
     - tlp
     - unrar
     - unzip
-    - wireguard-tools
+    #- wireguard-tools

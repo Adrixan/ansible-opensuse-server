@@ -4,7 +4,7 @@
  - name: Add gamehub repository
    zypper_repository:
     name: gamehub
-    repo: 'https://download.opensuse.org/repositories/X11:Pantheon:Apps/openSUSE_Tumbleweed/'
+    repo: 'https://download.opensuse.org/repositories/X11:/Pantheon:/Apps/openSUSE_Tumbleweed/'
     state: present
     auto_import_keys: yes
 
@@ -20,29 +20,29 @@
     name: "{{graphical_packages}}"
     update_cache: yes
 
- - name: Install kde environment
-   zypper:
-    name: kde_plasma
-    type: pattern
-    update_cache: yes
+    # - name: Install kde environment
+    #zypper:
+      #name: kde_plasma
+      #type: pattern
+      #update_cache: yes
 
- - name: get default runlevel
-   command: systemctl get-default
-   register: runlevel
+      #- name: get default runlevel
+      #command: systemctl get-default
+      #register: runlevel
 
- - name: Set graphical runlevel
-   command: systemctl set-default graphical.target
-   when: runlevel.stdout != "graphical.target"
+      #- name: Set graphical runlevel
+      #command: systemctl set-default graphical.target
+      #when: runlevel.stdout != "graphical.target"
 
- - name: set lightdm as default displaymanager
-   alternatives:
-       name: default-displaymanager
-       path: /usr/lib/X11/displaymanagers/lightdm
+      #- name: set lightdm as default displaymanager
+      #alternatives:
+        #name: default-displaymanager
+        #path: /usr/lib/X11/displaymanagers/lightdm
 
- - name: Disable lid actions
-   lineinfile:
-    path: /etc/systemd/logind.conf
-    regexp: 'HandleLidSwitch'
-    line: HandleLidSwitch=ignore
+        #- name: Disable lid actions
+        #lineinfile:
+          #path: /etc/systemd/logind.conf
+          #regexp: 'HandleLidSwitch'
+          #line: HandleLidSwitch=ignore
 
 

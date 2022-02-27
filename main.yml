@@ -7,10 +7,10 @@
      - { role: base_software, tags: base_software }
      - shell_environment
      - { role: shell_environment, tags: shell_environment }
-     - syncthing-daemon
-     - { role: syncthing-daemon, tags: syncthing-daemon }
+     #     - syncthing-daemon
+     #- { role: syncthing-daemon, tags: syncthing-daemon }
      - graphical-environment
      - { role: graphical-environment, tags: graphical-environment }
-     - laptop-setup
-     - { role: laptop-setup, tags: laptop-setup }
+       #     - laptop-setup
+       #     - { role: laptop-setup, tags: laptop-setup }
 
