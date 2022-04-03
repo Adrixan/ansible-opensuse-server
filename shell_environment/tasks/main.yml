@@ -15,20 +15,6 @@
        auto_import_keys: yes 
        state: present
 
- - name: Add repository for yadm
-   zypper_repository:
-       name: yadm
-       repo: 'https://download.opensuse.org/repositories/home:TheLocehiliosan:yadm/openSUSE_Tumbleweed/'
-       auto_import_keys: yes 
-       state: present
-
- - name: Add repository for tmuxinator
-   zypper_repository:
-       name: tmuxinator
-       repo: 'https://download.opensuse.org/repositories/devel:languages:ruby:extensions/openSUSE_Tumbleweed/'
-       auto_import_keys: yes 
-       state: present
-
  - name: Install shell packages
    zypper:
     name: "{{shell_packages}}"
