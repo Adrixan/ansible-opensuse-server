@@ -39,3 +39,10 @@ shell_packages:
     - ansible
     - python-xml
     - npm-default
+    - pdfgrep
+    - lazydocker
+    - fzf
+    - broot
+    - dog
+    - git-delta
+    - httpie

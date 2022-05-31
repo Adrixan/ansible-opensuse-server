@@ -121,7 +121,7 @@
    systemd:
     daemon_reload: yes
    
-  - name: Install tmuxp
+ - name: Install tmuxp
    pip:
     name: tmuxp
 
