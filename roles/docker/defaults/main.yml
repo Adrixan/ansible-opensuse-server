@@ -1,0 +1,7 @@
+---
+# defaults file for docker
+docker_packages:
+  - docker
+
+docker_pip_packages:
+  - docker-compose

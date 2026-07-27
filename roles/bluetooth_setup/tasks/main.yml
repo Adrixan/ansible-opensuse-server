@@ -1,0 +1,13 @@
+---
+# tasks file for bluetooth_setup
+- name: Install Bluetooth packages and PulseAudio integration
+  community.general.zypper:
+    name: "{{ bluetooth_packages }}"
+    state: present
+
+- name: Enable and start bluetooth service
+  ansible.builtin.systemd:
+    name: bluetooth
+    state: started
+    enabled: yes
+  when: not ansible_check_mode

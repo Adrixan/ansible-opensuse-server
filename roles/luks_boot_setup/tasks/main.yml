@@ -1,0 +1,68 @@
+---
+# tasks file for luks_boot_setup
+- name: Install LUKS and boot configuration dependencies
+  community.general.zypper:
+    name: "{{ luks_boot_packages }}"
+    state: present
+
+- name: Ensure ext4 root volume uses noatime and optimal commit intervals
+  ansible.builtin.mount:
+    path: "{{ item.mount }}"
+    src: "{{ item.device }}"
+    fstype: "{{ item.fstype }}"
+    opts: "defaults,noatime,commit=1800,nodiratime,discard,acl,user_xattr"
+    state: mounted
+  loop: "{{ ansible_mounts }}"
+  when: item.mount == "/"
+
+- name: Allow discards in LVM configuration
+  ansible.builtin.lineinfile:
+    path: /etc/lvm/lvm.conf
+    regexp: '^#?\s*issue_discards ='
+    line: "issue_discards = 1"
+
+- name: Create root keyfile for auto-decryption
+  ansible.builtin.command: dd if=/dev/urandom of=/.root.key bs=1024 count=1
+  args:
+    creates: /.root.key
+
+- name: Secure root keyfile permissions
+  ansible.builtin.file:
+    path: /.root.key
+    owner: root
+    group: root
+    mode: '0400'
+
+- name: Add root keyfile configuration to dracut
+  ansible.builtin.copy:
+    src: 99-root-key.conf
+    dest: /etc/dracut.conf.d/99-root-key.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Register LUKS keyfile to partition
+  ansible.builtin.expect:
+    command: cryptsetup luksAddKey /dev/nvme0n1p5 /.root.key
+    responses:
+      (?i)Enter: "EnterMe"
+  no_log: true
+  when: not ansible_check_mode
+
+- name: Set GRUB kernel boot command line parameters
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+    line: 'GRUB_CMDLINE_LINUX_DEFAULT="resume=/dev/system/swap rd.luks.options=discard elevator=deadline nmi_watchdog=0 drm.vblankoffdelay=1 cryptkey=rootfs:/.root.key"'
+
+- name: Configure user-level resume for dracut
+  ansible.builtin.copy:
+    src: 95-user-level-resume.conf
+    dest: /etc/dracut.conf.d/95-user-level-resume.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Regenerate initramfs with dracut
+  ansible.builtin.command: dracut --force
+  when: not ansible_check_mode

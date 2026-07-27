@@ -1,0 +1,69 @@
+---
+# tasks file for irc_bouncer
+- name: Install ZNC bouncer packages
+  community.general.zypper:
+    name: "{{ znc_packages }}"
+    state: present
+
+- name: Add ZNC service user
+  ansible.builtin.user:
+    name: znc
+    shell: /sbin/nologin
+    home: /var/lib/znc
+    system: yes
+
+- name: Clone clientbuffer module repository
+  ansible.builtin.git:
+    repo: 'https://github.com/CyberShadow/znc-clientbuffer.git'
+    dest: /srv/znc-clientbuffer
+
+- name: Build clientbuffer module
+  ansible.builtin.command: znc-buildmod /srv/znc-clientbuffer/clientbuffer.cpp
+  args:
+    chdir: /usr/lib64/znc
+    creates: /usr/lib64/znc/clientbuffer.so
+
+- name: Clone playback module repository
+  ansible.builtin.git:
+    repo: 'https://github.com/jpnurmi/znc-playback.git'
+    dest: /srv/znc-playback
+
+- name: Build playback module
+  ansible.builtin.command: znc-buildmod /srv/znc-playback/playback.cpp
+  args:
+    chdir: /usr/lib64/znc
+    creates: /usr/lib64/znc/playback.so
+
+- name: Clone backlog module repository
+  ansible.builtin.git:
+    repo: 'https://github.com/fruitiex/znc-backlog/'
+    dest: /srv/znc-backlog
+
+- name: Build backlog module
+  ansible.builtin.command: znc-buildmod /srv/znc-backlog/backlog.cpp
+  args:
+    chdir: /usr/lib64/znc
+    creates: /usr/lib64/znc/backlog.so
+
+- name: Copy ZNC configuration directory
+  ansible.builtin.copy:
+    src: znc
+    dest: /var/lib/
+    owner: znc
+    group: znc
+    mode: '0700'
+
+- name: Copy ZNC systemd service file
+  ansible.builtin.copy:
+    src: znc.service
+    dest: /etc/systemd/system/znc.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and start ZNC service
+  ansible.builtin.systemd:
+    name: znc.service
+    state: restarted
+    enabled: yes
+    daemon_reload: yes

@@ -1,0 +1,7 @@
+---
+# defaults file for printing_setup
+printing_packages:
+  - cups
+  - cups-backends
+  - cups-pdf
+  - gutenprint

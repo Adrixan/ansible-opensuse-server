@@ -1,0 +1,7 @@
+---
+# defaults file for graphical_environment
+graphical_packages:
+  - MozillaFirefox
+  - partitionmanager
+  - gwenview
+  - ark

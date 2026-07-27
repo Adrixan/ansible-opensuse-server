@@ -1,0 +1,6 @@
+---
+# defaults file for luks_boot_setup
+luks_boot_packages:
+  - python3-pexpect
+  - dracut
+  - cryptsetup

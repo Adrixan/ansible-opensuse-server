@@ -1,0 +1,6 @@
+---
+# tasks file for graphical_environment
+- name: Install core graphical desktop packages
+  community.general.zypper:
+    name: "{{ graphical_packages }}"
+    state: present

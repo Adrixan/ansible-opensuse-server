@@ -1,0 +1,31 @@
+---
+# tasks file for docker
+- name: Install docker system packages
+  community.general.zypper:
+    name: "{{ docker_packages }}"
+    state: present
+
+- name: Install docker-compose via pip
+  ansible.builtin.pip:
+    name: "{{ docker_pip_packages }}"
+    extra_args: "--break-system-packages"
+
+- name: Enable and start docker service
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: yes
+  when: not ansible_check_mode
+
+- name: Deploy docker-compose systemd service unit template
+  ansible.builtin.copy:
+    src: docker-compose@.service
+    dest: /etc/systemd/system/docker-compose@.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  when: not ansible_check_mode

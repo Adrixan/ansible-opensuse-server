@@ -1,0 +1,6 @@
+---
+# tasks file for power_management
+- name: Install power management packages
+  community.general.zypper:
+    name: "{{ power_packages }}"
+    state: present

@@ -1,0 +1,12 @@
+---
+# defaults file for office_suite
+office_packages:
+  - libreoffice
+  - libreoffice-base
+  - libreoffice-calc
+  - libreoffice-draw
+  - libreoffice-impress
+  - libreoffice-math
+  - libreoffice-writer
+  - okular
+  - filezilla

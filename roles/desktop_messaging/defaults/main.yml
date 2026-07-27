@@ -1,0 +1,4 @@
+---
+# defaults file for desktop_messaging
+messaging_packages:
+  - signal-desktop

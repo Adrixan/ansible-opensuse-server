@@ -1,0 +1,4 @@
+---
+# defaults file for obsidian
+obsidian_flatpak_name: "md.obsidian.Obsidian"
+obsidian_flatpak_remote: "flathub"

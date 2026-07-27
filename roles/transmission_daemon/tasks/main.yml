@@ -1,0 +1,35 @@
+---
+# tasks file for transmission_daemon
+- name: Install transmission-daemon packages
+  community.general.zypper:
+    name: "{{ transmission_packages }}"
+    state: present
+
+- name: Temporarily stop transmission-daemon before updating configuration
+  ansible.builtin.systemd:
+    name: transmission-daemon
+    enabled: yes
+    state: stopped
+
+- name: Create transmission configuration directory
+  ansible.builtin.file:
+    path: /var/lib/transmission/.config/transmission
+    owner: transmission
+    group: transmission
+    mode: '0755'
+    state: directory
+
+- name: Upload transmission settings.json template
+  ansible.builtin.template:
+    src: settings.json
+    dest: /var/lib/transmission/.config/transmission/settings.json
+    owner: transmission
+    group: transmission
+    mode: '0600'
+  notify: start-transmission
+
+- name: Enable and start transmission-daemon service
+  ansible.builtin.systemd:
+    name: transmission-daemon
+    enabled: yes
+    state: started

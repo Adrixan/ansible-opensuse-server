@@ -1,0 +1,6 @@
+---
+# tasks file for desktop_fonts
+- name: Install Adobe Source font packages
+  community.general.zypper:
+    name: "{{ font_packages }}"
+    state: present

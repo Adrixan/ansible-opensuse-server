@@ -1,16 +1,166 @@
 ---
 - hosts: opensuse-laptops
-  remote_user: Adrixan
+  remote_user: "{{ target_user | default('Adrixan') }}"
   become: yes
-  roles:
-     - base_software
-     - { role: base_software, tags: base_software }
-     - shell_environment
-     - { role: shell_environment, tags: shell_environment }
-     #     - syncthing-daemon
-     #- { role: syncthing-daemon, tags: syncthing-daemon }
-     - graphical-environment
-     - { role: graphical-environment, tags: graphical-environment }
-       #     - laptop-setup
-       #     - { role: laptop-setup, tags: laptop-setup }
+  tasks:
+    - name: Include system_update role
+      ansible.builtin.include_role:
+        name: system_update
+      when: enable_system_update | default(false) | bool
+      tags: [system_update]
 
+    - name: Include ssh_setup role
+      ansible.builtin.include_role:
+        name: ssh_setup
+      when: enable_ssh_setup | default(false) | bool
+      tags: [ssh_setup]
+
+    - name: Include luks_boot_setup role
+      ansible.builtin.include_role:
+        name: luks_boot_setup
+      when: enable_luks_boot_setup | default(false) | bool
+      tags: [luks_boot_setup]
+
+    - name: Include power_management role
+      ansible.builtin.include_role:
+        name: power_management
+      when: enable_power_management | default(false) | bool
+      tags: [power_management]
+
+    - name: Include bluetooth_setup role
+      ansible.builtin.include_role:
+        name: bluetooth_setup
+      when: enable_bluetooth_setup | default(false) | bool
+      tags: [bluetooth_setup]
+
+    - name: Include printing_setup role
+      ansible.builtin.include_role:
+        name: printing_setup
+      when: enable_printing_setup | default(false) | bool
+      tags: [printing_setup]
+
+    - name: Include base_software role
+      ansible.builtin.include_role:
+        name: base_software
+      when: enable_base_software | default(false) | bool
+      tags: [base_software]
+
+    - name: Include python_environment role
+      ansible.builtin.include_role:
+        name: python_environment
+      when: enable_python_environment | default(false) | bool
+      tags: [python_environment]
+
+    - name: Include shell_environment role
+      ansible.builtin.include_role:
+        name: shell_environment
+      when: enable_shell_environment | default(false) | bool
+      tags: [shell_environment]
+
+    - name: Include cli_tools role
+      ansible.builtin.include_role:
+        name: cli_tools
+      when: enable_cli_tools | default(false) | bool
+      tags: [cli_tools]
+
+    - name: Include desktop_fonts role
+      ansible.builtin.include_role:
+        name: desktop_fonts
+      when: enable_desktop_fonts | default(false) | bool
+      tags: [desktop_fonts]
+
+    - name: Include graphical_environment role
+      ansible.builtin.include_role:
+        name: graphical_environment
+      when: enable_graphical_environment | default(false) | bool
+      tags: [graphical_environment]
+
+    - name: Include desktop_messaging role
+      ansible.builtin.include_role:
+        name: desktop_messaging
+      when: enable_desktop_messaging | default(false) | bool
+      tags: [desktop_messaging]
+
+    - name: Include multimedia_codecs role
+      ansible.builtin.include_role:
+        name: multimedia_codecs
+      when: enable_multimedia_codecs | default(false) | bool
+      tags: [multimedia_codecs]
+
+    - name: Include office_suite role
+      ansible.builtin.include_role:
+        name: office_suite
+      when: enable_office_suite | default(false) | bool
+      tags: [office_suite]
+
+    - name: Include graphics_tools role
+      ansible.builtin.include_role:
+        name: graphics_tools
+      when: enable_graphics_tools | default(false) | bool
+      tags: [graphics_tools]
+
+    - name: Include gaming_environment role
+      ansible.builtin.include_role:
+        name: gaming_environment
+      when: enable_gaming_environment | default(false) | bool
+      tags: [gaming_environment]
+
+    - name: Include docker role
+      ansible.builtin.include_role:
+        name: docker
+      when: enable_docker | default(false) | bool
+      tags: [docker]
+
+    - name: Include flatpak_setup role
+      ansible.builtin.include_role:
+        name: flatpak_setup
+      when: enable_flatpak_setup | default(false) | bool
+      tags: [flatpak_setup]
+
+    - name: Include obsidian role
+      ansible.builtin.include_role:
+        name: obsidian
+      when: enable_obsidian | default(false) | bool
+      tags: [obsidian]
+
+    - name: Include syncthing_daemon role
+      ansible.builtin.include_role:
+        name: syncthing_daemon
+      when: enable_syncthing_daemon | default(false) | bool
+      tags: [syncthing_daemon]
+
+    - name: Include docker_pi_hole role
+      ansible.builtin.include_role:
+        name: docker_pi_hole
+      when: enable_docker_pi_hole | default(false) | bool
+      tags: [docker_pi_hole]
+
+    - name: Include plex_server role
+      ansible.builtin.include_role:
+        name: plex_server
+      when: enable_plex_server | default(false) | bool
+      tags: [plex_server]
+
+    - name: Include rdp_server role
+      ansible.builtin.include_role:
+        name: rdp_server
+      when: enable_rdp_server | default(false) | bool
+      tags: [rdp_server]
+
+    - name: Include irc_bouncer role
+      ansible.builtin.include_role:
+        name: irc_bouncer
+      when: enable_irc_bouncer | default(false) | bool
+      tags: [irc_bouncer]
+
+    - name: Include rclone_backup role
+      ansible.builtin.include_role:
+        name: rclone_backup
+      when: enable_rclone_backup | default(false) | bool
+      tags: [rclone_backup]
+
+    - name: Include transmission_daemon role
+      ansible.builtin.include_role:
+        name: transmission_daemon
+      when: enable_transmission_daemon | default(false) | bool
+      tags: [transmission_daemon]

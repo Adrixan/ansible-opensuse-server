@@ -1,0 +1,13 @@
+---
+# tasks file for flatpak_setup
+- name: Install flatpak system package
+  community.general.zypper:
+    name: "{{ flatpak_packages }}"
+    state: present
+
+- name: Add Flathub repository remote
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: "{{ flathub_repo_url }}"
+    method: system

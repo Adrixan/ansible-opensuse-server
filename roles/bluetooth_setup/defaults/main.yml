@@ -1,0 +1,5 @@
+---
+# defaults file for bluetooth_setup
+bluetooth_packages:
+  - bluez
+  - bluez-firmware

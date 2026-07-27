@@ -1,0 +1,21 @@
+---
+# tasks file for printing_setup
+- name: Install printing subsystem packages
+  community.general.zypper:
+    name: "{{ printing_packages }}"
+    state: present
+
+- name: Upload CUPS printers configuration
+  ansible.builtin.copy:
+    src: printers.conf
+    dest: /etc/cups/printers.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Start and enable CUPS service
+  ansible.builtin.systemd:
+    name: cups
+    state: restarted
+    enabled: yes
+  when: not ansible_check_mode

@@ -1,0 +1,62 @@
+---
+# tasks file for rdp_server
+- name: Install xrdp server
+  community.general.zypper:
+    name: xrdp
+    state: present
+
+- name: Copy xrdp server configuration
+  ansible.builtin.copy:
+    src: xrdp.ini
+    dest: /etc/xrdp/xrdp.ini
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Copy window manager startup configuration
+  ansible.builtin.copy:
+    src: startwm.sh
+    dest: /etc/xrdp/startwm.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install build libraries for PulseAudio audio support
+  community.general.zypper:
+    name: "{{ libraries }}"
+
+- name: Download PulseAudio sources for audio driver compilation
+  ansible.builtin.get_url:
+    url: https://freedesktop.org/software/pulseaudio/releases/pulseaudio-11.1.tar.gz
+    dest: /tmp/pulseaudio-11.1.tar.gz
+    mode: '0644'
+
+- name: Unarchive PulseAudio source code
+  ansible.builtin.unarchive:
+    src: /tmp/pulseaudio-11.1.tar.gz
+    dest: /tmp/
+    remote_src: yes
+    creates: /tmp/pulseaudio-11.1
+
+- name: Configure PulseAudio sources
+  ansible.builtin.command: ./configure
+  args:
+    chdir: /tmp/pulseaudio-11.1
+    creates: /tmp/pulseaudio-11.1/config.h
+
+- name: Clone xrdp audio driver repository
+  ansible.builtin.git:
+    repo: 'https://github.com/neutrinolabs/pulseaudio-module-xrdp.git'
+    dest: /tmp/pulseaudio-module-xrdp
+
+- name: Configure and install xrdp audio driver
+  ansible.builtin.command: ./bootstrap && ./configure PULSE_DIR=/tmp/pulseaudio-11.1 && make && make install
+  args:
+    chdir: /tmp/pulseaudio-module-xrdp
+    creates: /var/lib/xrdp-pulseaudio-installer/module-xrdp-sink.so
+
+- name: Enable and start xrdp service
+  ansible.builtin.systemd:
+    name: xrdp
+    state: started
+    enabled: yes

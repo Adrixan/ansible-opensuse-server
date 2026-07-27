@@ -1,0 +1,22 @@
+---
+# tasks file for python_environment
+- name: Install Python environment packages
+  community.general.zypper:
+    name: "{{ python_packages }}"
+
+- name: Make python3 default system alternative
+  community.general.alternatives:
+    name: python
+    link: /usr/bin/python
+    path: /usr/bin/python3
+
+- name: Make pip3 default system alternative
+  community.general.alternatives:
+    name: pip
+    link: /usr/bin/pip
+    path: /usr/bin/pip3
+
+- name: Install Python CLI packages via pip
+  ansible.builtin.pip:
+    name: "{{ python_pip_packages }}"
+    extra_args: "--break-system-packages"

@@ -1,0 +1,24 @@
+---
+# tasks file for syncthing_daemon
+- name: Install syncthing
+  community.general.zypper:
+    name: syncthing
+    state: present
+
+- name: Copy syncthing service template
+  ansible.builtin.copy:
+    src: syncthing@.service
+    dest: /etc/systemd/system/syncthing@.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Start and enable syncthing service for user
+  ansible.builtin.systemd:
+    name: "syncthing@{{ target_user }}"
+    state: started
+    enabled: yes

@@ -1,0 +1,14 @@
+---
+# defaults file for cli_tools
+build_packages:
+  - gcc
+  - gcc-c++
+  - make
+  - zlib-devel
+  - pcre2-devel
+
+npm_global_packages:
+  - tldr
+
+pip_cli_packages:
+  - tmuxp
