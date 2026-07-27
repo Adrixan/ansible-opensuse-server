@@ -1,0 +1,6 @@
+---
+# defaults file for desktop_fonts
+font_packages:
+  - adobe-sourcecodepro-fonts
+  - adobe-sourcesanspro-fonts
+  - adobe-sourceserifpro-fonts

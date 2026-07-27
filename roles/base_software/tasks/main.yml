@@ -1,0 +1,5 @@
+---
+# tasks file for base_software
+- name: Install base system packages
+  community.general.zypper:
+    name: "{{ base_packages }}"

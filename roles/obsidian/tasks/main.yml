@@ -1,0 +1,12 @@
+---
+# tasks file for obsidian
+- name: Ensure flatpak environment is configured
+  ansible.builtin.include_role:
+    name: flatpak_setup
+
+- name: Install Obsidian via Flatpak
+  community.general.flatpak:
+    name: "{{ obsidian_flatpak_name }}"
+    remote: "{{ obsidian_flatpak_remote }}"
+    state: present
+    method: system

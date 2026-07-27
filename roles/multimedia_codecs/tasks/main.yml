@@ -1,0 +1,14 @@
+---
+# tasks file for multimedia_codecs
+- name: Add Packman repository for media codecs
+  community.general.zypper_repository:
+    name: packman
+    repo: 'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/'
+    state: present
+    priority: 50
+    auto_import_keys: yes
+
+- name: Install multimedia players and codecs
+  community.general.zypper:
+    name: "{{ multimedia_packages }}"
+    state: present

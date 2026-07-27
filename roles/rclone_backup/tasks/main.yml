@@ -1,0 +1,45 @@
+---
+# tasks file for rclone_backup
+- name: Install rclone
+  community.general.zypper:
+    name: rclone
+    state: present
+
+- name: Copy backup script
+  ansible.builtin.copy:
+    src: rclone-pcloud
+    dest: "{{ target_user_home }}/rclone-pcloud"
+    mode: '0755'
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+  become: yes
+  become_user: "{{ target_user }}"
+
+- name: Create config directory
+  ansible.builtin.file:
+    path: "{{ target_user_home }}/.config/rclone"
+    state: directory
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0755'
+  become: yes
+  become_user: "{{ target_user }}"
+
+- name: Upload pcloud token configuration
+  ansible.builtin.template:
+    src: rclone.conf
+    dest: "{{ target_user_home }}/.config/rclone/rclone.conf"
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0600'
+  become: yes
+  become_user: "{{ target_user }}"
+
+- name: Add recurring cron task for pcloud backup
+  ansible.builtin.cron:
+    name: "pcloud-backup"
+    minute: "0"
+    hour: "3"
+    job: "/bin/bash {{ target_user_home }}/rclone-pcloud >/dev/null 2>&1"
+  become: yes
+  become_user: "{{ target_user }}"

@@ -1,0 +1,20 @@
+---
+# defaults file for base_software
+base_packages:
+  - zellij
+  - neovim
+  - mosh
+  - htop
+  - exfat-utils
+  - findutils
+  - fwupd
+  - git
+  - lsof
+  - ntfs-3g
+  - ntfsprogs
+  - ntfsprogs-extra
+  - p7zip
+  - p7zip-full
+  - powertop
+  - unrar
+  - unzip

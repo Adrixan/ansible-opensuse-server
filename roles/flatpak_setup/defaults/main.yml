@@ -1,0 +1,6 @@
+---
+# defaults file for flatpak_setup
+flatpak_packages:
+  - flatpak
+
+flathub_repo_url: "https://dl.flathub.org/repo/flathub.flatpakrepo"

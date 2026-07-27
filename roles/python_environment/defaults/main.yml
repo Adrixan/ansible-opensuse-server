@@ -1,0 +1,9 @@
+---
+# defaults file for python_environment
+python_packages:
+  - python3
+  - python3-pip
+  - python3-neovim
+
+python_pip_packages:
+  - manly

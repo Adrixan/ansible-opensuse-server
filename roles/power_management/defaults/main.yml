@@ -1,0 +1,4 @@
+---
+# defaults file for power_management
+power_packages:
+  - powertop

@@ -1,0 +1,6 @@
+---
+# tasks file for office_suite
+- name: Install office suite applications
+  community.general.zypper:
+    name: "{{ office_packages }}"
+    state: present

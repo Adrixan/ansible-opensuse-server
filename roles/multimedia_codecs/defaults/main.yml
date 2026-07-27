@@ -1,0 +1,21 @@
+---
+# defaults file for multimedia_codecs
+multimedia_packages:
+  - vlc
+  - vlc-codecs
+  - vlc-codec-gstreamer
+  - vlc-vdpau
+  - faac
+  - faad2
+  - ffmpeg
+  - mpv
+  - gstreamer
+  - gstreamer-plugins-bad
+  - gstreamer-plugins-base
+  - gstreamer-plugins-good
+  - gstreamer-plugins-good-extra
+  - gstreamer-plugins-libav
+  - gstreamer-plugins-vaapi
+  - guayadeque
+  - x264
+  - x265

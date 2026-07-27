@@ -1,0 +1,13 @@
+---
+# tasks file for shell_environment
+- name: Add packman repository
+  community.general.zypper_repository:
+    name: packman
+    repo: 'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/'
+    state: present
+    priority: 50
+    auto_import_keys: yes
+
+- name: Install shell packages
+  community.general.zypper:
+    name: "{{ shell_packages }}"

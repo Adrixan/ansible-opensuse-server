@@ -1,0 +1,13 @@
+---
+# tasks file for plex_server
+- name: Add RPM repository for Plex Media Server
+  community.general.zypper_repository:
+    name: PlexRepo
+    repo: 'https://downloads.plex.tv/repo/rpm/x86_64/'
+    auto_import_keys: yes
+    state: present
+
+- name: Install plexmediaserver
+  community.general.zypper:
+    name: plexmediaserver
+    state: present

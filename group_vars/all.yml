@@ -1,0 +1,35 @@
+---
+# Global variables for all host groups
+
+# Primary user configuration
+target_user: "Adrixan"
+target_user_home: "/home/{{ target_user }}"
+
+# Role feature flags (Disabled by default)
+enable_system_update: false
+enable_ssh_setup: false
+enable_power_management: false
+enable_printing_setup: false
+enable_luks_boot_setup: false
+enable_base_software: false
+enable_python_environment: false
+enable_shell_environment: false
+enable_cli_tools: false
+enable_desktop_fonts: false
+enable_bluetooth_setup: false
+enable_graphical_environment: false
+enable_multimedia_codecs: false
+enable_desktop_messaging: false
+enable_office_suite: false
+enable_graphics_tools: false
+enable_gaming_environment: false
+enable_docker: false
+enable_flatpak_setup: false
+enable_obsidian: false
+enable_syncthing_daemon: false
+enable_docker_pi_hole: false
+enable_plex_server: false
+enable_rdp_server: false
+enable_irc_bouncer: false
+enable_rclone_backup: false
+enable_transmission_daemon: false

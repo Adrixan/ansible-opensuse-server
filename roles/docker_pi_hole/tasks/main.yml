@@ -1,0 +1,30 @@
+---
+# tasks file for docker_pi_hole
+- name: Create docker-compose directory for Pi-hole
+  ansible.builtin.file:
+    path: /etc/docker-compose/pi-hole
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Upload Pi-hole docker-compose configuration template
+  ansible.builtin.template:
+    src: docker-compose.yml
+    dest: /etc/docker-compose/pi-hole/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Add recurring cron task for docker-compose refresh
+  ansible.builtin.cron:
+    name: "docker-compose-refresh"
+    minute: "0"
+    hour: "4"
+    job: "/bin/systemctl reload docker-compose@*.service"
+
+- name: Start and enable Pi-hole docker-compose service
+  ansible.builtin.systemd:
+    name: docker-compose@pi-hole
+    state: started
+    enabled: yes

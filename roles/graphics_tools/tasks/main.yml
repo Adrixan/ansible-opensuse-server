@@ -1,0 +1,6 @@
+---
+# tasks file for graphics_tools
+- name: Install graphics and image editing software
+  community.general.zypper:
+    name: "{{ graphics_packages }}"
+    state: present

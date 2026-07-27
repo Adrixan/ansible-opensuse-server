@@ -1,0 +1,18 @@
+---
+# defaults file for shell_environment
+shell_packages:
+  - ncdu
+  - bind-utils
+  - curl
+  - zsh
+  - neovim
+  - yadm
+  - aria2
+  - gpg
+  - youtube-dl
+  - ripgrep
+  - topgrade
+  - ansible
+  - npm-default
+  - pdfgrep
+  - fzf
