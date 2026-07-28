@@ -19,7 +19,7 @@ It is configured to run pull-style deployments (`ansible_connection=local`) targ
 - **[roles/cli_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/cli_tools)**: Specialized CLI applications (`tldr` npm, `tmuxp` pip, `tintin++` build).
 - **[roles/desktop_fonts](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_fonts)**: Desktop typography.
 - **[roles/graphical_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphical_environment)**: Core desktop software.
-- **[roles/desktop_messaging](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_messaging)**: Signal messaging client.
+- **[roles/desktop_messaging](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_messaging)**: Signal Desktop Flatpak client (`org.signal.Signal`).
 - **[roles/multimedia_codecs](file:///home/Adrixan/code/ansible-opensuse-server/roles/multimedia_codecs)**: Packman players and codecs with Packman vendor preference.
 - **[roles/office_suite](file:///home/Adrixan/code/ansible-opensuse-server/roles/office_suite)**: LibreOffice suite & utilities.
 - **[roles/graphics_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphics_tools)**: GIMP & Gwenview image software.
