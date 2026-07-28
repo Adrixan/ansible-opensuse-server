@@ -5,6 +5,7 @@ Migrate `desktop_messaging` role to remove legacy OBS zypper repository and nati
 
 ## Completed Sprint Stories (Sprint 9)
 - **US-9.1**: Refactor `desktop_messaging` to purge legacy `signal` zypper repo and packages, and install `org.signal.Signal` Flatpak (3 SP) - **Done**
+- **US-9.2**: Add `tigervnc` (VNC viewer) package to `graphical_environment` and install live on localhost (2 SP) - **Done**
 
 ## Verification Summary
 - Playbook `--syntax-check`: **PASS (100%)**
@@ -12,5 +13,7 @@ Migrate `desktop_messaging` role to remove legacy OBS zypper repository and nati
   - Legacy RPM packages (`signal-desktop`, `signal-sqlcipher`, `libsignal`, `signal-libringrtc`): **Uninstalled**
   - Legacy Zypper repo (`signal`): **Removed**
   - Flatpak app (`org.signal.Signal`): **Installed & Verified (v8.20.0)**
+- Live localhost execution (`graphical_environment`): **PASS (ok=3, changed=1, failed=0)**
+  - Package `tigervnc`: **Installed & Verified (`/usr/bin/vncviewer`)**
 - Remote Push: **Pushed to `origin/laptops`**
 
