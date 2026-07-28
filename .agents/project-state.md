@@ -26,7 +26,7 @@
 10. **[cli_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/cli_tools)**: Specialized CLI applications (`tldr` via npm, `tmuxp` via pip, `tintin++` compilation).
 11. **[desktop_fonts](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_fonts)**: Adobe Source Code/Sans/Serif Pro fonts.
 12. **[graphical_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphical_environment)**: Desktop tools (Firefox, Partition Manager, Gwenview, Ark).
-13. **[desktop_messaging](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_messaging)**: Signal desktop messaging client.
+13. **[desktop_messaging](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_messaging)**: Removes legacy zypper repo/packages and installs Signal Desktop client via Flatpak (`org.signal.Signal`).
 14. **[multimedia_codecs](file:///home/Adrixan/code/ansible-opensuse-server/roles/multimedia_codecs)**: Packman media players & codecs (`vlc`, `ffmpeg`, `mpv`, `gstreamer`, `x264`, `x265`, `faac`, `faad2`) with Packman vendor priority alignment.
 15. **[office_suite](file:///home/Adrixan/code/ansible-opensuse-server/roles/office_suite)**: LibreOffice suite, Okular, FileZilla.
 16. **[graphics_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphics_tools)**: GIMP & Gwenview image applications.

@@ -1,4 +1,10 @@
 ---
 # defaults file for desktop_messaging
-messaging_packages:
+signal_zypper_packages:
   - signal-desktop
+  - signal-sqlcipher
+  - libsignal
+  - signal-libringrtc
+signal_zypper_repo_name: "signal"
+signal_flatpak_name: "org.signal.Signal"
+signal_flatpak_remote: "flathub"

@@ -1,14 +1,23 @@
 ---
 # tasks file for desktop_messaging
-- name: Add Signal repository
-  community.general.zypper_repository:
-    name: signal
-    repo: 'https://download.opensuse.org/repositories/network:im:signal/openSUSE_Tumbleweed/'
-    state: present
-    auto_import_keys: yes
-
-- name: Install Signal desktop client
+- name: Remove legacy Signal zypper packages
   community.general.zypper:
-    name: "{{ messaging_packages }}"
+    name: "{{ signal_zypper_packages }}"
+    state: absent
+  ignore_errors: true
+
+- name: Remove legacy Signal zypper repository
+  community.general.zypper_repository:
+    name: "{{ signal_zypper_repo_name }}"
+    state: absent
+
+- name: Ensure flatpak environment is configured
+  ansible.builtin.include_role:
+    name: flatpak_setup
+
+- name: Install Signal Desktop via Flatpak
+  community.general.flatpak:
+    name: "{{ signal_flatpak_name }}"
+    remote: "{{ signal_flatpak_remote }}"
     state: present
-    update_cache: yes
+    method: system

@@ -33,6 +33,7 @@
 - **US-8.2**: Live Localhost Execution of `desktop_*`, `gaming`, `graphical`, `graphics`, `multimedia`, and `office` roles (5 SP) - **Done**
 - **US-8.3**: Comprehensive `README.md` documentation explaining all 26 playbook roles (3 SP) - **Done**
 - **US-8.4**: State File Updates & Git Commit / Push to `origin/laptops` (2 SP) - **Done**
+- **US-9.1**: Migrate `desktop_messaging` to remove broken OBS zypper repo/packages and install Signal Desktop via Flatpak (`org.signal.Signal`) (3 SP) - **Done**
 
 ### Deferred / Backlog
 - **US-1.1**: Encrypt Plaintext Password in `hosts` File (Deferred per user instruction, retained in state/memory log).
