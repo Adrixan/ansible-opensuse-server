@@ -12,5 +12,5 @@ Enforce Packman repository vendor preference for unrestricted codecs in `multime
 ## Verification Summary
 - Playbook `--syntax-check`: **PASS (100%)**
 - Dry-run check mode (`enable_multimedia_codecs=true`): **PASS (ok=3, changed=1, failed=0)**
-- Live localhost execution (`desktop_fonts`, `desktop_messaging`, `graphical_environment`, `multimedia_codecs`, `office_suite`, `graphics_tools`, `gaming_environment`): **PASS (ok=17, changed=1, failed=0)**
+- Live localhost execution (`desktop_fonts`, `desktop_messaging`, `graphical_environment`, `multimedia_codecs`, `office_suite`, `graphics_tools`, `gaming_environment`, `obsidian`): **PASS (ok=6, changed=1, failed=0)**
 - Remote Push: **Pushed to `origin/laptops`**
