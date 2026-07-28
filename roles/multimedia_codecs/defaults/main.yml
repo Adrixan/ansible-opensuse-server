@@ -4,7 +4,6 @@ multimedia_packages:
   - vlc
   - vlc-codecs
   - vlc-codec-gstreamer
-  - vlc-vdpau
   - faac
   - faad2
   - ffmpeg

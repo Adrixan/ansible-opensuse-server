@@ -1,14 +1,6 @@
 ---
 # tasks file for gaming_environment
-- name: Add gamehub repository
-  community.general.zypper_repository:
-    name: gamehub
-    repo: 'https://download.opensuse.org/repositories/X11:/Pantheon:/Apps/openSUSE_Tumbleweed/'
-    state: present
-    auto_import_keys: yes
-
 - name: Install gaming platforms and emulators
   community.general.zypper:
     name: "{{ gaming_packages }}"
     state: present
-    update_cache: yes
