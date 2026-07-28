@@ -1,10 +1,7 @@
 ---
 # defaults file for gaming_environment
 gaming_packages:
-  - doomsday
-  - dosbox
-  - gamehub
-  - gzdoom
-  - lutris
   - steam
-  - steamtricks
+  - lutris
+  - dosbox
+  - doomsday

@@ -8,7 +8,8 @@
     priority: 50
     auto_import_keys: yes
 
-- name: Install multimedia players and codecs
+- name: Install multimedia players and codecs from Packman repository
   community.general.zypper:
     name: "{{ multimedia_packages }}"
     state: present
+    allow_vendor_change: yes

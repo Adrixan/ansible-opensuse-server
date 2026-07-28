@@ -2,7 +2,7 @@
 
 ## Product Backlog (MoSCoW)
 
-### Completed Stories (Sprints 1-7)
+### Completed Stories (Sprints 1-8)
 - **US-1**: Repository Analysis & State Scaffolding (3 SP) - **Done**
 - **US-2**: Intention Explanation & Memory File Creation (2 SP) - **Done**
 - **US-2.1**: Parameterize User and Home Directory Variables (5 SP) - **Done**
@@ -29,6 +29,10 @@
 - **US-7.4**: Ansible `--syntax-check` & `--check` Dry-Run Verification (2 SP) - **Done**
 - **US-7.5**: Live Localhost Execution of Base Setup & Shell Environment (3 SP) - **Done**
 - **US-7.6**: State File Updates & Git Commit / Push (2 SP) - **Done**
+- **US-8.1**: Configure Packman vendor-priority alignment for unrestricted codecs in `multimedia_codecs` (3 SP) - **Done**
+- **US-8.2**: Live Localhost Execution of `desktop_*`, `gaming`, `graphical`, `graphics`, `multimedia`, and `office` roles (5 SP) - **Done**
+- **US-8.3**: Comprehensive `README.md` documentation explaining all 26 playbook roles (3 SP) - **Done**
+- **US-8.4**: State File Updates & Git Commit / Push to `origin/laptops` (2 SP) - **Done**
 
 ### Deferred / Backlog
 - **US-1.1**: Encrypt Plaintext Password in `hosts` File (Deferred per user instruction, retained in state/memory log).
