@@ -30,7 +30,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 
 ### 🎨 Desktop & Graphical Applications
 * **`desktop_fonts`**: Installs Adobe Source Code Pro, Source Sans Pro, and Source Serif Pro typography packages.
-* **`graphical_environment`**: Core desktop software suite (`MozillaFirefox`, `partitionmanager`, `gwenview`, `ark`).
+* **`graphical_environment`**: Core desktop software suite (`MozillaFirefox`, `MozillaThunderbird`, `partitionmanager`, `gwenview`, `ark`, `tigervnc` VNC viewer).
 * **`desktop_messaging`**: Removes legacy zypper repository/packages and installs Signal Desktop client via Flatpak (`org.signal.Signal`).
 * **`multimedia_codecs`**: Configures high-priority Packman repository and installs unrestricted audio/video codecs (`ffmpeg`, `vlc`, `mpv`, `gstreamer-plugins-*`, `x264`, `x265`, `faac`, `faad2`).
 * **`office_suite`**: Installs full LibreOffice productivity suite, Okular PDF viewer, and FileZilla FTP client.
