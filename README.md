@@ -27,6 +27,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 * **`python_environment`**: Provisions Python 3 alternatives, `pip`, and installs CLI packages (`manly`) with PEP 668 compliance.
 * **`shell_environment`**: Interactive shell setup including Zsh, Yadm dotfile manager, Topgrade updater, FZF, Ripgrep, and NCDU.
 * **`cli_tools`**: Specialized CLI applications (`tldr` via global npm, `tmuxp` via pip, `tintin++` source compilation toolchain).
+* **`opencode`**: OpenCode AI CLI tool (`opencode-ai` via global npm).
 
 ### 🎨 Desktop & Graphical Applications
 * **`desktop_fonts`**: Installs Adobe Source Code Pro, Source Sans Pro, and Source Serif Pro typography packages.

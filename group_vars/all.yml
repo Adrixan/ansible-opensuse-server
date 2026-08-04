@@ -26,6 +26,7 @@ enable_gaming_environment: false
 enable_docker: false
 enable_flatpak_setup: false
 enable_obsidian: false
+enable_opencode: false
 enable_syncthing_daemon: false
 enable_docker_pi_hole: false
 enable_plex_server: false

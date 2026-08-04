@@ -1,19 +1,15 @@
 # Sprint Backlog & To-Do
 
 ## Sprint Goal
-Migrate `desktop_messaging` role to remove legacy OBS zypper repository and native Signal RPM packages, install Signal Desktop via Flatpak (`org.signal.Signal`), verify live execution, update documentation, and commit/push changes.
+Create `opencode` role to install OpenCode AI CLI tool via global npm (`opencode-ai`), integrate with playbook, execute live on localhost, verify installation, and commit/push changes.
 
-## Completed Sprint Stories (Sprint 9)
-- **US-9.1**: Refactor `desktop_messaging` to purge legacy `signal` zypper repo and packages, and install `org.signal.Signal` Flatpak (3 SP) - **Done**
-- **US-9.2**: Add `tigervnc` (VNC viewer) package to `graphical_environment` and install live on localhost (2 SP) - **Done**
+## Completed Sprint Stories (Sprint 10)
+- **US-10.1**: Create `opencode` role (`roles/opencode`), configure feature flag in `group_vars/all.yml` & `main.yml`, and execute live on localhost (2 SP) - **Done**
 
 ## Verification Summary
 - Playbook `--syntax-check`: **PASS (100%)**
-- Live localhost execution (`desktop_messaging`): **PASS (ok=8, changed=3, failed=0)**
-  - Legacy RPM packages (`signal-desktop`, `signal-sqlcipher`, `libsignal`, `signal-libringrtc`): **Uninstalled**
-  - Legacy Zypper repo (`signal`): **Removed**
-  - Flatpak app (`org.signal.Signal`): **Installed & Verified (v8.20.0)**
-- Live localhost execution (`graphical_environment`): **PASS (ok=3, changed=1, failed=0)**
-  - Package `tigervnc`: **Installed & Verified (`/usr/bin/vncviewer`)**
+- Live localhost execution (`opencode`): **PASS (ok=4, changed=1, failed=0)**
+  - OpenCode CLI (`opencode-ai` via npm): **Installed & Verified (`/usr/local/bin/opencode` v1.18.12)**
 - Remote Push: **Pushed to `origin/laptops`**
+
 

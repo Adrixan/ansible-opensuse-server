@@ -1,0 +1,14 @@
+---
+# tasks file for opencode
+- name: Ensure Node.js and npm are installed
+  community.general.zypper:
+    name:
+      - nodejs
+      - npm
+    state: present
+
+- name: Install OpenCode CLI via npm
+  community.general.npm:
+    name: "{{ opencode_npm_package }}"
+    global: yes
+    state: "{{ opencode_state }}"
