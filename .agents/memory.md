@@ -17,6 +17,7 @@ It is configured to run pull-style deployments (`ansible_connection=local`) targ
 - **[roles/base_software](file:///home/Adrixan/code/ansible-opensuse-server/roles/base_software)**: Essential system utilities & drivers.
 - **[roles/shell_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/shell_environment)**: Interactive shell tools & Packman repo.
 - **[roles/cli_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/cli_tools)**: Specialized CLI applications (`tldr` npm, `tmuxp` pip, `tintin++` build).
+- **[roles/opencode](file:///home/Adrixan/code/ansible-opensuse-server/roles/opencode)**: OpenCode AI CLI tool (`opencode-ai` via global npm).
 - **[roles/desktop_fonts](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_fonts)**: Desktop typography.
 - **[roles/graphical_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphical_environment)**: Core desktop software.
 - **[roles/desktop_messaging](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_messaging)**: Signal Desktop Flatpak client (`org.signal.Signal`).

@@ -1,0 +1,4 @@
+---
+# defaults file for opencode
+opencode_npm_package: "opencode-ai"
+opencode_state: present

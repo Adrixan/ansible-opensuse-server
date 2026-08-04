@@ -63,6 +63,13 @@
       when: enable_cli_tools | default(false) | bool
       tags: [cli_tools]
 
+    - name: Include opencode role
+      ansible.builtin.include_role:
+        name: opencode
+      when: enable_opencode | default(false) | bool
+      tags: [opencode]
+
+
     - name: Include desktop_fonts role
       ansible.builtin.include_role:
         name: desktop_fonts
