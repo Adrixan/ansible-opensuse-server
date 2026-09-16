@@ -7,7 +7,7 @@ The primary goal of this repository is to automate the installation, configurati
 It is configured to run pull-style deployments (`ansible_connection=local`) targeting `localhost`.
 
 ## Compact Semantic Role Architecture
-- **[roles/system_update](file:///home/Adrixan/code/ansible-opensuse-server/roles/system_update)**: System package upgrade.
+- **[roles/system_update](file:///home/Adrixan/code/ansible-opensuse-server/roles/system_update)**: System package upgrade & `topgrade` utility via zypper.
 - **[roles/ssh_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/ssh_setup)**: User SSH access (`authorized_keys`).
 - **[roles/luks_boot_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/luks_boot_setup)**: LUKS keyfile, Dracut, initramfs.
 - **[roles/power_management](file:///home/Adrixan/code/ansible-opensuse-server/roles/power_management)**: Power management (`powertop`).

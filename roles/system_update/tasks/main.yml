@@ -1,5 +1,10 @@
 ---
 # tasks file for system_update
+- name: Install system update utilities
+  community.general.zypper:
+    name: "{{ system_update_packages }}"
+    state: present
+
 - name: Update system package cache and upgrade all packages
   community.general.zypper:
     name: '*'
