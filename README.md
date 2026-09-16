@@ -15,7 +15,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 ## 📦 Role Catalog
 
 ### ⚙️ System & Core Infrastructure
-* **`system_update`**: Refreshes system package repositories and executes system-wide updates (`zypper dup`).
+* **`system_update`**: Installs `topgrade` upgrade utility via zypper, refreshes package repositories, and executes system-wide updates (`zypper dup`).
 * **`ssh_setup`**: Secures `.ssh` directory permissions and provisions `authorized_keys`.
 * **`luks_boot_setup`**: Manages root LUKS keyfiles, LVM discards/TRIM, Dracut initramfs modules, and GRUB kernel parameters.
 * **`power_management`**: Configures `powertop` and manages `tlp.service` for laptop battery optimization.

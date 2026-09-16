@@ -1,0 +1,4 @@
+---
+# defaults file for system_update
+system_update_packages:
+  - topgrade

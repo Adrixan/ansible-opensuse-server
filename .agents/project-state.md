@@ -14,7 +14,7 @@
 - **Service Manager**: `systemd`
 
 ## Compact Semantic Role Architecture (27 Roles)
-1. **[system_update](file:///home/Adrixan/code/ansible-opensuse-server/roles/system_update)**: System package upgrade.
+1. **[system_update](file:///home/Adrixan/code/ansible-opensuse-server/roles/system_update)**: System package upgrade & `topgrade` utility via zypper.
 2. **[ssh_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/ssh_setup)**: User SSH access & `authorized_keys`.
 3. **[luks_boot_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/luks_boot_setup)**: Root LUKS keyfile, Dracut, GRUB parameters, initramfs.
 4. **[power_management](file:///home/Adrixan/code/ansible-opensuse-server/roles/power_management)**: Power management tools (`powertop`, `tlp.service`).
