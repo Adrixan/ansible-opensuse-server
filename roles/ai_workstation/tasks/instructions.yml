@@ -32,3 +32,12 @@
     - "{{ ai_workstation_user_home }}/.claude/CLAUDE.md"
     - "{{ ai_workstation_user_home }}/.gemini/GEMINI.md"
     - "{{ ai_workstation_user_home }}/.config/opencode/AGENTS.md"
+
+- name: Link personal branding document to ~/.config/ai/BRANDING.md
+  ansible.builtin.file:
+    src: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Freelancing/Branding.md"
+    dest: "{{ ai_workstation_user_home }}/.config/ai/BRANDING.md"
+    state: link
+    force: yes
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"

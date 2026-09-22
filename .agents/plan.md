@@ -38,6 +38,7 @@
 - **US-10.1**: Create `opencode` role for OpenCode AI CLI tool installation and verify live on localhost (2 SP) - **Done**
 - **US-10.2**: Ensure `topgrade` upgrade utility is provisioned via zypper in `system_update` and `shell_environment`, verified live on localhost (2 SP) - **Done**
 - **US-10.3**: Create `ai_workstation` role for unified MCP parity, lean core instructions, skills consolidation, and shell env (5 SP) - **Done**
+- **US-10.4**: Integrate personal branding and visual styleguide into `ai_workstation` default configuration (2 SP) - **Done**
 
 ### Deferred / Backlog
 - **US-1.1**: Encrypt Plaintext Password in `hosts` File (Deferred per user instruction, retained in state/memory log).
