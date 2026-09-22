@@ -1,0 +1,118 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "@frankhommers/opencode-yolo"
+  ],
+  "provider": {
+    "nowcoding": {
+      "name": "NowCoding Marketplace",
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "options": {
+        "baseURL": "https://nowcoding.ai/v1",
+        "apiKey": "{{ ai_workstation_nowcoding_api_key }}"
+      },
+      "models": {
+        "gpt-5.6-sol": { "modelID": "gpt-5.6-sol", "name": "GPT-5.6 Sol", "limit": { "context": 1050000, "output": 128000 } },
+        "claude-opus-5": { "modelID": "claude-opus-5", "name": "Claude Opus 5", "limit": { "context": 1000000, "output": 128000 } },
+        "claude-sonnet-5": { "modelID": "claude-sonnet-5", "name": "Claude Sonnet 5", "limit": { "context": 1000000, "output": 128000 } }
+      }
+    },
+    "bailian-cli": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Alibaba Cloud Model Studio",
+      "options": {
+        "baseURL": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
+        "apiKey": "{{ ai_workstation_anthropic_auth_token }}",
+        "setCacheKey": true
+      },
+      "models": {
+        "qwen3.8-max": { "name": "Qwen 3.8 Max (Flagship)", "limit": { "context": 1000000, "output": 131072 } },
+        "qwen3.7-plus": { "name": "Qwen 3.7 Plus (Balanced)", "limit": { "context": 1000000, "output": 65536 } },
+        "qwen3.8-flash": { "name": "Qwen 3.8 Flash (Fast)", "limit": { "context": 1000000, "output": 65536 } },
+        "deepseek-v4-pro": { "name": "DeepSeek V4 Pro (Reasoning/Coding)", "limit": { "context": 1000000, "output": 131072 } }
+      }
+    }
+  },
+  "model": "bailian-cli/qwen3.8-max",
+  "mcp": {
+    "github": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{{ ai_workstation_github_token }}"
+      },
+      "enabled": true
+    },
+    "puppeteer": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ],
+      "enabled": true
+    },
+    "sqlite": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "--with",
+        "mcp<=1.1.2",
+        "mcp-server-sqlite",
+        "--db-path",
+        "{{ ai_workstation_user_home }}/code/workspace.db"
+      ],
+      "enabled": true
+    },
+    "memory": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "enabled": true
+    },
+    "fetch": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "mcp-server-fetch"
+      ],
+      "enabled": true
+    },
+    "git": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "mcp-server-git"
+      ],
+      "enabled": true
+    },
+    "arxiv": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "arxiv-mcp-server",
+        "--storage-path",
+        "{{ ai_workstation_user_home }}/Obsidian/Ph.D./Papers/arxiv"
+      ],
+      "enabled": true
+    },
+    "zotero": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "zotero-mcp-server"
+      ],
+      "environment": {
+        "ZOTERO_LOCAL": "true"
+      },
+      "enabled": true
+    }
+  }
+}

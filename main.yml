@@ -69,6 +69,13 @@
       when: enable_opencode | default(false) | bool
       tags: [opencode]
 
+    - name: Include ai_workstation role
+      ansible.builtin.include_role:
+        name: ai_workstation
+      when: enable_ai_workstation | default(false) | bool
+      tags: [ai_workstation]
+
+
 
     - name: Include desktop_fonts role
       ansible.builtin.include_role:

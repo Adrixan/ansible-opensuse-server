@@ -28,9 +28,12 @@ It is configured to run pull-style deployments (`ansible_connection=local`) targ
 - **[roles/docker](file:///home/Adrixan/code/ansible-opensuse-server/roles/docker)**: Containerization daemon & systemd template.
 - **[roles/flatpak_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/flatpak_setup)**: Flatpak system package & Flathub remote.
 - **[roles/obsidian](file:///home/Adrixan/code/ansible-opensuse-server/roles/obsidian)**: Obsidian Flatpak app.
+- **[roles/ai_workstation](file:///home/Adrixan/code/ansible-opensuse-server/roles/ai_workstation)**: AI harnesses unification (Claude Code, Gemini/Antigravity, OpenCode), lean core instructions, MCP server parity, skills consolidation, and credential management.
 - Other server/daemon roles: `docker_pi_hole`, `irc_bouncer`, `plex_server`, `rclone_backup`, `rdp_server`, `syncthing_daemon`, `transmission_daemon`.
 
 ## Key Implementation Patterns & Decisions
+- **AI Workstation Standardization**: Centralizes AI instructions at `~/.config/ai/AGENTS.md` and symlinks to `~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md`, and `~/.config/opencode/AGENTS.md`. Centralizes skills in `~/.local/share/skills/` and exports credentials in `~/.config/ai/env` (mode `0600`).
+- **Claude MCP Injection**: Uses a dedicated Python script `roles/ai_workstation/files/update_claude_mcp.py` to merge MCP servers into `~/.claude.json` without clobbering existing configuration, session state, or flags.
 - **Packman Codec Vendor Alignment**: Configured `roles/multimedia_codecs` with Packman priority (50) and `allow_vendor_change: yes` to pull unrestricted media libraries (`libavcodec`, `libavformat`, `libavfilter`, `vlc-codecs`, `ffmpeg`) from Packman.
 - **PEP 668 Pip Compliance**: System-wide pip tasks use `extra_args: "--break-system-packages"` for openSUSE Tumbleweed compatibility.
 - **PipeWire Audio Integration**: Replaced legacy `pulseaudio-module-bluetooth` and `pulseaudio-module-x11` with openSUSE standard PipeWire audio stack.

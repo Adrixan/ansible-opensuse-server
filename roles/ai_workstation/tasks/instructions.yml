@@ -1,0 +1,34 @@
+---
+- name: Ensure target configuration directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+  loop:
+    - "{{ ai_workstation_user_home }}/.claude"
+    - "{{ ai_workstation_user_home }}/.gemini"
+    - "{{ ai_workstation_user_home }}/.gemini/config"
+    - "{{ ai_workstation_user_home }}/.config/opencode"
+
+- name: Deploy standalone core AGENTS.md instructions
+  ansible.builtin.template:
+    src: AGENTS.md.j2
+    dest: "{{ ai_workstation_user_home }}/.config/ai/AGENTS.md"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+
+- name: Create global instruction symlinks for AI harnesses
+  ansible.builtin.file:
+    src: "{{ ai_workstation_user_home }}/.config/ai/AGENTS.md"
+    dest: "{{ item }}"
+    state: link
+    force: yes
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+  loop:
+    - "{{ ai_workstation_user_home }}/.claude/CLAUDE.md"
+    - "{{ ai_workstation_user_home }}/.gemini/GEMINI.md"
+    - "{{ ai_workstation_user_home }}/.config/opencode/AGENTS.md"

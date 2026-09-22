@@ -1,0 +1,21 @@
+---
+- name: Deploy Antigravity MCP configuration
+  ansible.builtin.template:
+    src: gemini_mcp.json.j2
+    dest: "{{ ai_workstation_user_home }}/.gemini/config/mcp_config.json"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+
+- name: Deploy OpenCode configuration
+  ansible.builtin.template:
+    src: opencode.json.j2
+    dest: "{{ ai_workstation_user_home }}/.config/opencode/opencode.json"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+
+- name: Update Claude Code MCP servers in ~/.claude.json
+  ansible.builtin.command:
+    cmd: "python3 {{ role_path }}/files/update_claude_mcp.py {{ ai_workstation_user_home }}/.claude.json {{ ai_workstation_github_token }}"
+

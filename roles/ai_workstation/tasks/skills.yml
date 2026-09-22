@@ -1,0 +1,45 @@
+---
+- name: Ensure central skills directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.local/share/skills"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
+- name: Ensure target harness skills directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+  loop:
+    - "{{ ai_workstation_user_home }}/.claude/skills"
+    - "{{ ai_workstation_user_home }}/.gemini/skills"
+    - "{{ ai_workstation_user_home }}/.gemini/config/skills"
+    - "{{ ai_workstation_user_home }}/.config/opencode/skills"
+
+- name: Consolidate skills into ~/.local/share/skills
+  ansible.builtin.shell: |
+    set -euo pipefail
+    # Copy standalone skill folders from ~/.claude/skills to ~/.local/share/skills if not already there
+    for d in "{{ ai_workstation_user_home }}/.claude/skills"/*; do
+      [ -d "$d" ] || continue
+      base="$(basename "$d")"
+      if [ ! -L "$d" ] && [ ! -e "{{ ai_workstation_user_home }}/.local/share/skills/$base" ]; then
+        cp -a "$d" "{{ ai_workstation_user_home }}/.local/share/skills/"
+      fi
+    done
+    # Symlink all skills in ~/.local/share/skills across all harnesses
+    for s in "{{ ai_workstation_user_home }}/.local/share/skills"/*; do
+      [ -e "$s" ] || continue
+      base="$(basename "$s")"
+      for target_dir in "{{ ai_workstation_user_home }}/.claude/skills" "{{ ai_workstation_user_home }}/.gemini/skills" "{{ ai_workstation_user_home }}/.gemini/config/skills" "{{ ai_workstation_user_home }}/.config/opencode/skills"; do
+        if [ ! -e "$target_dir/$base" ]; then
+          ln -s "$s" "$target_dir/$base"
+        fi
+      done
+    done
+  args:
+    executable: /bin/bash
