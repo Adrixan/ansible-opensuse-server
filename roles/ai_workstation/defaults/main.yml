@@ -1,0 +1,19 @@
+---
+# defaults file for ai_workstation
+ai_workstation_user: "{{ target_user | default('Adrixan') }}"
+ai_workstation_user_home: "{{ target_user_home | default('/home/' + ai_workstation_user) }}"
+
+ai_workstation_packages:
+  - nodejs
+  - npm
+  - git
+  - sqlite3
+
+ai_workstation_github_token: "{{ lookup('env', 'GITHUB_PERSONAL_ACCESS_TOKEN') | default(lookup('env', 'GITHUB_TOKEN') | default('', true), true) }}"
+ai_workstation_anthropic_base_url: "https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic"
+ai_workstation_anthropic_auth_token: "{{ lookup('env', 'ANTHROPIC_AUTH_TOKEN') | default(lookup('env', 'ANTHROPIC_API_KEY') | default('', true), true) }}"
+ai_workstation_nowcoding_api_key: "{{ lookup('env', 'NOWCODING_API_KEY') | default('', true) }}"
+ai_workstation_anthropic_model: "qwen3.7-plus"
+ai_workstation_anthropic_default_sonnet: "qwen3.7-plus"
+ai_workstation_anthropic_default_haiku: "qwen3.8-flash"
+ai_workstation_anthropic_default_opus: "qwen3.8-max"

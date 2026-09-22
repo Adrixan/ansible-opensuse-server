@@ -1,0 +1,14 @@
+# AI Environment Configuration
+# Managed by Ansible - do not edit manually
+
+export GITHUB_PERSONAL_ACCESS_TOKEN="{{ ai_workstation_github_token }}"
+export ANTHROPIC_BASE_URL="{{ ai_workstation_anthropic_base_url }}"
+export ANTHROPIC_AUTH_TOKEN="{{ ai_workstation_anthropic_auth_token }}"
+export ANTHROPIC_API_KEY="{{ ai_workstation_anthropic_auth_token }}"
+export ANTHROPIC_MODEL="{{ ai_workstation_anthropic_model }}"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="{{ ai_workstation_anthropic_default_sonnet }}"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="{{ ai_workstation_anthropic_default_haiku }}"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="{{ ai_workstation_anthropic_default_opus }}"
+export CLAUDE_CODE_SUBAGENT_MODEL="{{ ai_workstation_anthropic_default_haiku }}"
+export CLAUDE_CODE_MAX_CONTEXT_TOKENS="1000000"
+export CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT="1"

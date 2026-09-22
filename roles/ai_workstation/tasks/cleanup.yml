@@ -1,0 +1,17 @@
+---
+- name: Remove orphaned code/.agents/skills directory
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/code/.agents/skills"
+    state: absent
+
+- name: Clean up inline ANTHROPIC exports from ~/.bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_user_home }}/.bashrc"
+    regexp: '^export ANTHROPIC_'
+    state: absent
+
+- name: Purge old Claude backup files
+  ansible.builtin.shell: |
+    find "{{ ai_workstation_user_home }}/.claude/backups" -type f -name ".claude.json.backup.*" -mtime +7 -delete 2>/dev/null || true
+  args:
+    executable: /bin/bash

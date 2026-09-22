@@ -1,0 +1,5 @@
+---
+- name: Install required system packages
+  community.general.zypper:
+    name: "{{ ai_workstation_packages }}"
+    state: present

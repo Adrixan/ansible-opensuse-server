@@ -28,6 +28,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 * **`shell_environment`**: Interactive shell setup including Zsh, Yadm dotfile manager, Topgrade updater, FZF, Ripgrep, and NCDU.
 * **`cli_tools`**: Specialized CLI applications (`tldr` via global npm, `tmuxp` via pip, `tintin++` source compilation toolchain).
 * **`opencode`**: OpenCode AI CLI tool (`opencode-ai` via global npm).
+* **`ai_workstation`**: Provisions unified AI environment (MCP servers, lean core instructions, skills, shell environment) across Antigravity, Claude Code, and OpenCode.
 
 ### 🎨 Desktop & Graphical Applications
 * **`desktop_fonts`**: Installs Adobe Source Code Pro, Source Sans Pro, and Source Serif Pro typography packages.

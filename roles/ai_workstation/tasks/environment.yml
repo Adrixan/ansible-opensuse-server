@@ -1,0 +1,69 @@
+---
+- name: Ensure ~/.config/ai directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/ai"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0700'
+
+- name: Check if ~/.config/ai/env exists
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.config/ai/env"
+  register: ai_workstation_env_file
+
+- name: Read existing ~/.config/ai/env if present
+  ansible.builtin.slurp:
+    src: "{{ ai_workstation_user_home }}/.config/ai/env"
+  register: ai_workstation_env_content
+  when: ai_workstation_env_file.stat.exists
+
+- name: Populate facts from existing ~/.config/ai/env if tokens not provided
+  ansible.builtin.set_fact:
+    ai_workstation_github_token: "{{ (ai_workstation_env_content.content | b64decode | regex_findall('export GITHUB_PERSONAL_ACCESS_TOKEN=\"([^\"]*)\"') | first) if (ai_workstation_github_token | length == 0 and (ai_workstation_env_content.content | b64decode | regex_findall('export GITHUB_PERSONAL_ACCESS_TOKEN=\"([^\"]*)\"') | length > 0)) else ai_workstation_github_token }}"
+    ai_workstation_anthropic_auth_token: "{{ (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_AUTH_TOKEN=\"([^\"]*)\"') | first) if (ai_workstation_anthropic_auth_token | length == 0 and (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_AUTH_TOKEN=\"([^\"]*)\"') | length > 0)) else ai_workstation_anthropic_auth_token }}"
+  when: ai_workstation_env_file.stat.exists
+
+- name: Check if ~/.config/opencode/opencode.json exists
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.config/opencode/opencode.json"
+  register: ai_workstation_opencode_json_file
+
+- name: Read existing ~/.config/opencode/opencode.json if present
+  ansible.builtin.slurp:
+    src: "{{ ai_workstation_user_home }}/.config/opencode/opencode.json"
+  register: ai_workstation_opencode_content
+  when: ai_workstation_opencode_json_file.stat.exists
+
+- name: Populate nowcoding API key from existing config if not provided
+  ansible.builtin.set_fact:
+    ai_workstation_nowcoding_api_key: "{{ ((ai_workstation_opencode_content.content | b64decode | from_json).provider.nowcoding.options.apiKey) if (ai_workstation_nowcoding_api_key | length == 0 and (ai_workstation_opencode_content.content | b64decode | from_json).provider.nowcoding.options.apiKey is defined) else ai_workstation_nowcoding_api_key }}"
+  when: ai_workstation_opencode_json_file.stat.exists and (ai_workstation_nowcoding_api_key | length == 0)
+
+- name: Deploy unified AI environment configuration file
+  ansible.builtin.template:
+    src: ai_env.j2
+    dest: "{{ ai_workstation_user_home }}/.config/ai/env"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0600'
+
+- name: Ensure ~/.config/ai/env is sourced in ~/.zshrc
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_user_home }}/.zshrc"
+    line: '[ -f "$HOME/.config/ai/env" ] && source "$HOME/.config/ai/env"'
+    state: present
+    create: yes
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+
+- name: Ensure ~/.config/ai/env is sourced in ~/.bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_user_home }}/.bashrc"
+    line: '[ -f "$HOME/.config/ai/env" ] && source "$HOME/.config/ai/env"'
+    state: present
+    create: yes
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'

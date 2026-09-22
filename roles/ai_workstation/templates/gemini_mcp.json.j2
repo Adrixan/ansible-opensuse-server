@@ -1,0 +1,67 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{{ ai_workstation_github_token }}"
+      }
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "sqlite": {
+      "command": "uvx",
+      "args": [
+        "--with",
+        "mcp<=1.1.2",
+        "mcp-server-sqlite",
+        "--db-path",
+        "{{ ai_workstation_user_home }}/code/workspace.db"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git"
+      ]
+    },
+    "arxiv": {
+      "command": "uvx",
+      "args": [
+        "arxiv-mcp-server",
+        "--storage-path",
+        "{{ ai_workstation_user_home }}/Obsidian/Ph.D./Papers/arxiv"
+      ]
+    },
+    "zotero": {
+      "command": "uvx",
+      "args": [
+        "zotero-mcp-server"
+      ],
+      "env": {
+        "ZOTERO_LOCAL": "true"
+      }
+    }
+  }
+}

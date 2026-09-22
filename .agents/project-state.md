@@ -13,7 +13,7 @@
 - **Containerization**: Docker & Docker Compose
 - **Service Manager**: `systemd`
 
-## Compact Semantic Role Architecture (27 Roles)
+## Compact Semantic Role Architecture (29 Roles)
 1. **[system_update](file:///home/Adrixan/code/ansible-opensuse-server/roles/system_update)**: System package upgrade & `topgrade` utility via zypper.
 2. **[ssh_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/ssh_setup)**: User SSH access & `authorized_keys`.
 3. **[luks_boot_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/luks_boot_setup)**: Root LUKS keyfile, Dracut, GRUB parameters, initramfs.
@@ -25,17 +25,24 @@
 9. **[shell_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/shell_environment)**: Interactive shell packages (`zsh`, `yadm`, `topgrade` via zypper, `fzf`, `ripgrep`, etc.) and Packman repo.
 10. **[cli_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/cli_tools)**: Specialized CLI applications (`tldr` via npm, `tmuxp` via pip, `tintin++` compilation).
 11. **[opencode](file:///home/Adrixan/code/ansible-opensuse-server/roles/opencode)**: OpenCode AI CLI tool (`opencode-ai` via global npm).
-12. **[desktop_fonts](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_fonts)**: Adobe Source Code/Sans/Serif Pro fonts.
-13. **[graphical_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphical_environment)**: Desktop tools (Firefox, Thunderbird, Partition Manager, Gwenview, Ark, TigerVNC viewer).
-14. **[desktop_messaging](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_messaging)**: Removes legacy zypper repo/packages and installs Signal Desktop client via Flatpak (`org.signal.Signal`).
-15. **[multimedia_codecs](file:///home/Adrixan/code/ansible-opensuse-server/roles/multimedia_codecs)**: Packman media players & codecs (`vlc`, `ffmpeg`, `mpv`, `gstreamer`, `x264`, `x265`, `faac`, `faad2`) with Packman vendor priority alignment.
-15. **[office_suite](file:///home/Adrixan/code/ansible-opensuse-server/roles/office_suite)**: LibreOffice suite, Okular, FileZilla.
-16. **[graphics_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphics_tools)**: GIMP & Gwenview image applications.
-17. **[gaming_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/gaming_environment)**: Steam, Lutris, DOSBox, Doomsday.
-18. **[docker](file:///home/Adrixan/code/ansible-opensuse-server/roles/docker)**: Docker daemon, `docker-compose`, systemd service template.
-19. **[flatpak_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/flatpak_setup)**: Flatpak package installation & Flathub remote setup.
-20. **[obsidian](file:///home/Adrixan/code/ansible-opensuse-server/roles/obsidian)**: Obsidian Flatpak application installation (`md.obsidian.Obsidian`).
-21. Other server/daemon roles: `docker_pi_hole`, `irc_bouncer`, `plex_server`, `rclone_backup`, `rdp_server`, `syncthing_daemon`, `transmission_daemon`.
+12. **[ai_workstation](file:///home/Adrixan/code/ansible-opensuse-server/roles/ai_workstation)**: Unified AI environment (MCP servers, lean core instructions, skills, shell env) across harnesses.
+13. **[desktop_fonts](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_fonts)**: Adobe Source Code/Sans/Serif Pro fonts.
+14. **[graphical_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphical_environment)**: Desktop tools (Firefox, Thunderbird, Partition Manager, Gwenview, Ark, TigerVNC viewer).
+15. **[desktop_messaging](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_messaging)**: Removes legacy zypper repo/packages and installs Signal Desktop client via Flatpak (`org.signal.Signal`).
+16. **[multimedia_codecs](file:///home/Adrixan/code/ansible-opensuse-server/roles/multimedia_codecs)**: Packman media players & codecs (`vlc`, `ffmpeg`, `mpv`, `gstreamer`, `x264`, `x265`, `faac`, `faad2`) with Packman vendor priority alignment.
+17. **[office_suite](file:///home/Adrixan/code/ansible-opensuse-server/roles/office_suite)**: LibreOffice suite, Okular, FileZilla.
+18. **[graphics_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphics_tools)**: GIMP & Gwenview image applications.
+19. **[gaming_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/gaming_environment)**: Steam, Lutris, DOSBox, Doomsday.
+20. **[docker](file:///home/Adrixan/code/ansible-opensuse-server/roles/docker)**: Containerization engine & systemd service.
+21. **[flatpak_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/flatpak_setup)**: Flatpak package and Flathub repository setup.
+22. **[obsidian](file:///home/Adrixan/code/ansible-opensuse-server/roles/obsidian)**: Obsidian markdown knowledge base application via Flatpak.
+23. **[docker_pi_hole](file:///home/Adrixan/code/ansible-opensuse-server/roles/docker_pi_hole)**: DNS sinkhole and ad blocker via Docker container.
+24. **[irc_bouncer](file:///home/Adrixan/code/ansible-opensuse-server/roles/irc_bouncer)**: ZNC IRC bouncer.
+25. **[plex_server](file:///home/Adrixan/code/ansible-opensuse-server/roles/plex_server)**: Plex Media Server.
+26. **[rclone_backup](file:///home/Adrixan/code/ansible-opensuse-server/roles/rclone_backup)**: Automated cloud backups with Rclone.
+27. **[rdp_server](file:///home/Adrixan/code/ansible-opensuse-server/roles/rdp_server)**: Remote desktop server via XRDP.
+28. **[syncthing_daemon](file:///home/Adrixan/code/ansible-opensuse-server/roles/syncthing_daemon)**: Continuous file synchronization.
+29. **[transmission_daemon](file:///home/Adrixan/code/ansible-opensuse-server/roles/transmission_daemon)**: BitTorrent client daemon.
 
 ## Technical Debt & Deferred Items
 1. **Plaintext Password in Host File**: Password `ansible_ssh_pass=aufner02` in [hosts](file:///home/Adrixan/code/ansible-opensuse-server/hosts) retained per user directive.
