@@ -47,3 +47,13 @@ Universal behavioral, communication, and engineering standards for all AI harnes
   - Body: Inter or Public Sans.
   - Code: JetBrains Mono.
 </branding_and_visual_style>
+
+<workspace_and_session_continuity>
+- Workspace Locality:
+  - All scratch scripts, test runners, temporary data files, and debug tools must be written to `.scratch/` inside the active project working directory, never inside the internal AI appData directory (`~/.gemini/.../brain/`, `~/.claude/`, `/tmp`).
+  - For non-code tasks (such as Obsidian vaults or system maintenance), output files, research logs, and notes must be written directly to the target working directory or designated vault path.
+- Session & Chat Continuity:
+  - The universal handoff mechanism across different harnesses (Antigravity, Claude Code, OpenCode) and across devices is the workspace state.
+  - At the completion of non-trivial tasks or before session exit, maintain `.agents/session-handoff.md` capturing conversational trajectory, active intent, pending decisions, and next steps.
+  - When starting a task in any repository or directory, inspect `.agents/session-handoff.md` and `.agents/` state files first to resume context seamlessly without requiring local machine chat history.
+</workspace_and_session_continuity>

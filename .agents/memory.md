@@ -33,6 +33,7 @@ It is configured to run pull-style deployments (`ansible_connection=local`) targ
 
 ## Key Implementation Patterns & Decisions
 - **AI Workstation Standardization**: Centralizes AI instructions at `~/.config/ai/AGENTS.md` and symlinks to `~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md`, and `~/.config/opencode/AGENTS.md`. Centralizes skills in `~/.local/share/skills/` and exports credentials in `~/.config/ai/env` (mode `0600`).
+- **Workspace Locality & Session Continuity**: Mandates `.scratch/` in the working directory for temporary scripts (globally ignored via `~/.config/git/ignore`) and establishes `.agents/session-handoff.md` as the platform-agnostic vehicle for resuming tasks across harnesses and devices.
 - **Claude MCP Injection**: Uses a dedicated Python script `roles/ai_workstation/files/update_claude_mcp.py` to merge MCP servers into `~/.claude.json` without clobbering existing configuration, session state, or flags.
 - **Packman Codec Vendor Alignment**: Configured `roles/multimedia_codecs` with Packman priority (50) and `allow_vendor_change: yes` to pull unrestricted media libraries (`libavcodec`, `libavformat`, `libavfilter`, `vlc-codecs`, `ffmpeg`) from Packman.
 - **PEP 668 Pip Compliance**: System-wide pip tasks use `extra_args: "--break-system-packages"` for openSUSE Tumbleweed compatibility.

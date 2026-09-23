@@ -67,3 +67,21 @@
     owner: "{{ ai_workstation_user }}"
     group: "{{ ai_workstation_user }}"
     mode: '0644'
+
+- name: Ensure ~/.config/git directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/git"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
+- name: Ensure .scratch/ is ignored in global gitignore
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_user_home }}/.config/git/ignore"
+    line: ".scratch/"
+    state: present
+    create: yes
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
