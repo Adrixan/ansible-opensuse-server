@@ -21,8 +21,24 @@
 - name: Populate facts from existing ~/.config/ai/env if tokens not provided
   ansible.builtin.set_fact:
     ai_workstation_github_token: "{{ (ai_workstation_env_content.content | b64decode | regex_findall('export GITHUB_PERSONAL_ACCESS_TOKEN=\"([^\"]*)\"') | first) if (ai_workstation_github_token | length == 0 and (ai_workstation_env_content.content | b64decode | regex_findall('export GITHUB_PERSONAL_ACCESS_TOKEN=\"([^\"]*)\"') | length > 0)) else ai_workstation_github_token }}"
-    ai_workstation_anthropic_auth_token: "{{ (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_AUTH_TOKEN=\"([^\"]*)\"') | first) if (ai_workstation_anthropic_auth_token | length == 0 and (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_AUTH_TOKEN=\"([^\"]*)\"') | length > 0)) else ai_workstation_anthropic_auth_token }}"
+    ai_workstation_anthropic_workspace_id: "{{ (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_WORKSPACE_ID=\"([^\"]*)\"') | first) if (ai_workstation_anthropic_workspace_id | length == 0 and (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_WORKSPACE_ID=\"([^\"]*)\"') | length > 0)) else ai_workstation_anthropic_workspace_id }}"
   when: ai_workstation_env_file.stat.exists
+
+- name: Check if ~/.local/share/opencode/auth.json exists
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.local/share/opencode/auth.json"
+  register: ai_workstation_opencode_auth_file
+
+- name: Read existing ~/.local/share/opencode/auth.json if present
+  ansible.builtin.slurp:
+    src: "{{ ai_workstation_user_home }}/.local/share/opencode/auth.json"
+  register: ai_workstation_opencode_auth_content
+  when: ai_workstation_opencode_auth_file.stat.exists
+
+- name: Populate Anthropic API key from opencode auth.json if not provided
+  ansible.builtin.set_fact:
+    ai_workstation_anthropic_api_key: "{{ ((ai_workstation_opencode_auth_content.content | b64decode | from_json).anthropic.key) if (ai_workstation_anthropic_api_key | length == 0 and (ai_workstation_opencode_auth_content.content | b64decode | from_json).anthropic.key is defined) else ai_workstation_anthropic_api_key }}"
+  when: ai_workstation_opencode_auth_file.stat.exists and (ai_workstation_anthropic_api_key | length == 0)
 
 - name: Check if ~/.config/opencode/opencode.json exists
   ansible.builtin.stat:

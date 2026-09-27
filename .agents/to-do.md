@@ -9,6 +9,7 @@ Create `opencode` role to install OpenCode AI CLI tool via global npm (`opencode
 - **US-10.3**: Create `ai_workstation` role for unified MCP parity, lean core instructions, skills consolidation, and shell env (5 SP) - **Done**
 - **US-10.4**: Integrate personal branding and visual styleguide into `ai_workstation` default configuration (2 SP) - **Done**
 - **US-10.5**: Implement workspace locality mandate, session handoff protocol, and global gitignore in `ai_workstation` role (3 SP) - **Done**
+- **US-10.6**: Transition Claude Code and OpenCode from Bailian gateway to official Anthropic access and clean up configurations (3 SP) - **Done**
 
 ## Verification Summary
 - Playbook `--syntax-check`: **PASS (100%)**
@@ -16,15 +17,16 @@ Create `opencode` role to install OpenCode AI CLI tool via global npm (`opencode
   - OpenCode CLI (`opencode-ai` via npm): **Installed & Verified (`/usr/local/bin/opencode` v1.18.12)**
 - Live localhost execution (`shell_environment` & `system_update` check): **PASS (ok=4, changed=0, failed=0)**
   - Package `topgrade`: **Installed & Verified via Zypper (`/usr/bin/topgrade` v17.8.0)**
-- Live localhost execution (`ai_workstation`): **PASS (ok=28, changed=5, failed=0)**
+- Live localhost execution (`ai_workstation`): **PASS (ok=32, changed=5, failed=0)**
   - Unified core instructions: **`~/.config/ai/AGENTS.md` deployed with workspace locality & session handoff rules**
   - Global gitignore: **`~/.config/git/ignore` configured with `.scratch/` entry**
   - Session handoff reference: **`.agents/session-handoff.md` created in repository**
   - Canonical styleguide link: **`~/.config/ai/BRANDING.md` created pointing to `~/Obsidian/Adrixan/Freelancing/Branding.md`**
   - MCP servers parity: **8 servers (`github`, `puppeteer`, `sqlite`, `memory`, `fetch`, `git`, `arxiv`, `zotero`) across Gemini, OpenCode, Claude Code**
   - Skills consolidation: **`~/.local/share/skills` centralized and symlinked to `~/.claude/skills`, `~/.gemini/antigravity-cli/skills`, `~/.config/opencode/skills`**
-  - Environment centralization: **`~/.config/ai/env` created (0600) and sourced in `~/.zshrc` and `~/.bashrc`**
-  - Cleanup: **Legacy code skills directory and inline exports removed**
+  - Environment centralization: **`~/.config/ai/env` purged of legacy gateway tokens and Qwen variables**
+  - Claude settings cleanup: **Legacy Bailian `env`, `modelOverrides`, and custom models purged from `~/.claude/settings.json` and `~/.claude.json`**
+  - OpenCode configuration: **Bailian provider removed; Anthropic model set to `anthropic/claude-sonnet-4-5`; optional `anthropic-workspace-id` header support integrated**
 - Remote Push: **Pending push to `origin/laptops`**
 
 

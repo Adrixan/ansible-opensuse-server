@@ -16,24 +16,16 @@
         "claude-opus-5": { "modelID": "claude-opus-5", "name": "Claude Opus 5", "limit": { "context": 1000000, "output": 128000 } },
         "claude-sonnet-5": { "modelID": "claude-sonnet-5", "name": "Claude Sonnet 5", "limit": { "context": 1000000, "output": 128000 } }
       }
-    },
-    "bailian-cli": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Alibaba Cloud Model Studio",
+    }{% if ai_workstation_anthropic_workspace_id | default('') | length > 0 %},
+    "anthropic": {
       "options": {
-        "baseURL": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
-        "apiKey": "{{ ai_workstation_anthropic_auth_token }}",
-        "setCacheKey": true
-      },
-      "models": {
-        "qwen3.8-max": { "name": "Qwen 3.8 Max (Flagship)", "limit": { "context": 1000000, "output": 131072 } },
-        "qwen3.7-plus": { "name": "Qwen 3.7 Plus (Balanced)", "limit": { "context": 1000000, "output": 65536 } },
-        "qwen3.8-flash": { "name": "Qwen 3.8 Flash (Fast)", "limit": { "context": 1000000, "output": 65536 } },
-        "deepseek-v4-pro": { "name": "DeepSeek V4 Pro (Reasoning/Coding)", "limit": { "context": 1000000, "output": 131072 } }
+        "headers": {
+          "anthropic-workspace-id": "{{ ai_workstation_anthropic_workspace_id }}"
+        }
       }
-    }
+    }{% endif %}
   },
-  "model": "bailian-cli/qwen3.8-max",
+  "model": "anthropic/claude-sonnet-4-5",
   "mcp": {
     "github": {
       "type": "local",
