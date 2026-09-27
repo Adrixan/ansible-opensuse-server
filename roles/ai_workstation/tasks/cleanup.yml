@@ -45,9 +45,29 @@
   register: sanitize_claude_settings
   changed_when: "'Sanitized' in sanitize_claude_settings.stdout"
 
-- name: Purge old Claude backup files
+- name: Clean up inline ANTHROPIC and CLAUDE_CODE exports from ~/.profile
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_user_home }}/.profile"
+    regexp: '^export (ANTHROPIC_|CLAUDE_CODE_)'
+    state: absent
+
+- name: Check if ~/.config/zsh/env exists
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.config/zsh/env"
+  register: ai_workstation_zsh_env_file
+
+- name: Clean up inline ANTHROPIC and CLAUDE_CODE exports from ~/.config/zsh/env
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_user_home }}/.config/zsh/env"
+    regexp: '^export (ANTHROPIC_|CLAUDE_CODE_)'
+    state: absent
+  when: ai_workstation_zsh_env_file.stat.exists
+
+- name: Purge old Claude backup and doctor files
   ansible.builtin.shell: |
     find "{{ ai_workstation_user_home }}/.claude/backups" -type f -name ".claude.json.backup.*" -mtime +7 -delete 2>/dev/null || true
+    rm -f "{{ ai_workstation_user_home }}/.claude/settings.json.bak"* "{{ ai_workstation_user_home }}/.claude.json.bak"* 2>/dev/null || true
   args:
     executable: /bin/bash
+
 

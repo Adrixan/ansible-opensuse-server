@@ -8,11 +8,12 @@ Transition AI workstation tools (Claude Code and OpenCode) from legacy Alibaba C
 - State: Complete & Verified
 
 ## Key Decisions & Architecture
-- Claude Code CLI uses native first-party OAuth authentication for the user's flat-rate Claude subscription. `ANTHROPIC_API_KEY` is not exported in shell environments to avoid overriding the OAuth session with per-token billing.
+- Claude Code CLI uses native first-party OAuth authentication for the user's flat-rate Claude subscription. `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are not exported in any shell environment (`~/.config/ai/env`, `~/.profile`, `~/.config/zsh/env`, `~/.bashrc`, `~/.zshrc`).
 - OpenCode uses the official Anthropic API with credentials in `~/.local/share/opencode/auth.json`.
-- All legacy Alibaba Bailian gateway URLs, Qwen model aliases, and `modelOverrides` have been purged from `roles/ai_workstation/`, `~/.config/ai/env`, `~/.claude/settings.json`, and `~/.claude.json`.
+- All legacy Alibaba Bailian gateway URLs, Z.ai URLs, Qwen model aliases, and `modelOverrides` have been purged from `roles/ai_workstation/`, `~/.config/ai/env`, `~/.profile`, `~/.config/zsh/env`, `~/.claude/settings.json`, and `~/.claude.json`.
 - Workspace scoping for OpenCode is active: `ANTHROPIC_WORKSPACE_ID="wrkspc_017CGfYfmKQbqyxBeQp14Czy"` is stored in `~/.config/ai/env` and automatically mapped into `~/.config/opencode/opencode.json` via Ansible.
-- Live test confirmed: Anthropic API accepted the workspace ID header and returned the credit balance requirement.
+- Live test confirmed: Claude CLI reports `apiProvider: firstParty`, `authMethod: none`, and `loggedIn: false`. Running `claude auth login` launches native Claude subscription OAuth.
+- All other customizations across Gemini, OpenCode, and Claude Code (core instructions, 8 MCP servers, centralized skills, personal branding) remain intact.
 
 ## Immediate Next Steps
 - For Claude Code CLI: Run `claude auth login` in a local terminal window to authorize your Claude subscription via browser OAuth.
