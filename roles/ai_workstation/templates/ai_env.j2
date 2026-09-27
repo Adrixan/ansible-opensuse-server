@@ -5,3 +5,15 @@ export GITHUB_PERSONAL_ACCESS_TOKEN="{{ ai_workstation_github_token }}"
 {% if ai_workstation_anthropic_workspace_id | default('') | length > 0 %}
 export ANTHROPIC_WORKSPACE_ID="{{ ai_workstation_anthropic_workspace_id }}"
 {% endif %}
+
+# Ensure Claude Code CLI uses native first-party OAuth subscription without custom gateway overrides
+unset ANTHROPIC_BASE_URL
+unset ANTHROPIC_AUTH_TOKEN
+unset ANTHROPIC_API_KEY
+unset ANTHROPIC_MODEL
+unset ANTHROPIC_DEFAULT_SONNET_MODEL
+unset ANTHROPIC_DEFAULT_HAIKU_MODEL
+unset ANTHROPIC_DEFAULT_OPUS_MODEL
+unset CLAUDE_CODE_SUBAGENT_MODEL
+unset CLAUDE_CODE_MAX_CONTEXT_TOKENS
+unset CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT
