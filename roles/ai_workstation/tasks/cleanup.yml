@@ -10,8 +10,44 @@
     regexp: '^export ANTHROPIC_'
     state: absent
 
+- name: Clean up inline ANTHROPIC exports from ~/.zshrc
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_user_home }}/.zshrc"
+    regexp: '^export ANTHROPIC_'
+    state: absent
+
+- name: Purge legacy custom gateway and model overrides from ~/.claude/settings.json
+  ansible.builtin.shell: |
+    python3 -c '
+    import json, os
+    p = os.path.expanduser("{{ ai_workstation_user_home }}/.claude/settings.json")
+    if os.path.exists(p):
+        try:
+            with open(p, "r") as f:
+                d = json.load(f)
+            changed = False
+            for k in ["env", "modelOverrides", "autoCompactWindow"]:
+                if k in d:
+                    del d[k]
+                    changed = True
+            if d.get("model") in ["qwen3.7-plus", "qwen3.8-max", "qwen3.8-flash", "deepseek-v4-pro", "glm-5.2"]:
+                del d["model"]
+                changed = True
+            if changed:
+                with open(p, "w") as f:
+                    json.dump(d, f, indent=2)
+                print("Sanitized ~/.claude/settings.json")
+        except Exception as e:
+            print("Error sanitizing settings.json:", e)
+    '
+  args:
+    executable: /bin/bash
+  register: sanitize_claude_settings
+  changed_when: "'Sanitized' in sanitize_claude_settings.stdout"
+
 - name: Purge old Claude backup files
   ansible.builtin.shell: |
     find "{{ ai_workstation_user_home }}/.claude/backups" -type f -name ".claude.json.backup.*" -mtime +7 -delete 2>/dev/null || true
   args:
     executable: /bin/bash
+

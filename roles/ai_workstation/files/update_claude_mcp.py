@@ -17,6 +17,13 @@ try:
 except Exception:
     data = {}
 
+# Purge legacy custom gateway env, model overrides, and invalid model selection
+data.pop("env", None)
+data.pop("modelOverrides", None)
+data.pop("customApiKeyResponses", None)
+if data.get("model") in ["qwen3.7-plus", "qwen3.8-max", "qwen3.8-flash", "deepseek-v4-pro", "glm-5.2"]:
+    data.pop("model", None)
+
 data["mcpServers"] = {
     "github": {
         "type": "stdio",
