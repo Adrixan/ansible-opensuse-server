@@ -29,6 +29,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 * **`cli_tools`**: Specialized CLI applications (`tldr` via global npm, `tmuxp` via pip, `tintin++` source compilation toolchain).
 * **`opencode`**: OpenCode AI CLI tool (`opencode-ai` via global npm).
 * **`ai_workstation`**: Provisions unified AI environment (MCP servers, lean core instructions, skills, shell environment) across Antigravity, Claude Code, and OpenCode.
+* **`ai_desktop`**: Provisions official GUI editions of Claude Desktop (`2.7032.0`) and Google Antigravity (`2.17.0`) with desktop launchers and icons.
 
 ### 🎨 Desktop & Graphical Applications
 * **`desktop_fonts`**: Installs Adobe Source Code Pro, Source Sans Pro, and Source Serif Pro typography packages.

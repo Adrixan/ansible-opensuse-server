@@ -75,6 +75,14 @@
       when: enable_ai_workstation | default(false) | bool
       tags: [ai_workstation]
 
+    - name: Include ai_desktop role
+      ansible.builtin.include_role:
+        name: ai_desktop
+        apply:
+          tags: [ai_desktop]
+      when: enable_ai_desktop | default(false) | bool
+      tags: [ai_desktop]
+
 
 
     - name: Include desktop_fonts role
