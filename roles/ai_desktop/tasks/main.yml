@@ -1,0 +1,18 @@
+---
+# tasks file for ai_desktop
+
+- name: Ensure extraction utility packages are installed
+  ansible.builtin.package:
+    name:
+      - binutils
+      - tar
+      - xz
+    state: present
+
+- name: Include Claude Desktop installation tasks
+  ansible.builtin.include_tasks: claude_desktop.yml
+  when: enable_claude_desktop | default(true) | bool
+
+- name: Include Antigravity Desktop installation tasks
+  ansible.builtin.include_tasks: antigravity.yml
+  when: enable_antigravity_desktop | default(true) | bool

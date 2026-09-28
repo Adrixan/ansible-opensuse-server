@@ -1,0 +1,113 @@
+---
+# tasks for installing Google Antigravity Desktop
+
+- name: Check currently installed Antigravity Desktop version
+  ansible.builtin.slurp:
+    src: "{{ antigravity_install_dir }}/.version"
+  register: antigravity_version_check
+  failed_when: false
+  changed_when: false
+
+- name: Set installed Antigravity Desktop version fact
+  ansible.builtin.set_fact:
+    antigravity_installed_version: "{{ (antigravity_version_check.content | b64decode | trim) if antigravity_version_check.content is defined else '' }}"
+
+- name: Manage Antigravity Desktop installation lifecycle
+  when: antigravity_installed_version != (antigravity_version + '-' + antigravity_build_id)
+  block:
+    - name: Create temporary staging directory for Antigravity Desktop
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: antigravity_
+      register: antigravity_temp_dir
+
+    - name: Download official Antigravity Desktop archive
+      ansible.builtin.get_url:
+        url: "{{ antigravity_tarball_url }}"
+        dest: "{{ antigravity_temp_dir.path }}/Antigravity.tar.gz"
+        checksum: "{{ antigravity_tarball_checksum }}"
+        mode: '0644'
+
+    - name: Ensure target installation directory exists for Antigravity
+      ansible.builtin.file:
+        path: "{{ antigravity_install_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Unpack Antigravity Desktop payload into installation directory
+      ansible.builtin.unarchive:
+        src: "{{ antigravity_temp_dir.path }}/Antigravity.tar.gz"
+        dest: "{{ antigravity_install_dir }}"
+        remote_src: true
+        extra_opts:
+          - '--strip-components=1'
+
+    - name: Ensure executable permissions on Antigravity binary
+      ansible.builtin.file:
+        path: "{{ antigravity_install_dir }}/antigravity"
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Ensure permissions on Antigravity chrome-sandbox
+      ansible.builtin.file:
+        path: "{{ antigravity_install_dir }}/chrome-sandbox"
+        mode: '4755'
+        owner: root
+        group: root
+
+    - name: Record installed Antigravity Desktop version
+      ansible.builtin.copy:
+        content: "{{ antigravity_version }}-{{ antigravity_build_id }}\n"
+        dest: "{{ antigravity_install_dir }}/.version"
+        owner: root
+        group: root
+        mode: '0644'
+
+  always:
+    - name: Remove temporary staging directory for Antigravity Desktop
+      ansible.builtin.file:
+        path: "{{ antigravity_temp_dir.path }}"
+        state: absent
+      when: antigravity_temp_dir.path is defined
+
+- name: Create symlink for Antigravity executable in /usr/local/bin
+  ansible.builtin.file:
+    src: "{{ antigravity_install_dir }}/antigravity"
+    dest: /usr/local/bin/antigravity
+    state: link
+    force: true
+
+- name: Install Antigravity application launcher
+  ansible.builtin.copy:
+    src: antigravity.desktop
+    dest: /usr/share/applications/antigravity.desktop
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install Antigravity pixmaps icon
+  ansible.builtin.copy:
+    src: antigravity.png
+    dest: /usr/share/pixmaps/antigravity.png
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure hicolor 512x512 apps icon directory exists
+  ansible.builtin.file:
+    path: /usr/share/icons/hicolor/512x512/apps
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install Antigravity hicolor icon
+  ansible.builtin.copy:
+    src: antigravity.png
+    dest: /usr/share/icons/hicolor/512x512/apps/antigravity.png
+    owner: root
+    group: root
+    mode: '0644'

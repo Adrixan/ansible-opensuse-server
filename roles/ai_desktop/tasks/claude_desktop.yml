@@ -1,0 +1,98 @@
+---
+# tasks for installing Claude Desktop
+
+- name: Check currently installed Claude Desktop version
+  ansible.builtin.slurp:
+    src: "{{ claude_desktop_install_dir }}/.version"
+  register: claude_desktop_version_check
+  failed_when: false
+  changed_when: false
+
+- name: Set installed Claude Desktop version fact
+  ansible.builtin.set_fact:
+    claude_desktop_installed_version: "{{ (claude_desktop_version_check.content | b64decode | trim) if claude_desktop_version_check.content is defined else '' }}"
+
+- name: Manage Claude Desktop installation lifecycle
+  when: claude_desktop_installed_version != claude_desktop_version
+  block:
+    - name: Create temporary staging directory for Claude Desktop
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: claude_desktop_
+      register: claude_desktop_temp_dir
+
+    - name: Download official Claude Desktop deb package
+      ansible.builtin.get_url:
+        url: "{{ claude_desktop_deb_url }}"
+        dest: "{{ claude_desktop_temp_dir.path }}/claude-desktop_{{ claude_desktop_version }}_amd64.deb"
+        checksum: "{{ claude_desktop_deb_checksum }}"
+        mode: '0644'
+
+    - name: Unpack data.tar.xz from Claude Desktop deb package
+      ansible.builtin.shell:
+        cmd: "ar p claude-desktop_{{ claude_desktop_version }}_amd64.deb data.tar.xz | tar -xJf - -C {{ claude_desktop_temp_dir.path }}"
+        chdir: "{{ claude_desktop_temp_dir.path }}"
+      changed_when: true
+
+    - name: Ensure target installation directory exists for Claude Desktop
+      ansible.builtin.file:
+        path: "{{ claude_desktop_install_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy Claude Desktop application files into installation directory
+      ansible.builtin.shell:
+        cmd: "cp -a {{ claude_desktop_temp_dir.path }}/usr/lib/claude-desktop/. {{ claude_desktop_install_dir }}/"
+      changed_when: true
+
+    - name: Ensure executable permissions on Claude Desktop binary
+      ansible.builtin.file:
+        path: "{{ claude_desktop_install_dir }}/claude-desktop"
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Ensure permissions on Claude Desktop chrome-sandbox
+      ansible.builtin.file:
+        path: "{{ claude_desktop_install_dir }}/chrome-sandbox"
+        mode: '4755'
+        owner: root
+        group: root
+
+    - name: Install Claude Desktop application launcher
+      ansible.builtin.copy:
+        src: "{{ claude_desktop_temp_dir.path }}/usr/share/applications/com.anthropic.Claude.desktop"
+        dest: /usr/share/applications/com.anthropic.Claude.desktop
+        remote_src: true
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy Claude Desktop hicolor icons
+      ansible.builtin.shell:
+        cmd: "cp -a {{ claude_desktop_temp_dir.path }}/usr/share/icons/hicolor/. /usr/share/icons/hicolor/"
+      changed_when: true
+
+    - name: Record installed Claude Desktop version
+      ansible.builtin.copy:
+        content: "{{ claude_desktop_version }}\n"
+        dest: "{{ claude_desktop_install_dir }}/.version"
+        owner: root
+        group: root
+        mode: '0644'
+
+  always:
+    - name: Remove temporary staging directory for Claude Desktop
+      ansible.builtin.file:
+        path: "{{ claude_desktop_temp_dir.path }}"
+        state: absent
+      when: claude_desktop_temp_dir.path is defined
+
+- name: Create symlink for Claude Desktop executable in /usr/local/bin
+  ansible.builtin.file:
+    src: "{{ claude_desktop_install_dir }}/claude-desktop"
+    dest: /usr/local/bin/claude-desktop
+    state: link
+    force: true

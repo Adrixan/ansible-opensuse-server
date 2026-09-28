@@ -1,7 +1,19 @@
 # Sprint Backlog & To-Do
 
 ## Sprint Goal
-Create `opencode` role to install OpenCode AI CLI tool via global npm (`opencode-ai`), integrate with playbook, execute live on localhost, verify installation, and commit/push changes.
+Create `ai_desktop` role to provision official GUI editions of Claude Desktop (`2.7032.0`) and Google Antigravity (`2.17.0`) on openSUSE Tumbleweed, integrate with `group_vars/all.yml` and `main.yml`, verify syntax, and deploy live on localhost.
+
+## Active Sprint Story (Sprint 11)
+- **US-11.1**: Create `ai_desktop` role for Claude Desktop and Antigravity GUI application deployment (5 SP) - **Done**
+  - [x] Role directory structure and defaults created (`roles/ai_desktop/defaults/main.yml`)
+  - [x] Desktop and icon assets created in `roles/ai_desktop/files/`
+  - [x] Tasks implemented (`tasks/main.yml`, `tasks/claude_desktop.yml`, `tasks/antigravity.yml`)
+  - [x] Variable and playbook integration (`group_vars/all.yml`, `main.yml`)
+  - [x] Playbook syntax verification (`--syntax-check`)
+  - [x] Live localhost deployment verification (`ansible-playbook -i hosts main.yml -e "enable_ai_desktop=true"`)
+  - [x] Idempotency test verified (`ok=15, changed=0, failed=0`)
+  - [x] Binary execution and desktop file validation
+  - [x] State files and session handoff updated
 
 ## Completed Sprint Stories (Sprint 10)
 - **US-10.1**: Create `opencode` role (`roles/opencode`), configure feature flag in `group_vars/all.yml` & `main.yml`, and execute live on localhost (2 SP) - **Done**
@@ -13,6 +25,13 @@ Create `opencode` role to install OpenCode AI CLI tool via global npm (`opencode
 
 ## Verification Summary
 - Playbook `--syntax-check`: **PASS (100%)**
+- Live localhost execution (`ai_desktop` initial run): **PASS (ok=34, changed=21, failed=0)**
+- Live localhost execution (`ai_desktop` idempotency run): **PASS (ok=15, changed=0, failed=0)**
+- Application Verifications:
+  - Claude Desktop (`claude-desktop`): **Installed in `/opt/claude-desktop/`, verified (`/usr/local/bin/claude-desktop` v2.7032.0)**
+  - Claude Desktop Launcher: **`/usr/share/applications/com.anthropic.Claude.desktop` deployed with hicolor icons**
+  - Google Antigravity GUI (`antigravity`): **Installed in `/opt/antigravity/`, verified (`/usr/local/bin/antigravity` v2.17.0-5217732355031040)**
+  - Google Antigravity Launcher: **`/usr/share/applications/antigravity.desktop` deployed with pixmap and 512x512 hicolor icon**
 - Live localhost execution (`opencode`): **PASS (ok=4, changed=1, failed=0)**
   - OpenCode CLI (`opencode-ai` via npm): **Installed & Verified (`/usr/local/bin/opencode` v1.18.12)**
 - Live localhost execution (`shell_environment` & `system_update` check): **PASS (ok=4, changed=0, failed=0)**
