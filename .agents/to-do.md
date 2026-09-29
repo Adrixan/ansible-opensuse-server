@@ -1,19 +1,25 @@
 # Sprint Backlog & To-Do
 
 ## Sprint Goal
-Create `ai_desktop` role to provision official GUI editions of Claude Desktop (`2.7032.0`) and Google Antigravity (`2.17.0`) on openSUSE Tumbleweed, integrate with `group_vars/all.yml` and `main.yml`, verify syntax, and deploy live on localhost.
+Enable default remote control across all supporting AI harnesses (Claude Code CLI, Google Antigravity CLI, and OpenCode AI CLI) via `ai_workstation` role, verify syntax, and deploy live on localhost.
 
-## Active Sprint Story (Sprint 11)
+## Active Sprint Story (Sprint 12)
+None (Sprint 12 Complete)
+
+## Completed Sprint Stories (Sprint 12)
+- **US-12.1**: Enable Default Remote Control across Claude Code, Antigravity, and OpenCode (3 SP) - **Done**
+  - [x] Configure `"remoteControlAtStartup": true` in `~/.claude/settings.json` via Ansible task
+  - [x] Configure `antigravity-cli-daemon.service` under user systemd and add `alias agy="agy --remote-control"` to `~/.config/ai/env`
+  - [x] Configure `"server"` object in `~/.config/opencode/opencode.json` (port 4096, localhost bound)
+  - [x] Provision and enable `opencode-server.service` under user systemd
+  - [x] Verify playbook syntax (`--syntax-check`)
+  - [x] Deploy live on localhost (`ansible-playbook -i hosts main.yml -e "enable_ai_workstation=true"`)
+  - [x] Verify service states, daemon status, and idempotency (`changed=0`)
+  - [x] Update state files and session handoff
+
+## Completed Sprint Stories (Sprint 11)
 - **US-11.1**: Create `ai_desktop` role for Claude Desktop and Antigravity GUI application deployment (5 SP) - **Done**
-  - [x] Role directory structure and defaults created (`roles/ai_desktop/defaults/main.yml`)
-  - [x] Desktop and icon assets created in `roles/ai_desktop/files/`
-  - [x] Tasks implemented (`tasks/main.yml`, `tasks/claude_desktop.yml`, `tasks/antigravity.yml`)
-  - [x] Variable and playbook integration (`group_vars/all.yml`, `main.yml`)
-  - [x] Playbook syntax verification (`--syntax-check`)
-  - [x] Live localhost deployment verification (`ansible-playbook -i hosts main.yml -e "enable_ai_desktop=true"`)
-  - [x] Idempotency test verified (`ok=15, changed=0, failed=0`)
-  - [x] Binary execution and desktop file validation
-  - [x] State files and session handoff updated
+
 
 ## Completed Sprint Stories (Sprint 10)
 - **US-10.1**: Create `opencode` role (`roles/opencode`), configure feature flag in `group_vars/all.yml` & `main.yml`, and execute live on localhost (2 SP) - **Done**
@@ -25,8 +31,15 @@ Create `ai_desktop` role to provision official GUI editions of Claude Desktop (`
 
 ## Verification Summary
 - Playbook `--syntax-check`: **PASS (100%)**
+- Live localhost execution (`ai_workstation` Sprint 12 deployment): **PASS (ok=46, changed=10, failed=0)**
+- Live localhost execution (`ai_workstation` Sprint 12 idempotency run): **PASS (ok=44, changed=0, failed=0)**
+- Harness Remote Control Verifications:
+  - Claude Code CLI: **`"remoteControlAtStartup": true` set in `~/.claude/settings.json`**
+  - Antigravity CLI: **`antigravity-cli-daemon.service` active under user systemd, connected to cloud relay, interactive alias `alias agy="agy --remote-control"` in `~/.config/ai/env`**
+  - OpenCode AI CLI: **`opencode-server.service` active under user systemd, listening on `127.0.0.1:4096`, `"server"` config configured in `~/.config/opencode/opencode.json`, helper aliases `opencode-remote` and `opencode-web` in `~/.config/ai/env`**
 - Live localhost execution (`ai_desktop` initial run): **PASS (ok=34, changed=21, failed=0)**
 - Live localhost execution (`ai_desktop` idempotency run): **PASS (ok=15, changed=0, failed=0)**
+
 - Application Verifications:
   - Claude Desktop (`claude-desktop`): **Installed in `/opt/claude-desktop/`, verified (`/usr/local/bin/claude-desktop` v2.7032.0)**
   - Claude Desktop Launcher: **`/usr/share/applications/com.anthropic.Claude.desktop` deployed with hicolor icons**

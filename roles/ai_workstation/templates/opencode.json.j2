@@ -26,6 +26,13 @@
     }{% endif %}
   },
   "model": "anthropic/claude-sonnet-4-5",
+{% if ai_workstation_opencode_remote_control | default(true) | bool %}
+  "server": {
+    "hostname": "{{ ai_workstation_opencode_server_host }}",
+    "port": {{ ai_workstation_opencode_server_port }},
+    "mdns": false
+  },
+{% endif %}
   "mcp": {
     "github": {
       "type": "local",

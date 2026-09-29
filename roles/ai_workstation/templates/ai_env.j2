@@ -17,3 +17,12 @@ unset ANTHROPIC_DEFAULT_OPUS_MODEL
 unset CLAUDE_CODE_SUBAGENT_MODEL
 unset CLAUDE_CODE_MAX_CONTEXT_TOKENS
 unset CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT
+
+# Remote control aliases
+{% if ai_workstation_antigravity_remote_control | default(true) | bool %}
+alias agy="agy --remote-control"
+{% endif %}
+{% if ai_workstation_opencode_remote_control | default(true) | bool %}
+alias opencode-remote="opencode attach http://{{ ai_workstation_opencode_server_host }}:{{ ai_workstation_opencode_server_port }}"
+alias opencode-web="opencode web --port {{ ai_workstation_opencode_server_port }} --hostname {{ ai_workstation_opencode_server_host }}"
+{% endif %}

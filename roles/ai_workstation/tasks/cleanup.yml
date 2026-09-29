@@ -69,6 +69,8 @@
     rm -f "{{ ai_workstation_user_home }}/.claude/settings.json.bak"* "{{ ai_workstation_user_home }}/.claude.json.bak"* 2>/dev/null || true
   args:
     executable: /bin/bash
+  changed_when: false
+
 - name: Check if ~/.config/zsh/aliases exists
   ansible.builtin.stat:
     path: "{{ ai_workstation_user_home }}/.config/zsh/aliases"

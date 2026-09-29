@@ -75,7 +75,19 @@ data["mcpServers"] = {
     }
 }
 
-with open(path, "w") as f:
-    json.dump(data, f, indent=2)
+old_content = ""
+if os.path.exists(path):
+    try:
+        with open(path, "r") as f:
+            old_content = f.read()
+    except Exception:
+        pass
 
-print("Updated Claude MCP servers successfully.")
+new_content = json.dumps(data, indent=2) + "\n"
+if old_content.strip() != new_content.strip():
+    with open(path, "w") as f:
+        f.write(new_content)
+    print("CONFIGURED")
+else:
+    print("ALREADY_SET")
+

@@ -13,3 +13,10 @@ ai_workstation_github_token: "{{ lookup('env', 'GITHUB_PERSONAL_ACCESS_TOKEN') |
 ai_workstation_anthropic_api_key: "{{ lookup('env', 'ANTHROPIC_API_KEY') | default('', true) }}"
 ai_workstation_anthropic_workspace_id: "{{ lookup('env', 'ANTHROPIC_WORKSPACE_ID') | default('', true) }}"
 ai_workstation_nowcoding_api_key: "{{ lookup('env', 'NOWCODING_API_KEY') | default('', true) }}"
+
+# Remote control configuration across harnesses
+ai_workstation_claude_remote_control: true
+ai_workstation_antigravity_remote_control: true
+ai_workstation_opencode_remote_control: true
+ai_workstation_opencode_server_port: 4096
+ai_workstation_opencode_server_host: "127.0.0.1"
