@@ -1,0 +1,116 @@
+---
+# tasks for configuring remote control across AI harnesses
+
+- name: Ensure ~/.claude directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.claude"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
+
+- name: Configure remoteControlAtStartup in ~/.claude/settings.json
+  ansible.builtin.shell: |
+    python3 -c '
+    import json, os
+    p = os.path.expanduser("{{ ai_workstation_user_home }}/.claude/settings.json")
+    target_val = {{ "True" if (ai_workstation_claude_remote_control | default(true) | bool) else "False" }}
+    data = {}
+    if os.path.exists(p):
+        try:
+            with open(p, "r") as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+    if data.get("remoteControlAtStartup") != target_val:
+        data["remoteControlAtStartup"] = target_val
+        with open(p, "w") as f:
+            json.dump(data, f, indent=2)
+        print("CONFIGURED")
+    else:
+        print("ALREADY_SET")
+    '
+  args:
+    executable: /bin/bash
+  register: claude_remote_control_result
+  changed_when: "'CONFIGURED' in claude_remote_control_result.stdout"
+
+- name: Ensure user systemd directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
+- name: Check status of Antigravity CLI remote-control daemon
+  ansible.builtin.command:
+    cmd: "systemctl --user is-active antigravity-cli-daemon.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  register: agy_daemon_status
+  failed_when: false
+  changed_when: false
+
+- name: Start and enable Antigravity CLI remote-control daemon
+  ansible.builtin.command:
+    cmd: "{{ ai_workstation_user_home }}/.local/bin/agy remote-control start"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  when:
+    - ai_workstation_antigravity_remote_control | default(true) | bool
+    - agy_daemon_status.rc != 0
+
+- name: Deploy OpenCode server user systemd unit
+  ansible.builtin.template:
+    src: opencode-server.service.j2
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/opencode-server.service"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  register: opencode_service_template
+  when: ai_workstation_opencode_remote_control | default(true) | bool
+
+- name: Reload user systemd daemon for OpenCode server
+  ansible.builtin.command:
+    cmd: "systemctl --user daemon-reload"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  when:
+    - ai_workstation_opencode_remote_control | default(true) | bool
+    - opencode_service_template.changed
+
+- name: Check status of OpenCode server user service
+  ansible.builtin.command:
+    cmd: "systemctl --user is-active opencode-server.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  register: opencode_service_status
+  failed_when: false
+  changed_when: false
+  when: ai_workstation_opencode_remote_control | default(true) | bool
+
+- name: Ensure OpenCode server user service is enabled and started
+  ansible.builtin.command:
+    cmd: "systemctl --user enable --now opencode-server.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  when:
+    - ai_workstation_opencode_remote_control | default(true) | bool
+    - opencode_service_status.rc is defined and opencode_service_status.rc != 0

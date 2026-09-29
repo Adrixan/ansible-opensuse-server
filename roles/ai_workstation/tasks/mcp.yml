@@ -18,4 +18,7 @@
 - name: Update Claude Code MCP servers in ~/.claude.json
   ansible.builtin.command:
     cmd: "python3 {{ role_path }}/files/update_claude_mcp.py {{ ai_workstation_user_home }}/.claude.json {{ ai_workstation_github_token }}"
+  register: claude_mcp_result
+  changed_when: "'CONFIGURED' in claude_mcp_result.stdout"
+
 

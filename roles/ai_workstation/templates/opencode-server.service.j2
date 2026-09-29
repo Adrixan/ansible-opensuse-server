@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenCode AI headless server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/opencode serve --port {{ ai_workstation_opencode_server_port }} --hostname {{ ai_workstation_opencode_server_host }}
+Restart=on-failure
+RestartSec=10s
+TimeoutStopSec=30s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

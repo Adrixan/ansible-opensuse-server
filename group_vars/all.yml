@@ -4,6 +4,7 @@
 # Primary user configuration
 target_user: "Adrixan"
 target_user_home: "/home/{{ target_user }}"
+target_user_uid: 1000
 
 # Role feature flags (Disabled by default)
 enable_system_update: false
