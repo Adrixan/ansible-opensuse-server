@@ -23,6 +23,23 @@
     - claude_code_remove_npm_global | bool
     - claude_code_npm_global.stat.exists
 
+- name: Check npm global scope directory left behind by the removal
+  ansible.builtin.find:
+    paths: /usr/local/lib/node_modules/@anthropic-ai
+    file_type: any
+    hidden: true
+  register: claude_code_npm_scope
+  failed_when: false
+
+- name: Remove empty npm global @anthropic-ai scope directory
+  ansible.builtin.file:
+    path: /usr/local/lib/node_modules/@anthropic-ai
+    state: absent
+  when:
+    - claude_code_remove_npm_global | bool
+    - claude_code_npm_scope.matched is defined
+    - claude_code_npm_scope.matched == 0
+
 - name: Check /usr/bin/claude compatibility symlink
   ansible.builtin.stat:
     path: /usr/bin/claude
@@ -37,6 +54,15 @@
     - claude_code_remove_npm_global | bool
     - claude_code_usr_bin.stat.islnk | default(false)
     - claude_code_usr_bin.stat.lnk_source | default('') is match('/usr/local/(bin/claude|lib/node_modules/@anthropic-ai/claude-code/)')
+
+- name: Deploy Claude version pruning helper
+  ansible.builtin.copy:
+    src: claude-prune-versions.py
+    dest: "{{ claude_prune_script }}"
+    owner: root
+    group: root
+    mode: '0755'
+  register: claude_prune_script_file
 
 - name: Ensure user systemd directory exists
   ansible.builtin.file:
@@ -82,3 +108,27 @@
   register: claude_code_update
   changed_when: "'is up to date' not in claude_code_update.stdout"
   when: not ansible_check_mode
+
+- name: Prune superseded native Claude Code versions
+  ansible.builtin.command:
+    argv: >-
+      {{ [claude_prune_script, '--dir', claude_code_versions_dir, '--keep-target', claude_code_bin,
+          '--keep', claude_code_keep_versions | string] + (['--check'] if ansible_check_mode else []) }}
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+  check_mode: false
+  register: claude_code_prune
+  changed_when: "'CHANGED:' in claude_code_prune.stdout"
+  when: not (ansible_check_mode and claude_prune_script_file.changed)
+
+- name: Prune superseded Claude Code versions bundled with Claude Desktop
+  ansible.builtin.command:
+    argv: >-
+      {{ [claude_prune_script, '--dir', claude_code_desktop_bundled_dir,
+          '--keep', claude_code_keep_versions | string] + (['--check'] if ansible_check_mode else []) }}
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+  check_mode: false
+  register: claude_code_bundled_prune
+  changed_when: "'CHANGED:' in claude_code_bundled_prune.stdout"
+  when: not (ansible_check_mode and claude_prune_script_file.changed)

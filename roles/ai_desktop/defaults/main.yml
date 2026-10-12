@@ -18,7 +18,8 @@ claude_desktop_signing_key: /usr/share/keyrings/claude-desktop.asc
 claude_desktop_version: latest
 claude_desktop_install_root: /opt
 claude_desktop_install_dir: "{{ claude_desktop_install_root }}/claude-desktop"
-claude_desktop_keep_versions: 2
+# Only the newest version stays installed; an older one that is still running is kept until it exits
+claude_desktop_keep_versions: 1
 claude_desktop_update_on_calendar: daily
 
 # Claude Code CLI (official native installer, self-updating in ~/.local)
@@ -27,3 +28,9 @@ claude_code_bin: "{{ ai_desktop_user_home }}/.local/bin/claude"
 claude_code_update_on_calendar: daily
 # Remove the root-owned npm global copy, which never self-updates and goes stale
 claude_code_remove_npm_global: true
+
+# Superseded Claude Code CLI versions: the native installer and Claude Desktop both keep old copies
+claude_prune_script: /usr/local/bin/claude-prune-versions
+claude_code_keep_versions: 1
+claude_code_versions_dir: "{{ ai_desktop_user_home }}/.local/share/claude/versions"
+claude_code_desktop_bundled_dir: "{{ ai_desktop_user_home }}/.config/Claude/claude-code"

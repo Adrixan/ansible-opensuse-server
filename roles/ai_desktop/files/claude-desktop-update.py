@@ -166,7 +166,8 @@ def in_use(path: Path) -> bool:
     return False
 
 
-def prune(install_root: Path, install_dir: Path, keep: int) -> None:
+def prune(install_root: Path, install_dir: Path, keep: int, check: bool) -> bool:
+    """Remove superseded versions; a version a process is running from is kept until it exits."""
     current = install_dir.resolve()
     versions = sorted(
         (d for d in install_root.glob("claude-desktop-*")
@@ -174,11 +175,20 @@ def prune(install_root: Path, install_dir: Path, keep: int) -> None:
         key=lambda d: version_key(d.name.removeprefix("claude-desktop-")),
         reverse=True,
     )
+    changed = False
     for old in versions[max(keep, 1):]:
-        if old.resolve() == current or in_use(old):
+        if old.resolve() == current:
             continue
-        shutil.rmtree(old)
-        log(f"Pruned {old}")
+        if in_use(old):
+            log(f"KEEP {old} (in use, restart Claude Desktop to release it)")
+            continue
+        if check:
+            log(f"CHANGED: would prune {old}")
+        else:
+            shutil.rmtree(old)
+            log(f"CHANGED: pruned {old}")
+        changed = True
+    return changed
 
 
 def install(pkg: dict[str, str], base_url: str, install_root: Path, install_dir: Path) -> None:
@@ -240,7 +250,7 @@ def main() -> int:
     parser.add_argument("--install-root", default="/opt", type=Path)
     parser.add_argument("--install-dir", default="/opt/claude-desktop", type=Path)
     parser.add_argument("--version", default="latest", help="exact version to install, or 'latest'")
-    parser.add_argument("--keep", default=2, type=int, help="number of versions to keep on disk")
+    parser.add_argument("--keep", default=1, type=int, help="number of versions to keep on disk")
     parser.add_argument("--check", action="store_true", help="report what would change without changing anything")
     args = parser.parse_args()
 
@@ -263,9 +273,8 @@ def main() -> int:
 
     current = installed_version(args.install_dir)
     if current == pkg["Version"]:
-        if not args.check:
-            prune(args.install_root, args.install_dir, args.keep)
-        if not changed:
+        pruned = prune(args.install_root, args.install_dir, args.keep, args.check)
+        if not (changed or pruned):
             log(f"UP_TO_DATE {current}")
         return 0
 
@@ -275,7 +284,7 @@ def main() -> int:
 
     install(pkg, args.repo, args.install_root, args.install_dir)
     log(f"CHANGED: updated Claude Desktop {current or 'none'} -> {pkg['Version']}")
-    prune(args.install_root, args.install_dir, args.keep)
+    prune(args.install_root, args.install_dir, args.keep, check=False)
     return 0
 
 

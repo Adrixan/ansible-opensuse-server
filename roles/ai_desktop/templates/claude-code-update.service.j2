@@ -8,4 +8,6 @@ After=network-online.target
 Type=oneshot
 UnsetEnvironment=DISABLE_AUTOUPDATER
 ExecStart={{ claude_code_bin }} update
+ExecStartPost={{ claude_prune_script }} --dir {{ claude_code_versions_dir }} --keep-target {{ claude_code_bin }} --keep {{ claude_code_keep_versions }}
+ExecStartPost={{ claude_prune_script }} --dir {{ claude_code_desktop_bundled_dir }} --keep {{ claude_code_keep_versions }}
 Nice=10
