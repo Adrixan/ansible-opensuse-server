@@ -1,0 +1,84 @@
+---
+# tasks for installing Claude Code (native installer) and keeping it updated
+
+- name: Install Claude Code with the official native installer
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && curl -fsSL {{ claude_code_install_url | quote }} | bash"
+    executable: /bin/bash
+    creates: "{{ claude_code_bin }}"
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+
+- name: Check for root-owned npm global Claude Code install
+  ansible.builtin.stat:
+    path: /usr/local/lib/node_modules/@anthropic-ai/claude-code
+  register: claude_code_npm_global
+
+- name: Remove npm global Claude Code (does not self-update and shadows the native install for root)
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    global: true
+    state: absent
+  when:
+    - claude_code_remove_npm_global | bool
+    - claude_code_npm_global.stat.exists
+
+- name: Check /usr/bin/claude compatibility symlink
+  ansible.builtin.stat:
+    path: /usr/bin/claude
+    follow: false
+  register: claude_code_usr_bin
+
+- name: Remove dangling /usr/bin/claude symlink to the npm global install
+  ansible.builtin.file:
+    path: /usr/bin/claude
+    state: absent
+  when:
+    - claude_code_remove_npm_global | bool
+    - claude_code_usr_bin.stat.islnk | default(false)
+    - claude_code_usr_bin.stat.lnk_source | default('') is match('/usr/local/(bin/claude|lib/node_modules/@anthropic-ai/claude-code/)')
+
+- name: Ensure user systemd directory exists
+  ansible.builtin.file:
+    path: "{{ ai_desktop_user_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ ai_desktop_user }}"
+    group: "{{ ai_desktop_user }}"
+    mode: '0755'
+
+- name: Deploy Claude Code auto-update user systemd units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_desktop_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_desktop_user }}"
+    group: "{{ ai_desktop_user }}"
+    mode: '0644'
+  loop:
+    - claude-code-update.service
+    - claude-code-update.timer
+
+- name: Enable Claude Code auto-update user timer
+  ansible.builtin.systemd_service:
+    name: claude-code-update.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+  # Units deployed in the same run do not exist yet during check mode
+  ignore_errors: "{{ ansible_check_mode }}"
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_desktop_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_desktop_user_uid }}/bus"
+
+- name: Update Claude Code now
+  ansible.builtin.command:
+    cmd: "{{ claude_code_bin }} update"
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+  environment:
+    DISABLE_AUTOUPDATER: ""
+  register: claude_code_update
+  changed_when: "'is up to date' not in claude_code_update.stdout"
+  when: not ansible_check_mode

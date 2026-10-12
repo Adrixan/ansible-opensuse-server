@@ -1,18 +1,23 @@
 ---
 # tasks file for ai_desktop
 
-- name: Ensure extraction utility packages are installed
+- name: Ensure extraction and verification utility packages are installed
   ansible.builtin.package:
     name:
       - binutils
       - tar
       - xz
+      - zstd
+      - gpg2
     state: present
 
-- name: Include Claude Desktop installation tasks
+- name: Include Claude Desktop installation and auto-update tasks
   ansible.builtin.include_tasks: claude_desktop.yml
   when: enable_claude_desktop | default(true) | bool
 
-- name: Include Antigravity Desktop installation tasks
-  ansible.builtin.include_tasks: antigravity.yml
-  when: enable_antigravity_desktop | default(true) | bool
+- name: Include Claude Code installation and auto-update tasks
+  ansible.builtin.include_tasks: claude_code.yml
+  when: enable_claude_code | default(true) | bool
+
+- name: Include Antigravity Desktop removal tasks
+  ansible.builtin.include_tasks: antigravity_cleanup.yml

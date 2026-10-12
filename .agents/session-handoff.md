@@ -1,23 +1,21 @@
 # Session Handoff State
 
 ## Active Intent
-Enable remote controlling by default across all AI harnesses that support it (Claude Code CLI, Google Antigravity CLI, and OpenCode AI CLI) via the `ai_workstation` Ansible role on openSUSE Tumbleweed.
+Remove Google Antigravity Desktop from the `ai_desktop` role and keep Claude Desktop and Claude Code updated automatically on openSUSE Tumbleweed.
 
 ## Task & Story Status
-- Current Story: US-12.1 (Enable Default Remote Control across Claude Code, Antigravity, and OpenCode)
-- State: Complete & Verified
+- Current Story: `ai_desktop` Antigravity removal + Claude auto-update
+- State: Complete, verified live on localhost (2026-10-12), committed and pushed to `origin/laptops`
 
 ## Key Decisions & Architecture
-- Claude Code CLI: Configured `"remoteControlAtStartup": true` in `~/.claude/settings.json` via idempotent Python update script.
-- Google Antigravity CLI: Automated user systemd daemon `antigravity-cli-daemon.service` activation via `agy remote-control start`, and added interactive shortcut `alias agy="agy --remote-control"` to `~/.config/ai/env`.
-- OpenCode AI CLI: Deployed `~/.config/systemd/user/opencode-server.service` running `opencode serve --port 4096 --hostname 127.0.0.1`, added top-level `"server"` configuration block in `~/.config/opencode/opencode.json`, and added helper aliases `opencode-remote` and `opencode-web` to `~/.config/ai/env`.
-- GUI Applications (`claude-desktop` and `antigravity`): Evaluated; Electron desktop clients communicate via vendor cloud relays and do not expose headless daemon or inbound server control interfaces.
-- Idempotency hardening: Corrected directory mode parity between `instructions.yml` and `remote_control.yml`, added change detection to `update_claude_mcp.py` and skills consolidation shell script, and marked Claude backup cleanup task as `changed_when: false`.
-- Live execution: Initial run (`ok=46, changed=10, failed=0`), followed by idempotency verification run (`ok=44, changed=0, failed=0`).
-- Service status: `antigravity-cli-daemon.service` is active, `opencode-server.service` is active and listening on `127.0.0.1:4096`, and Claude Code CLI setting `remoteControlAtStartup` is confirmed active.
+- Antigravity Desktop: install tasks, launcher and icon assets removed from the role; `tasks/antigravity_cleanup.yml` deletes leftover files (`/opt/antigravity`, launcher, icons, `/usr/local/bin/antigravity`). The Antigravity CLI (`agy`) setup in `ai_workstation` was intentionally left untouched.
+- Claude Desktop: `/usr/local/sbin/claude-desktop-update` (from `roles/ai_desktop/files/claude-desktop-update.py`) tracks Anthropic's apt repo. Trust chain: InRelease verified with gpgv against the role-shipped key `files/claude-desktop-signing-key.asc` with pinned fingerprint `31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE`, Valid-Until enforced, Packages and .deb verified by SHA256.
+- Install layout: versioned dirs `/opt/claude-desktop-<version>`, `/opt/claude-desktop` is a symlink swapped atomically; keeps 2 versions and never prunes a version a running process uses. `claude_desktop_version: latest` (set an exact version to pin or roll back).
+- Root timer `claude-desktop-update.timer` (daily, sandboxed service with ProtectSystem=strict).
+- Claude Code: native installer (`~/.local/bin/claude`) plus user timer `claude-code-update.timer` running `claude update` daily. The stale root-owned npm global (2.1.278) and the `/usr/bin/claude` symlink were removed.
+- Live run: Claude Desktop 2.7032.0 -> 2.31226.1 (`ok=23, changed=11, failed=0`); idempotency rerun `changed=0`. Both timers active; both services tested manually.
 
 ## Immediate Next Steps
-- Changes staged, committed, and pushed to `origin/laptops`.
-- To connect to OpenCode remotely: run `opencode attach http://127.0.0.1:4096` or use the alias `opencode-remote`.
-- To launch interactive Antigravity CLI with remote control: run `agy` (aliased to `agy --remote-control`).
-
+- Restart Claude Desktop to load 2.31226.1 (the running instance still uses `/opt/claude-desktop-2.7032.0`, which will be pruned after a later update).
+- New global rule "Auto Commit & Push" added to `roles/ai_workstation/templates/AGENTS.md.j2` and copied to `~/.config/ai/AGENTS.md` (symlinked as `~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md`, OpenCode `AGENTS.md`).
+- Open question: `hosts` holds a plaintext `ansible_ssh_pass`; consider moving it to Ansible Vault or removing it (unused with `ansible_connection=local`).

@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Update Claude Code CLI (native install)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+UnsetEnvironment=DISABLE_AUTOUPDATER
+ExecStart={{ claude_code_bin }} update
+Nice=10

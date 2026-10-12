@@ -3,20 +3,27 @@
 
 ai_desktop_user: "{{ target_user | default('Adrixan') }}"
 ai_desktop_user_home: "{{ target_user_home | default('/home/' + ai_desktop_user) }}"
+ai_desktop_user_uid: "{{ target_user_uid | default(1000) }}"
 
 # Application feature flags
 enable_claude_desktop: true
-enable_antigravity_desktop: true
+enable_claude_code: true
 
-# Claude Desktop configuration (official Anthropic Debian repository)
-claude_desktop_version: "2.7032.0"
-claude_desktop_deb_url: "https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_{{ claude_desktop_version }}_amd64.deb"
-claude_desktop_deb_checksum: "sha256:1e7f4504bca5b2f6b2d3c4123d145d727647e77f2ee2d046850711e61e7d7b11"
-claude_desktop_install_dir: "/opt/claude-desktop"
+# Claude Desktop (official Anthropic signed apt repository, unpacked into /opt)
+claude_desktop_repo_url: "https://downloads.claude.ai/claude-desktop/apt/stable"
+# Pinned signer of the repository InRelease ("Anthropic Claude Code Release Signing")
+claude_desktop_signing_key_fingerprint: "31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE"
+claude_desktop_signing_key: /usr/share/keyrings/claude-desktop.asc
+# "latest" tracks the repository; set an exact version (e.g. "2.31226.1") to pin or roll back
+claude_desktop_version: latest
+claude_desktop_install_root: /opt
+claude_desktop_install_dir: "{{ claude_desktop_install_root }}/claude-desktop"
+claude_desktop_keep_versions: 2
+claude_desktop_update_on_calendar: daily
 
-# Google Antigravity Desktop configuration (official Google Cloud Storage repository)
-antigravity_version: "2.17.0"
-antigravity_build_id: "5217732355031040"
-antigravity_tarball_url: "https://storage.googleapis.com/antigravity-public/antigravity-hub/{{ antigravity_version }}-{{ antigravity_build_id }}/linux-x64/Antigravity.tar.gz"
-antigravity_tarball_checksum: "sha256:6a9b0ff60f7bd0d165022034aad9b047b3b0cf2ac56134feded8e68760e2ab01"
-antigravity_install_dir: "/opt/antigravity"
+# Claude Code CLI (official native installer, self-updating in ~/.local)
+claude_code_install_url: "https://claude.ai/install.sh"
+claude_code_bin: "{{ ai_desktop_user_home }}/.local/bin/claude"
+claude_code_update_on_calendar: daily
+# Remove the root-owned npm global copy, which never self-updates and goes stale
+claude_code_remove_npm_global: true

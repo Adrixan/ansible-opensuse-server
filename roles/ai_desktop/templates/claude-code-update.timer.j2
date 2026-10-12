@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Periodically update Claude Code CLI
+
+[Timer]
+OnCalendar={{ claude_code_update_on_calendar }}
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

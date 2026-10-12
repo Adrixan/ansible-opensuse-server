@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Update Claude Desktop from Anthropic's signed apt repository
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/claude-desktop-update --repo {{ claude_desktop_repo_url }} --key {{ claude_desktop_signing_key }} --fingerprint {{ claude_desktop_signing_key_fingerprint }} --install-root {{ claude_desktop_install_root }} --install-dir {{ claude_desktop_install_dir }} --version {{ claude_desktop_version }} --keep {{ claude_desktop_keep_versions }}
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths={{ claude_desktop_install_root }} /usr/share/applications /usr/share/icons/hicolor
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
