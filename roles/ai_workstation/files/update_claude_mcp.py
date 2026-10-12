@@ -3,12 +3,12 @@ import json
 import os
 import sys
 
-if len(sys.argv) < 3:
-    print("Usage: update_claude_mcp.py <claude_json_path> <github_token>")
+if len(sys.argv) < 2:
+    print("Usage: update_claude_mcp.py <claude_json_path> [github_token]")
     sys.exit(1)
 
 path = sys.argv[1]
-github_token = sys.argv[2]
+github_token = sys.argv[2] if len(sys.argv) > 2 else ""
 home = os.path.dirname(path)
 
 try:
