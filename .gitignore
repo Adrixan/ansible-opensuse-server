@@ -1,0 +1,3 @@
+
+# Local inventory (keep credentials out of git; use ansible-vault if ever needed)
+hosts

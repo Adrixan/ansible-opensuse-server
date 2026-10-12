@@ -42,4 +42,4 @@ It is configured to run pull-style deployments (`ansible_connection=local`) targ
 - **Dynamic Role Evaluation**: [main.yml](file:///home/Adrixan/code/ansible-opensuse-server/main.yml) uses `ansible.builtin.include_role` with `when: enable_<role> | default(false) | bool`.
 
 ## Deferred / Technical Debt Log
-- **Plaintext Host Password**: `ansible_ssh_pass=***REMOVED***` is in [hosts](file:///home/Adrixan/code/ansible-opensuse-server/hosts). Retained per explicit user directive.
+- **Host inventory**: `hosts` is untracked (gitignored); copy `hosts.example` to `hosts`. The former plaintext `ansible_ssh_pass` was purged from all git history on 2026-10-12 (force-push) and must be treated as compromised.

@@ -46,4 +46,4 @@
 30. **[transmission_daemon](file:///home/Adrixan/code/ansible-opensuse-server/roles/transmission_daemon)**: BitTorrent client daemon.
 
 ## Technical Debt & Deferred Items
-1. **Plaintext Password in Host File**: Password `ansible_ssh_pass=***REMOVED***` in [hosts](file:///home/Adrixan/code/ansible-opensuse-server/hosts) retained per user directive.
+1. **Host inventory**: `hosts` is gitignored; use `hosts.example` as template. The former plaintext password was purged from all history (2026-10-12).
