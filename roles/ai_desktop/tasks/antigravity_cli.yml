@@ -1,0 +1,55 @@
+---
+# tasks for installing Google Antigravity CLI (native installer) and keeping it updated
+
+- name: Install Antigravity CLI with the official native installer
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && curl -fsSL {{ antigravity_cli_install_url | quote }} | bash -s -- --dir {{ (antigravity_cli_bin | dirname) | quote }}"
+    executable: /bin/bash
+    creates: "{{ antigravity_cli_bin }}"
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+
+- name: Ensure user systemd directory exists
+  ansible.builtin.file:
+    path: "{{ ai_desktop_user_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ ai_desktop_user }}"
+    group: "{{ ai_desktop_user }}"
+    mode: '0755'
+
+- name: Deploy Antigravity CLI auto-update user systemd units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_desktop_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_desktop_user }}"
+    group: "{{ ai_desktop_user }}"
+    mode: '0644'
+  loop:
+    - antigravity-cli-update.service
+    - antigravity-cli-update.timer
+
+- name: Enable Antigravity CLI auto-update user timer
+  ansible.builtin.systemd_service:
+    name: antigravity-cli-update.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+  # Units deployed in the same run do not exist yet during check mode
+  ignore_errors: "{{ ansible_check_mode }}"
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_desktop_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_desktop_user_uid }}/bus"
+
+- name: Update Antigravity CLI now
+  ansible.builtin.command:
+    argv:
+      - "{{ antigravity_cli_bin }}"
+      - update
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+  register: antigravity_cli_update
+  changed_when: "'You are already on the latest version' not in antigravity_cli_update.stdout"
+  when: not ansible_check_mode

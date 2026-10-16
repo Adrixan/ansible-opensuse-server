@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Update Antigravity Desktop from Google's release repository
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/antigravity-desktop-update --releases-url {{ antigravity_desktop_releases_url }} --bucket-url {{ antigravity_desktop_bucket_url }} --metadata-url {{ antigravity_desktop_metadata_url }} --install-root {{ antigravity_desktop_install_root }} --install-dir {{ antigravity_desktop_install_dir }} --version {{ antigravity_desktop_version }} --keep {{ antigravity_desktop_keep_versions }}
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths={{ antigravity_desktop_install_root }}
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

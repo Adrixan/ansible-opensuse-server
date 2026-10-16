@@ -41,12 +41,14 @@
 - **US-10.4**: Integrate personal branding and visual styleguide into `ai_workstation` default configuration (2 SP) - **Done**
 - **US-10.5**: Implement workspace locality mandate, session handoff protocol, and global gitignore in `ai_workstation` role (3 SP) - **Done**
 - **US-10.6**: Transition Claude Code and OpenCode from Bailian gateway to official Anthropic access and clean up configurations (3 SP) - **Done**
-### Completed Stories (Sprints 1-12)
+### Completed Stories (Sprints 1-13)
 - **US-11.1**: Create `ai_desktop` role for Claude Desktop and Antigravity GUI application deployment (5 SP) - **Done**
 - **US-12.1**: Enable Default Remote Control across Claude Code, Antigravity, and OpenCode (3 SP) - **Done**
+- **US-13.1**: Add Antigravity Desktop and Antigravity CLI (`agy`) with daily systemd auto-update timers and single-version pruning to `ai_desktop` role (5 SP) - **Done**
 
-### Active Stories (Sprint 12)
-None (Sprint 12 Complete)
+### Active Stories (Sprint 13)
+None (Sprint 13 Complete)
+
 
 
 ### Deferred / Backlog

@@ -26,7 +26,8 @@
 10. **[cli_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/cli_tools)**: Specialized CLI applications (`tldr` via npm, `tmuxp` via pip, `tintin++` compilation).
 11. **[opencode](file:///home/Adrixan/code/ansible-opensuse-server/roles/opencode)**: OpenCode AI CLI tool (`opencode-ai` via global npm).
 12. **[ai_workstation](file:///home/Adrixan/code/ansible-opensuse-server/roles/ai_workstation)**: Unified AI environment (MCP servers, lean core instructions, skills, shell env) across harnesses.
-13. **[ai_desktop](file:///home/Adrixan/code/ansible-opensuse-server/roles/ai_desktop)**: Official GUI applications for Claude Desktop (`2.7032.0`) and Google Antigravity (`2.17.0`) with desktop environment integration.
+13. **[ai_desktop](file:///home/Adrixan/code/ansible-opensuse-server/roles/ai_desktop)**: Official GUI and CLI applications for Claude Desktop, Claude Code CLI, Google Antigravity Desktop, and Google Antigravity CLI (`agy`) with daily systemd auto-update timers and single-version retention.
+
 14. **[desktop_fonts](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_fonts)**: Adobe Source Code/Sans/Serif Pro fonts.
 15. **[graphical_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/graphical_environment)**: Desktop tools (Firefox, Thunderbird, Partition Manager, Gwenview, Ark, TigerVNC viewer).
 16. **[desktop_messaging](file:///home/Adrixan/code/ansible-opensuse-server/roles/desktop_messaging)**: Removes legacy zypper repo/packages and installs Signal Desktop client via Flatpak (`org.signal.Signal`).

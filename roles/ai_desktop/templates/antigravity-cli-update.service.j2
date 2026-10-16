@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Update Antigravity CLI (native install)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart={{ antigravity_cli_bin }} update
+Nice=10

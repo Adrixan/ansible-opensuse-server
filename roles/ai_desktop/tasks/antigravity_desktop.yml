@@ -1,0 +1,97 @@
+---
+# tasks for installing Google Antigravity Desktop and keeping it updated
+
+- name: Deploy Antigravity Desktop update script
+  ansible.builtin.copy:
+    src: antigravity-desktop-update.py
+    dest: /usr/local/sbin/antigravity-desktop-update
+    owner: root
+    group: root
+    mode: '0755'
+  register: antigravity_desktop_update_script
+
+- name: Install or update Antigravity Desktop to the configured version
+  ansible.builtin.command:
+    argv: "{{ antigravity_desktop_update_argv + (['--check'] if ansible_check_mode else []) }}"
+  vars:
+    antigravity_desktop_update_argv:
+      - /usr/local/sbin/antigravity-desktop-update
+      - --releases-url
+      - "{{ antigravity_desktop_releases_url }}"
+      - --bucket-url
+      - "{{ antigravity_desktop_bucket_url }}"
+      - --metadata-url
+      - "{{ antigravity_desktop_metadata_url }}"
+      - --install-root
+      - "{{ antigravity_desktop_install_root }}"
+      - --install-dir
+      - "{{ antigravity_desktop_install_dir }}"
+      - --version
+      - "{{ antigravity_desktop_version }}"
+      - --keep
+      - "{{ antigravity_desktop_keep_versions | string }}"
+  check_mode: false
+  register: antigravity_desktop_update
+  # In check mode the script runs with --check, but only once it is actually on disk
+  when: not (ansible_check_mode and antigravity_desktop_update_script.changed)
+  changed_when: "'CHANGED:' in antigravity_desktop_update.stdout"
+
+- name: Create symlink for Antigravity Desktop executable in /usr/local/bin
+  ansible.builtin.file:
+    src: "{{ antigravity_desktop_install_dir }}/antigravity"
+    dest: /usr/local/bin/antigravity
+    state: link
+    force: true
+  when: not ansible_check_mode or (antigravity_desktop_install_dir + '/antigravity') is file
+
+- name: Install Antigravity application launcher
+  ansible.builtin.copy:
+    src: antigravity.desktop
+    dest: /usr/share/applications/antigravity.desktop
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install Antigravity pixmaps icon
+  ansible.builtin.copy:
+    src: antigravity.png
+    dest: /usr/share/pixmaps/antigravity.png
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure hicolor 512x512 apps icon directory exists
+  ansible.builtin.file:
+    path: /usr/share/icons/hicolor/512x512/apps
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install Antigravity hicolor icon
+  ansible.builtin.copy:
+    src: antigravity.png
+    dest: /usr/share/icons/hicolor/512x512/apps/antigravity.png
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Deploy Antigravity Desktop auto-update systemd units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - antigravity-desktop-update.service
+    - antigravity-desktop-update.timer
+
+- name: Enable Antigravity Desktop auto-update timer
+  ansible.builtin.systemd_service:
+    name: antigravity-desktop-update.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  # Units deployed in the same run do not exist yet during check mode
+  ignore_errors: "{{ ansible_check_mode }}"

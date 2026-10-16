@@ -1,21 +1,23 @@
 # Sprint Backlog & To-Do
 
 ## Sprint Goal
-Enable default remote control across all supporting AI harnesses (Claude Code CLI, Google Antigravity CLI, and OpenCode AI CLI) via `ai_workstation` role, verify syntax, and deploy live on localhost.
+Add Google Antigravity Desktop and Antigravity CLI (`agy`) with daily systemd auto-update timers and single-version retention to the `ai_desktop` role, and deploy live on localhost.
 
-## Active Sprint Story (Sprint 12)
-None (Sprint 12 Complete)
+## Active Sprint Story (Sprint 13)
+None (Sprint 13 Complete)
+
+## Completed Sprint Stories (Sprint 13)
+- **US-13.1**: Add Antigravity Desktop and Antigravity CLI (`agy`) with daily systemd auto-update timers and single-version pruning to `ai_desktop` role (5 SP) - **Done**
+  - [x] Create `roles/ai_desktop/files/antigravity-desktop-update.py` verifying GCS object size and CRC32C (`libcrc32c1`), managing `/opt/antigravity-<version>` with atomic symlink switch and single-version pruning
+  - [x] Restore `antigravity.desktop` launcher and 512x512 `antigravity.png` icon in `roles/ai_desktop/files/`
+  - [x] Create `roles/ai_desktop/tasks/antigravity_desktop.yml` and `antigravity-desktop-update.{service,timer}.j2`
+  - [x] Create `roles/ai_desktop/tasks/antigravity_cli.yml` and `antigravity-cli-update.{service,timer}.j2`
+  - [x] Verify playbook syntax (`--syntax-check`) and dry-run (`--check`)
+  - [x] Deploy live on localhost (`ok=40, changed=10, failed=0`) and verify idempotency (`ok=40, changed=0, failed=0`)
+  - [x] Update state files, `README.md`, and session handoff
 
 ## Completed Sprint Stories (Sprint 12)
 - **US-12.1**: Enable Default Remote Control across Claude Code, Antigravity, and OpenCode (3 SP) - **Done**
-  - [x] Configure `"remoteControlAtStartup": true` in `~/.claude/settings.json` via Ansible task
-  - [x] Configure `antigravity-cli-daemon.service` under user systemd and add `alias agy="agy --remote-control"` to `~/.config/ai/env`
-  - [x] Configure `"server"` object in `~/.config/opencode/opencode.json` (port 4096, localhost bound)
-  - [x] Provision and enable `opencode-server.service` under user systemd
-  - [x] Verify playbook syntax (`--syntax-check`)
-  - [x] Deploy live on localhost (`ansible-playbook -i hosts main.yml -e "enable_ai_workstation=true"`)
-  - [x] Verify service states, daemon status, and idempotency (`changed=0`)
-  - [x] Update state files and session handoff
 
 ## Completed Sprint Stories (Sprint 11)
 - **US-11.1**: Create `ai_desktop` role for Claude Desktop and Antigravity GUI application deployment (5 SP) - **Done**
@@ -31,20 +33,17 @@ None (Sprint 12 Complete)
 
 ## Verification Summary
 - Playbook `--syntax-check`: **PASS (100%)**
-- Live localhost execution (`ai_workstation` Sprint 12 deployment): **PASS (ok=46, changed=10, failed=0)**
-- Live localhost execution (`ai_workstation` Sprint 12 idempotency run): **PASS (ok=44, changed=0, failed=0)**
-- Harness Remote Control Verifications:
-  - Claude Code CLI: **`"remoteControlAtStartup": true` set in `~/.claude/settings.json`**
-  - Antigravity CLI: **`antigravity-cli-daemon.service` active under user systemd, connected to cloud relay, interactive alias `alias agy="agy --remote-control"` in `~/.config/ai/env`**
-  - OpenCode AI CLI: **`opencode-server.service` active under user systemd, listening on `127.0.0.1:4096`, `"server"` config configured in `~/.config/opencode/opencode.json`, helper aliases `opencode-remote` and `opencode-web` in `~/.config/ai/env`**
-- Live localhost execution (`ai_desktop` initial run): **PASS (ok=34, changed=21, failed=0)**
-- Live localhost execution (`ai_desktop` idempotency run): **PASS (ok=15, changed=0, failed=0)**
+- Playbook `--check` (`ai_desktop` dry-run): **PASS (ok=36, changed=6, failed=0)**
+- Live localhost execution (`ai_desktop` Sprint 13 deployment): **PASS (ok=40, changed=10, failed=0)**
+- Live localhost execution (`ai_desktop` Sprint 13 idempotency run): **PASS (ok=40, changed=0, failed=0)**
+- Application & Timer Verifications:
+  - Google Antigravity Desktop (`antigravity`): **Installed in `/opt/antigravity` -> `antigravity-2.24.0`, symlinked at `/usr/local/bin/antigravity`, launcher and icons deployed**
+  - Antigravity Desktop Auto-Update Timer: **`antigravity-desktop-update.timer` active (system), sandboxed service verified**
+  - Google Antigravity CLI (`agy`): **Installed at `~/.local/bin/agy` (v1.4.0)**
+  - Antigravity CLI Auto-Update Timer: **`antigravity-cli-update.timer` active (user), service verified**
+  - Claude Desktop (`claude-desktop`): **Installed in `/opt/claude-desktop` -> `claude-desktop-2.42304.0`, `claude-desktop-update.timer` active (system)**
+  - Claude Code CLI (`claude`): **Installed at `~/.local/bin/claude`, `claude-code-update.timer` active (user)**
 
-- Application Verifications:
-  - Claude Desktop (`claude-desktop`): **Installed in `/opt/claude-desktop/`, verified (`/usr/local/bin/claude-desktop` v2.7032.0)**
-  - Claude Desktop Launcher: **`/usr/share/applications/com.anthropic.Claude.desktop` deployed with hicolor icons**
-  - Google Antigravity GUI (`antigravity`): **Installed in `/opt/antigravity/`, verified (`/usr/local/bin/antigravity` v2.17.0-5217732355031040)**
-  - Google Antigravity Launcher: **`/usr/share/applications/antigravity.desktop` deployed with pixmap and 512x512 hicolor icon**
 - Live localhost execution (`opencode`): **PASS (ok=4, changed=1, failed=0)**
   - OpenCode CLI (`opencode-ai` via npm): **Installed & Verified (`/usr/local/bin/opencode` v1.18.12)**
 - Live localhost execution (`shell_environment` & `system_update` check): **PASS (ok=4, changed=0, failed=0)**

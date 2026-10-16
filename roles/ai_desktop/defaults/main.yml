@@ -8,6 +8,8 @@ ai_desktop_user_uid: "{{ target_user_uid | default(1000) }}"
 # Application feature flags
 enable_claude_desktop: true
 enable_claude_code: true
+enable_antigravity_desktop: true
+enable_antigravity_cli: true
 
 # Claude Desktop (official Anthropic signed apt repository, unpacked into /opt)
 claude_desktop_repo_url: "https://downloads.claude.ai/claude-desktop/apt/stable"
@@ -34,3 +36,20 @@ claude_prune_script: /usr/local/bin/claude-prune-versions
 claude_code_keep_versions: 1
 claude_code_versions_dir: "{{ ai_desktop_user_home }}/.local/share/claude/versions"
 claude_code_desktop_bundled_dir: "{{ ai_desktop_user_home }}/.config/Claude/claude-code"
+
+# Google Antigravity Desktop (official release feed and GCS bucket, unpacked into /opt)
+antigravity_desktop_releases_url: "https://antigravity-hub-auto-updater-974169037036.us-central1.run.app/releases"
+antigravity_desktop_bucket_url: "https://storage.googleapis.com/antigravity-public/antigravity-hub"
+antigravity_desktop_metadata_url: "https://storage.googleapis.com/storage/v1/b/antigravity-public/o"
+# "latest" tracks the release feed; set an exact version (e.g. "2.24.0") to pin or roll back
+antigravity_desktop_version: latest
+antigravity_desktop_install_root: /opt
+antigravity_desktop_install_dir: "{{ antigravity_desktop_install_root }}/antigravity"
+antigravity_desktop_keep_versions: 1
+antigravity_desktop_update_on_calendar: daily
+
+# Google Antigravity CLI (official native installer, self-updating in ~/.local/bin/agy)
+antigravity_cli_install_url: "https://antigravity.google/cli/install.sh"
+antigravity_cli_bin: "{{ ai_desktop_user_home }}/.local/bin/agy"
+antigravity_cli_update_on_calendar: daily
+

@@ -1,28 +1,32 @@
 # Session Handoff State
 
 ## Active Intent
-Switch to `laptops` branch and apply the unified AI roles (`ai_workstation` and `ai_desktop`) on this host.
+Add Google Antigravity Desktop (`antigravity`) and Antigravity CLI (`agy`) to the `ai_desktop` role with daily systemd auto-update timers and single-version retention, and deploy them live on localhost.
 
 ## Task & Story Status
-- Current Task: Apply `ai_workstation` and `ai_desktop` roles on localhost (`laptops` branch)
-- State: Complete, verified live on localhost (2026-10-12), playbook execution 100% idempotent (`ok=64, changed=0, failed=0`).
+- Current Story: US-13.1 (Add Antigravity Desktop and Antigravity CLI with daily systemd auto-update timers and single-version pruning to `ai_desktop` role)
+- State: Complete, verified live on localhost (2026-10-16), playbook execution 100% idempotent (`ok=40, changed=0, failed=0`).
 
 ## Key Decisions & Architecture
-- User Group Provisioning: Created group `Adrixan` (gid 1000) on openSUSE Tumbleweed host; openSUSE defaults users to `users` (gid 100), but tasks across roles standardly target `group: "{{ target_user }}"`.
-- Claude MCP Updater Hardening: Made GitHub token optional with default empty string in `roles/ai_workstation/files/update_claude_mcp.py` and changed `roles/ai_workstation/tasks/mcp.yml` to pass arguments via `argv` list.
-- OpenCode Config Schema: Aligned `roles/ai_workstation/templates/opencode.json.j2` with OpenCode 1.2+ provider schema by replacing `"package"` with `"npm"`, allowing `opencode-server.service` to start successfully.
-- Live Verifications:
+- Antigravity Desktop (`roles/ai_desktop/tasks/antigravity_desktop.yml` & `files/antigravity-desktop-update.py`):
+  - Queries Google's official release feed (`https://antigravity-hub-auto-updater-974169037036.us-central1.run.app/releases`) and GCS object metadata (`https://storage.googleapis.com/storage/v1/b/antigravity-public/o/...`).
+  - Verifies exact archive byte size and hardware-accelerated CRC32C (`libcrc32c.so.1`) before unpacking into `/opt/antigravity-<version>`.
+  - Atomically replaces `/opt/antigravity` symlink -> `antigravity-<version>` and prunes superseded versions (`antigravity_desktop_keep_versions: 1`) while protecting any directory in use by a running process in `/proc`.
+  - Installs `/usr/local/bin/antigravity`, `/usr/share/applications/antigravity.desktop`, `/usr/share/pixmaps/antigravity.png`, and `/usr/share/icons/hicolor/512x512/apps/antigravity.png`.
+  - Daily sandboxed system timer `antigravity-desktop-update.timer` keeps Antigravity Desktop updated automatically.
+- Antigravity CLI (`roles/ai_desktop/tasks/antigravity_cli.yml`):
+  - Installs `agy` to `~/.local/bin/agy` via the official bootstrapper (`https://antigravity.google/cli/install.sh`).
+  - Runs `agy update` during role execution and provisions daily user systemd timer `antigravity-cli-update.timer` (`antigravity-cli-update.service`).
+- Live Verifications (2026-10-16):
+  - Antigravity Desktop v2.24.0 installed at `/opt/antigravity` -> `antigravity-2.24.0` (`/usr/local/bin/antigravity`)
+  - Antigravity CLI v1.4.0 installed at `~/.local/bin/agy`
+  - `antigravity-desktop-update.timer`: active (system)
+  - `antigravity-cli-update.timer`: active (user)
   - `claude-desktop-update.timer`: active (system)
   - `claude-code-update.timer`: active (user)
-  - `opencode-server.service`: active (user, listening on 127.0.0.1:4096)
-  - `antigravity-cli-daemon.service`: active (user)
-  - `~/.config/ai/AGENTS.md`: deployed with "Auto Commit & Push" rule and symlinked to `~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md`, and `~/.config/opencode/AGENTS.md`
-  - Claude Desktop v2.31226.1 & Claude Code v2.1.296 confirmed functional
 
 ## Immediate Next Steps
-- New global rule "Auto Commit & Push" added to `roles/ai_workstation/templates/AGENTS.md.j2` and copied to `~/.config/ai/AGENTS.md` (symlinked as `~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md`, OpenCode `AGENTS.md`).
-- Single-version policy (2026-10-12): `claude_desktop_keep_versions: 1`; new helper `/usr/local/bin/claude-prune-versions` (from `files/claude-prune-versions.py`) prunes `~/.local/share/claude/versions` (keeps newest and the `~/.local/bin/claude` target) and `~/.config/Claude/claude-code` (Desktop-bundled CLI), and runs as `ExecStartPost` of `claude-code-update.service`. Versions a running process was started from are never removed (verified under the root service sandbox).
-- Pruned (2026-10-12, verified after Desktop restart): native CLI 2.1.291 and 2.1.292, empty `/usr/local/lib/node_modules/@anthropic-ai`, `/opt/claude-desktop-2.7032.0` and bundled CLI 2.1.280. Remaining: Desktop 2.31226.1, native CLI 2.1.296, Desktop-managed bundled CLI 2.1.295 (downloaded by the app, newest in its directory). Role rerun is idempotent (`ok=26, changed=0`).
-- `/usr/local/bin/claude-zai` (outside the repo) exec'd the removed npm `/usr/local/bin/claude`; repointed to `~/.local/bin/claude`. It contains a plaintext API token and is world-readable (mode 755); consider mode 700 or loading the token from an env file.
-- Done 2026-10-12: `hosts` purged from all history (git-filter-repo, also scrubbed the password from `.agents/memory.md` and `.agents/project-state.md`), force-pushed `laptops` and `master`. `hosts` is now gitignored with `hosts.example` as template. Rotate the old password, because it was public on GitHub; pre-purge backup bundle: `.scratch/pre-purge-backup.bundle` (contains the password, delete after verifying).
+- All changes committed and pushed to `origin/laptops`.
+- Launch Antigravity Desktop via `antigravity` or the desktop application launcher, and Antigravity CLI via `agy`.
+
 

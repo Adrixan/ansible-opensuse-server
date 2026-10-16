@@ -9,6 +9,7 @@
       - xz
       - zstd
       - gpg2
+      - libcrc32c1
     state: present
 
 - name: Include Claude Desktop installation and auto-update tasks
@@ -19,5 +20,11 @@
   ansible.builtin.include_tasks: claude_code.yml
   when: enable_claude_code | default(true) | bool
 
-- name: Include Antigravity Desktop removal tasks
-  ansible.builtin.include_tasks: antigravity_cleanup.yml
+- name: Include Antigravity Desktop installation and auto-update tasks
+  ansible.builtin.include_tasks: antigravity_desktop.yml
+  when: enable_antigravity_desktop | default(true) | bool
+
+- name: Include Antigravity CLI installation and auto-update tasks
+  ansible.builtin.include_tasks: antigravity_cli.yml
+  when: enable_antigravity_cli | default(true) | bool
+
