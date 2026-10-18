@@ -1,10 +1,22 @@
 # Sprint Backlog & To-Do
 
 ## Sprint Goal
-Add Google Antigravity Desktop and Antigravity CLI (`agy`) with daily systemd auto-update timers and single-version retention to the `ai_desktop` role, and deploy live on localhost.
+Replace archived MCP servers, add MarkItDown/Serena/Nextcloud/Context7/Docker (read-only), and make yadm the single owner of harness configs while `ai_workstation` provisions runtimes and secrets.
 
-## Active Sprint Story (Sprint 13)
-None (Sprint 13 Complete)
+## Active Sprint Story (Sprint 14)
+None (Sprint 14 Complete)
+
+## Completed Sprint Stories (Sprint 14)
+- **US-14.1**: Overhaul MCP stack per free-MCP report review: yadm owns harness configs, `ai_workstation` installs runtimes only (8 SP) - **Done**
+  - [x] Replace archived `server-github` (remote `api.githubcopilot.com/mcp/`) and `server-puppeteer` (`@playwright/mcp` + zypper `chromium`); drop unused `sqlite`
+  - [x] Persist memory graph in `~/sync/ai/mcp-memory.jsonl` (Syncthing)
+  - [x] Install uv tools (`serena-agent`, `markitdown-mcp`, `nextcloud-mcp-server`, `mcp-server-docker`, `arxiv-mcp-server`, `zotero-mcp-server`, `mcp-server-fetch`, `mcp-server-git`) with daily `ai-mcp-tools-update.timer`
+  - [x] Remove Ansible-written harness configs (`gemini_mcp.json.j2`, `opencode.json.j2`, `update_claude_mcp.py`); purge legacy user-scope servers and plaintext PAT from `~/.claude.json`
+  - [x] Render yadm templates from `~/.config/ai/env` (export `NOWCODING_API_KEY`, `NEXTCLOUD_*`), 0600 outputs, drift-detecting checksum
+  - [x] Register yadm-tracked `workstation-mcp@workstation` Claude Code plugin
+  - [x] Read-only `docker-socket-proxy` (POST=0) on `127.0.0.1:2375` where Docker is installed
+  - [x] `instructions.yml` no longer overwrites yadm-owned `~/.config/ai/AGENTS.md`; relative symlinks match yadm
+  - [x] Deploy live on localhost and verify idempotency (`ok=55, changed=0, failed=0`); `claude mcp list` all plugin servers connected except `docker` (no Docker on this host)
 
 ## Completed Sprint Stories (Sprint 13)
 - **US-13.1**: Add Antigravity Desktop and Antigravity CLI (`agy`) with daily systemd auto-update timers and single-version pruning to `ai_desktop` role (5 SP) - **Done**

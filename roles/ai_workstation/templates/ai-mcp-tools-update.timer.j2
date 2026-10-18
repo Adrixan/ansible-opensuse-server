@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Periodically upgrade uv-managed MCP server tools
+
+[Timer]
+OnCalendar={{ ai_workstation_mcp_tools_update_on_calendar }}
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

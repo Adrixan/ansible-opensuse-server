@@ -1,28 +1,149 @@
 ---
-- name: Deploy Antigravity MCP configuration
-  ansible.builtin.template:
-    src: gemini_mcp.json.j2
-    dest: "{{ ai_workstation_user_home }}/.gemini/config/mcp_config.json"
-    owner: "{{ ai_workstation_user }}"
-    group: "{{ ai_workstation_user }}"
-    mode: '0644'
+# MCP server runtimes only. Harness configs are owned by yadm (see defaults/main.yml);
+# this file installs what they reference and renders the yadm templates with the secrets.
 
-- name: Deploy OpenCode configuration
-  ansible.builtin.template:
-    src: opencode.json.j2
-    dest: "{{ ai_workstation_user_home }}/.config/opencode/opencode.json"
-    owner: "{{ ai_workstation_user }}"
-    group: "{{ ai_workstation_user }}"
-    mode: '0644'
+- name: Install Node.js MCP servers via global npm
+  community.general.npm:
+    name: "{{ item }}"
+    global: true
+    state: "{{ ai_workstation_mcp_npm_state }}"
+  loop: "{{ ai_workstation_mcp_npm_packages }}"
 
-- name: Update Claude Code MCP servers in ~/.claude.json
+- name: List installed uv tools
   ansible.builtin.command:
-    argv:
-      - python3
-      - "{{ role_path }}/files/update_claude_mcp.py"
-      - "{{ ai_workstation_user_home }}/.claude.json"
-      - "{{ ai_workstation_github_token }}"
+    argv: [uv, tool, list]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  register: ai_workstation_uv_tool_list
+  changed_when: false
+  check_mode: false
+
+- name: Install Python MCP servers as uv tools
+  ansible.builtin.command:
+    argv: "{{ ['uv', 'tool', 'install'] + (['--python', item.python] if item.python is defined else []) + [item.name] }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  loop: "{{ ai_workstation_mcp_uv_tools }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name not in (ai_workstation_uv_tool_list.stdout | regex_findall('(?m)^(\\S+) v'))
+
+- name: Ensure user systemd directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
+- name: Deploy MCP tools auto-update user systemd units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop:
+    - ai-mcp-tools-update.service
+    - ai-mcp-tools-update.timer
+
+- name: Enable MCP tools auto-update user timer
+  ansible.builtin.systemd_service:
+    name: ai-mcp-tools-update.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+  # Units deployed in the same run do not exist yet during check mode
+  ignore_errors: "{{ ansible_check_mode }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+
+- name: Ensure memory MCP knowledge graph directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_mcp_memory_dir }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0700'
+
+- name: Remove legacy user-scope MCP servers from ~/.claude.json
+  ansible.builtin.command:
+    argv: "{{ ['python3', role_path + '/files/purge_claude_mcp.py', ai_workstation_user_home + '/.claude.json'] + ai_workstation_legacy_claude_mcp_servers }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
   register: claude_mcp_result
   changed_when: "'CONFIGURED' in claude_mcp_result.stdout"
+  when: not ansible_check_mode
 
+- name: Check for yadm repository
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.local/share/yadm/repo.git"
+  register: ai_workstation_yadm_repo
 
+- name: Render yadm templates (MCP configs) with secrets from ~/.config/ai/env
+  ansible.builtin.shell:
+    cmd: |
+      set -euo pipefail
+      umask 077
+      # Plain git: any yadm subcommand would trigger auto-alt before the checksum is taken
+      files=$(git --git-dir="$(yadm introspect repo)" ls-files | sed -n 's/##template$//p')
+      before=$(cd "$HOME" && sha256sum $files 2>/dev/null || true)
+      yadm alt >/dev/null
+      cd "$HOME" && chmod 0600 $files
+      after=$(sha256sum $files)
+      [ "$before" = "$after" ] || echo CHANGED
+    executable: /bin/bash
+    chdir: "{{ ai_workstation_user_home }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    HOME: "{{ ai_workstation_user_home }}"
+    GITHUB_PERSONAL_ACCESS_TOKEN: "{{ ai_workstation_github_token }}"
+    ANTHROPIC_WORKSPACE_ID: "{{ ai_workstation_anthropic_workspace_id }}"
+    NOWCODING_API_KEY: "{{ ai_workstation_nowcoding_api_key }}"
+    NEXTCLOUD_HOST: "{{ ai_workstation_nextcloud_host }}"
+    NEXTCLOUD_USERNAME: "{{ ai_workstation_nextcloud_username }}"
+    NEXTCLOUD_PASSWORD: "{{ ai_workstation_nextcloud_password }}"
+  register: ai_workstation_yadm_alt
+  changed_when: "'CHANGED' in ai_workstation_yadm_alt.stdout"
+  no_log: true
+  when:
+    - ai_workstation_yadm_repo.stat.exists
+    - not ansible_check_mode
+
+- name: Check for Claude Code CLI and the yadm-tracked workstation plugin marketplace
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ ai_workstation_claude_bin }}"
+    - "{{ ai_workstation_claude_marketplace_dir }}/.claude-plugin/marketplace.json"
+  register: ai_workstation_claude_plugin_prereqs
+
+- name: Register workstation MCP plugin with Claude Code
+  when: ai_workstation_claude_plugin_prereqs.results | map(attribute='stat.exists') | min
+  block:
+    - name: List installed Claude Code plugins
+      ansible.builtin.command:
+        argv: ["{{ ai_workstation_claude_bin }}", plugin, list, --json]
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+      register: ai_workstation_claude_plugins
+      changed_when: false
+      check_mode: false
+
+    - name: Add marketplace and install workstation-mcp plugin
+      ansible.builtin.shell:
+        cmd: >-
+          {{ ai_workstation_claude_bin | quote }} plugin marketplace add {{ ai_workstation_claude_marketplace_dir | quote }}
+          && {{ ai_workstation_claude_bin | quote }} plugin install workstation-mcp@workstation --scope user
+        executable: /bin/bash
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+      when: "'workstation-mcp@workstation' not in (ai_workstation_claude_plugins.stdout | from_json | map(attribute='id') | list)"
+
+- name: Configure read-only Docker API proxy for the docker MCP server
+  ansible.builtin.import_tasks: docker_mcp.yml

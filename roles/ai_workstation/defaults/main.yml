@@ -8,11 +8,48 @@ ai_workstation_packages:
   - npm
   - git
   - sqlite3
+  - python313-uv
+  # Browser for the Playwright MCP server (zypper-managed, so it receives security updates)
+  - chromium
 
 ai_workstation_github_token: "{{ lookup('env', 'GITHUB_PERSONAL_ACCESS_TOKEN') | default(lookup('env', 'GITHUB_TOKEN') | default('', true), true) }}"
 ai_workstation_anthropic_api_key: "{{ lookup('env', 'ANTHROPIC_API_KEY') | default('', true) }}"
 ai_workstation_anthropic_workspace_id: "{{ lookup('env', 'ANTHROPIC_WORKSPACE_ID') | default('', true) }}"
 ai_workstation_nowcoding_api_key: "{{ lookup('env', 'NOWCODING_API_KEY') | default('', true) }}"
+# Nextcloud MCP server credentials (use an app password from Settings > Security > Devices & sessions)
+ai_workstation_nextcloud_host: "{{ lookup('env', 'NEXTCLOUD_HOST') | default('', true) }}"
+ai_workstation_nextcloud_username: "{{ lookup('env', 'NEXTCLOUD_USERNAME') | default('', true) }}"
+ai_workstation_nextcloud_password: "{{ lookup('env', 'NEXTCLOUD_PASSWORD') | default('', true) }}"
+
+# MCP server runtimes. Harness configs are owned by yadm:
+#   ~/.config/ai/claude-plugins (Claude Code plugin), ~/.gemini/config/mcp_config.json##template,
+#   ~/.config/opencode/opencode.json##template
+ai_workstation_user_uid: "{{ target_user_uid | default(1000) }}"
+ai_workstation_mcp_npm_packages:
+  - "@playwright/mcp"
+  - "@modelcontextprotocol/server-memory"
+ai_workstation_mcp_npm_state: latest
+ai_workstation_mcp_uv_tools:
+  - { name: serena-agent, python: "3.13" }
+  - { name: markitdown-mcp }
+  - { name: nextcloud-mcp-server }
+  - { name: mcp-server-docker }
+  - { name: arxiv-mcp-server }
+  - { name: zotero-mcp-server }
+  - { name: mcp-server-fetch }
+  - { name: mcp-server-git }
+ai_workstation_mcp_tools_update_on_calendar: daily
+ai_workstation_claude_bin: "{{ ai_workstation_user_home }}/.local/bin/claude"
+ai_workstation_claude_marketplace_dir: "{{ ai_workstation_user_home }}/.config/ai/claude-plugins"
+# Knowledge graph of the memory MCP server, inside the Syncthing "sync" folder
+ai_workstation_mcp_memory_dir: "{{ ai_workstation_user_home }}/sync/ai"
+# User-scope servers previously written to ~/.claude.json, now provided by the workstation-mcp plugin
+ai_workstation_legacy_claude_mcp_servers: [github, puppeteer, sqlite, memory, fetch, git, arxiv, zotero]
+
+# Read-only Docker API for the docker MCP server (deployed only where Docker is installed)
+ai_workstation_docker_mcp_proxy: true
+ai_workstation_docker_mcp_proxy_image: "tecnativa/docker-socket-proxy:v0.5.0"
+ai_workstation_docker_mcp_proxy_port: 2375
 
 # Remote control configuration across harnesses
 ai_workstation_claude_remote_control: true
