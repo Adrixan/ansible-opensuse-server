@@ -17,3 +17,5 @@ US-14.1: MCP stack overhaul after reviewing `~/Free Claude MCP Servers.md`. yadm
 - Supply Nextcloud app password and re-run: `NEXTCLOUD_HOST=… NEXTCLOUD_USERNAME=… NEXTCLOUD_PASSWORD=… ansible-playbook main.yml -e enable_ai_workstation=true`.
 - NowCoding API key in `~/.config/opencode/opencode.json` was blanked by a `yadm alt` run without the variable; re-supply via `NOWCODING_API_KEY=… ansible-playbook …` if the key is still in use.
 - On Docker hosts: run `docker` + `ai_workstation` roles to get the read-only proxy.
+- Open decision: `laptops` and `master` have diverged (54 vs 15 commits). The new auto-merge rule deliberately does not merge `laptops` into `master`; do that only on explicit approval.
+- `roles/ai_workstation/templates/AGENTS.md.j2` mirrors the new auto-merge rule from the yadm-owned `~/.config/ai/AGENTS.md`.

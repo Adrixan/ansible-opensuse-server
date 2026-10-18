@@ -29,7 +29,7 @@ Universal behavioral, communication, and engineering standards for all AI harnes
 - Approval Gates: Never drop scope, pivot approach, or make breaking architectural changes without explicit user approval.
 - Debug Protocol: If an approach fails twice, stop and re-evaluate assumptions. Present alternative options with trade-offs.
 - Code Quality: Minimal, readable, typed, secure by default (OWASP/CIS), no hardcoded secrets, DRY at three occurrences.
-- Auto Commit & Push: After completing and verifying a change in a git repository, commit and push all related changes without asking. Use Conventional Commits. If on the default branch (`main`/`master`), create a feature branch first. Never commit secrets, never force-push, and stop and report if hooks, tests, or the push fail.
+- Auto Commit & Push: After completing and verifying a change in a git repository, commit and push all related changes without asking. Use Conventional Commits. If on the default branch (`main`/`master`), create a feature branch first, push it, then merge it back automatically: update the default branch (`git pull --ff-only`), `git merge --no-ff` the feature branch, and push the default branch. Work done on an existing long-lived non-default branch (e.g. `laptops`) stays on that branch and is merged into the default branch only with explicit approval. Never commit secrets, never force-push, and stop and report if hooks, tests, the push, or the merge fail (run `git merge --abort` on conflicts).
 </engineering_discipline>
 
 <branding_and_visual_style>
