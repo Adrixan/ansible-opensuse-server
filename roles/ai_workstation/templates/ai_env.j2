@@ -5,9 +5,6 @@ export GITHUB_PERSONAL_ACCESS_TOKEN="{{ ai_workstation_github_token }}"
 {% if ai_workstation_anthropic_workspace_id | default('') | length > 0 %}
 export ANTHROPIC_WORKSPACE_ID="{{ ai_workstation_anthropic_workspace_id }}"
 {% endif %}
-{% if ai_workstation_nowcoding_api_key | default('') | length > 0 %}
-export NOWCODING_API_KEY="{{ ai_workstation_nowcoding_api_key }}"
-{% endif %}
 {% if ai_workstation_nextcloud_host | default('') | length > 0 %}
 
 # Nextcloud MCP server (app password, not the login password)

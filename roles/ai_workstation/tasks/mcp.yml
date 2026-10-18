@@ -104,7 +104,6 @@
     HOME: "{{ ai_workstation_user_home }}"
     GITHUB_PERSONAL_ACCESS_TOKEN: "{{ ai_workstation_github_token }}"
     ANTHROPIC_WORKSPACE_ID: "{{ ai_workstation_anthropic_workspace_id }}"
-    NOWCODING_API_KEY: "{{ ai_workstation_nowcoding_api_key }}"
     NEXTCLOUD_HOST: "{{ ai_workstation_nextcloud_host }}"
     NEXTCLOUD_USERNAME: "{{ ai_workstation_nextcloud_username }}"
     NEXTCLOUD_PASSWORD: "{{ ai_workstation_nextcloud_password }}"

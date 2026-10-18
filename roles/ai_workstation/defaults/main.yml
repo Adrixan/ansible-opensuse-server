@@ -15,7 +15,6 @@ ai_workstation_packages:
 ai_workstation_github_token: "{{ lookup('env', 'GITHUB_PERSONAL_ACCESS_TOKEN') | default(lookup('env', 'GITHUB_TOKEN') | default('', true), true) }}"
 ai_workstation_anthropic_api_key: "{{ lookup('env', 'ANTHROPIC_API_KEY') | default('', true) }}"
 ai_workstation_anthropic_workspace_id: "{{ lookup('env', 'ANTHROPIC_WORKSPACE_ID') | default('', true) }}"
-ai_workstation_nowcoding_api_key: "{{ lookup('env', 'NOWCODING_API_KEY') | default('', true) }}"
 # Nextcloud MCP server credentials (use an app password from Settings > Security > Devices & sessions)
 ai_workstation_nextcloud_host: "{{ lookup('env', 'NEXTCLOUD_HOST') | default('', true) }}"
 ai_workstation_nextcloud_username: "{{ lookup('env', 'NEXTCLOUD_USERNAME') | default('', true) }}"

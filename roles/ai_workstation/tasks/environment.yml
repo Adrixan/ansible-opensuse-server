@@ -24,13 +24,12 @@
     ai_workstation_anthropic_workspace_id: "{{ (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_WORKSPACE_ID=\"([^\"]*)\"') | first) if (ai_workstation_anthropic_workspace_id | length == 0 and (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_WORKSPACE_ID=\"([^\"]*)\"') | length > 0)) else ai_workstation_anthropic_workspace_id }}"
   when: ai_workstation_env_file.stat.exists
 
-- name: Populate NowCoding and Nextcloud secrets from existing ~/.config/ai/env if not provided
+- name: Populate Nextcloud secrets from existing ~/.config/ai/env if not provided
   ansible.builtin.set_fact:
     "{{ item.fact }}": "{{ (_existing | first) if (lookup('vars', item.fact) | length == 0 and _existing | length > 0) else lookup('vars', item.fact) }}"
   vars:
     _existing: "{{ ai_workstation_env_content.content | b64decode | regex_findall('export ' + item.var + '=\"([^\"]*)\"') }}"
   loop:
-    - { var: NOWCODING_API_KEY, fact: ai_workstation_nowcoding_api_key }
     - { var: NEXTCLOUD_HOST, fact: ai_workstation_nextcloud_host }
     - { var: NEXTCLOUD_USERNAME, fact: ai_workstation_nextcloud_username }
     - { var: NEXTCLOUD_PASSWORD, fact: ai_workstation_nextcloud_password }
@@ -55,26 +54,10 @@
     ai_workstation_anthropic_api_key: "{{ ((ai_workstation_opencode_auth_content.content | b64decode | from_json).anthropic.key) if (ai_workstation_anthropic_api_key | length == 0 and (ai_workstation_opencode_auth_content.content | b64decode | from_json).anthropic.key is defined) else ai_workstation_anthropic_api_key }}"
   when: ai_workstation_opencode_auth_file.stat.exists and (ai_workstation_anthropic_api_key | length == 0)
 
-- name: Check if ~/.config/opencode/opencode.json exists
-  ansible.builtin.stat:
-    path: "{{ ai_workstation_user_home }}/.config/opencode/opencode.json"
-  register: ai_workstation_opencode_json_file
-
-- name: Read existing ~/.config/opencode/opencode.json if present
-  ansible.builtin.slurp:
-    src: "{{ ai_workstation_user_home }}/.config/opencode/opencode.json"
-  register: ai_workstation_opencode_content
-  when: ai_workstation_opencode_json_file.stat.exists
-
-- name: Populate nowcoding API key from existing config if not provided
-  ansible.builtin.set_fact:
-    ai_workstation_nowcoding_api_key: "{{ ((ai_workstation_opencode_content.content | b64decode | from_json).provider.nowcoding.options.apiKey) if (ai_workstation_nowcoding_api_key | length == 0 and (ai_workstation_opencode_content.content | b64decode | from_json).provider.nowcoding.options.apiKey is defined) else ai_workstation_nowcoding_api_key }}"
-  when: ai_workstation_opencode_json_file.stat.exists and (ai_workstation_nowcoding_api_key | length == 0)
-
 - name: Validate secrets are safe inside double-quoted shell exports
   ansible.builtin.assert:
     that: >-
-      [ai_workstation_github_token, ai_workstation_anthropic_workspace_id, ai_workstation_nowcoding_api_key,
+      [ai_workstation_github_token, ai_workstation_anthropic_workspace_id,
       ai_workstation_nextcloud_host, ai_workstation_nextcloud_username, ai_workstation_nextcloud_password]
       | select('search', '[\"$`\\\\]') | list | length == 0
     fail_msg: "A secret contains a double quote, dollar sign, backtick or backslash, which ~/.config/ai/env cannot hold safely"
