@@ -7,6 +7,11 @@ Replace archived MCP servers, add MarkItDown/Serena/Nextcloud/Context7/Docker (r
 None (Sprint 14 Complete)
 
 ## Completed Sprint Stories (Sprint 14)
+- **US-14.4**: Native V2 OpenCode config and update activation (2 SP) - **Done**
+  - [x] yadm `opencode.json##template` in native V2 shape (`providers`, `agents`, `mcp.servers`, `disabled`, `update: auto`); DragTokens via `@opencode/ai/providers/openai/responses` with `canonical: openai`
+  - [x] `/usr/local/bin/opencode-restart-stale-server`: `systemctl --user try-restart opencode-server.service` when `~/.local/state/opencode/service.json` reports an older version than the binary; runs after the daily upgrade and in the role
+  - [x] No config diagnostics; `opencode mcp list` 9 connected, 3 disabled; plan `dragtokens/gpt-6-astra`, build `dragtokens/gpt-6.1-sol`; rerun `ok=101, changed=0`
+  - [ ] DragTokens API unreachable on the school network: FortiGuard DNS sinkhole plus TLS reset on SNI `dragtokens.com`
 - **US-14.3**: Track the newest OpenCode release (V2) (3 SP) - **Done**
   - [x] `ai_desktop` uses the V2 installer (`https://opencode.ai/v2/install`); reinstalls when the binary is missing or older than `opencode_cli_major_version` (V1 installer refuses 2.x)
   - [x] `opencode-server.service` is a oneshot `opencode service start`/`stop` (running `serve --service` under systemd raced `opencode service restart`); listen address persisted via `opencode service set hostname/port`

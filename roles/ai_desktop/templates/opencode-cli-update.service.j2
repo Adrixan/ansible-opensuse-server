@@ -7,4 +7,6 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStart={{ opencode_cli_bin }} upgrade --method curl
+# Also catches updates installed in the background by `update: auto`
+ExecStartPost={{ opencode_restart_stale_server_script }}
 Nice=10

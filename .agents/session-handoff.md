@@ -32,3 +32,7 @@ US-14.1: MCP stack overhaul after reviewing `~/Free Claude MCP Servers.md`. yadm
 - The V1 config format in the yadm template stays (V2 reads it). Converting to the native V2 shape is optional; don't do it while any machine still runs V1.
 - Dropped: `@frankhommers/opencode-yolo` plugin and `/yolo` command (V1 plugin API, fails to load in V2). Closest built-in replacement: `opencode --auto` (auto-approves permissions that aren't explicitly denied).
 
+## 2026-10-19: US-14.4 native V2 config
+- yadm template now uses the native V2 shape; machines still on OpenCode V1 cannot read it, so run the playbook (`ai_desktop` migrates to V2) right after `yadm pull`.
+- DragTokens is blocked on the `schule.intern` network: system DNS answers with the Fortinet block page (208.91.112.55), and connecting to the real Cloudflare IP gets a TLS reset on SNI `dragtokens.com`. Firefox only reaches it through DoH (`network.trr.mode=3`, RethinkDNS), probably plus ECH (unverified). Making OpenCode work there would mean evading the school's filter: the user decides, ideally via school IT. Test on another network instead.
+

@@ -29,6 +29,14 @@
     state: absent
   when: opencode_cli_remove_npm_global | bool
 
+- name: Deploy helper that restarts an OpenCode server older than the installed binary
+  ansible.builtin.copy:
+    src: opencode-restart-stale-server.sh
+    dest: "{{ opencode_restart_stale_server_script }}"
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Ensure user systemd directory exists
   ansible.builtin.file:
     path: "{{ ai_desktop_user_home }}/.config/systemd/user"
@@ -74,4 +82,16 @@
   become_user: "{{ ai_desktop_user }}"
   register: opencode_cli_update
   changed_when: "'is already installed' not in opencode_cli_update.stdout"
+  when: not ansible_check_mode
+
+- name: Restart the OpenCode background server if it runs an outdated version
+  ansible.builtin.command:
+    argv: ["{{ opencode_restart_stale_server_script }}"]
+  become: true
+  become_user: "{{ ai_desktop_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_desktop_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_desktop_user_uid }}/bus"
+  register: opencode_stale_server_restart
+  changed_when: "'CHANGED:' in opencode_stale_server_restart.stdout"
   when: not ansible_check_mode

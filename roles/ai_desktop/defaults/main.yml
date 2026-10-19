@@ -61,3 +61,4 @@ opencode_cli_major_version: 2
 opencode_cli_bin: "{{ ai_desktop_user_home }}/.opencode/bin/opencode"
 opencode_cli_update_on_calendar: daily
 opencode_cli_remove_npm_global: true
+opencode_restart_stale_server_script: /usr/local/bin/opencode-restart-stale-server
