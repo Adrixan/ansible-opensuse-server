@@ -68,6 +68,35 @@
     - ai_workstation_antigravity_remote_control | default(true) | bool
     - agy_daemon_status.rc != 0
 
+- name: Read OpenCode background server listen settings
+  ansible.builtin.command:
+    argv: ["{{ ai_workstation_opencode_bin }}", service, get, "{{ item.key }}"]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  loop: "{{ ai_workstation_opencode_service_settings | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: ai_workstation_opencode_service_get
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: ai_workstation_opencode_remote_control | default(true) | bool
+
+- name: Set OpenCode background server listen settings (stops the server until its next start)
+  ansible.builtin.command:
+    argv: ["{{ ai_workstation_opencode_bin }}", service, set, "{{ item.item.key }}", "{{ item.item.value | string }}"]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  loop: "{{ ai_workstation_opencode_service_get.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.key | default('') }}"
+  register: ai_workstation_opencode_service_set
+  when:
+    - ai_workstation_opencode_remote_control | default(true) | bool
+    # A missing or V1 binary has no `service` subcommand; the ai_desktop role installs V2
+    - item.rc is defined and item.rc == 0
+    - item.stdout | trim != item.item.value | string
+
 - name: Deploy OpenCode server user systemd unit
   ansible.builtin.template:
     src: opencode-server.service.j2
@@ -126,4 +155,6 @@
   when:
     - ai_workstation_opencode_remote_control | default(true) | bool
     - opencode_service_status.rc is defined and opencode_service_status.rc == 0
-    - opencode_service_template.changed or (ai_workstation_yadm_alt.changed | default(false))
+    - >-
+      opencode_service_template.changed or (ai_workstation_yadm_alt.changed | default(false))
+      or (ai_workstation_opencode_service_set.changed | default(false))

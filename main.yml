@@ -63,12 +63,7 @@
       when: enable_cli_tools | default(false) | bool
       tags: [cli_tools]
 
-    - name: Include ai_workstation role
-      ansible.builtin.include_role:
-        name: ai_workstation
-      when: enable_ai_workstation | default(false) | bool
-      tags: [ai_workstation]
-
+    # ai_desktop installs the harness binaries (Claude Code, agy, OpenCode) that ai_workstation configures
     - name: Include ai_desktop role
       ansible.builtin.include_role:
         name: ai_desktop
@@ -76,6 +71,12 @@
           tags: [ai_desktop]
       when: enable_ai_desktop | default(false) | bool
       tags: [ai_desktop]
+
+    - name: Include ai_workstation role
+      ansible.builtin.include_role:
+        name: ai_workstation
+      when: enable_ai_workstation | default(false) | bool
+      tags: [ai_workstation]
 
 
 

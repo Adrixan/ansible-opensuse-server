@@ -54,8 +54,10 @@ antigravity_cli_install_url: "https://antigravity.google/cli/install.sh"
 antigravity_cli_bin: "{{ ai_desktop_user_home }}/.local/bin/agy"
 antigravity_cli_update_on_calendar: daily
 
-# OpenCode CLI v1 (official native installer, self-updating in ~/.opencode/bin; the installer hardcodes that directory)
-opencode_cli_install_url: "https://opencode.ai/install"
+# OpenCode CLI (official V2 native installer, self-updating in ~/.opencode/bin; the installer hardcodes that directory).
+# The V1 installer (https://opencode.ai/install) refuses 2.x, so it would pin the CLI to the 1.x line.
+opencode_cli_install_url: "https://opencode.ai/v2/install"
+opencode_cli_major_version: 2
 opencode_cli_bin: "{{ ai_desktop_user_home }}/.opencode/bin/opencode"
 opencode_cli_update_on_calendar: daily
 opencode_cli_remove_npm_global: true

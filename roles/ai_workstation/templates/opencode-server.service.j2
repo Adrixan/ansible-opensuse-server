@@ -1,14 +1,17 @@
+# {{ ansible_managed }}
+# OpenCode 2 supervises its own shared background server (`opencode service`); a unit that runs
+# `opencode serve --service` directly races `opencode service restart`. This unit only starts it at login.
 [Unit]
-Description=OpenCode AI headless server
-After=network.target
-StartLimitIntervalSec=0
+Description=OpenCode shared background server
+Wants=network-online.target
+After=network-online.target
 
 [Service]
-Type=simple
-ExecStart={{ ai_workstation_opencode_bin }} serve --port {{ ai_workstation_opencode_server_port }} --hostname {{ ai_workstation_opencode_server_host }}
-Restart=on-failure
-RestartSec=10s
-TimeoutStopSec=30s
+Type=oneshot
+RemainAfterExit=yes
+ExecStart={{ ai_workstation_opencode_bin }} service start
+ExecStop={{ ai_workstation_opencode_bin }} service stop
+TimeoutStartSec=60s
 StandardOutput=journal
 StandardError=journal
 

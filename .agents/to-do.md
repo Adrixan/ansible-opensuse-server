@@ -7,6 +7,12 @@ Replace archived MCP servers, add MarkItDown/Serena/Nextcloud/Context7/Docker (r
 None (Sprint 14 Complete)
 
 ## Completed Sprint Stories (Sprint 14)
+- **US-14.3**: Track the newest OpenCode release (V2) (3 SP) - **Done**
+  - [x] `ai_desktop` uses the V2 installer (`https://opencode.ai/v2/install`); reinstalls when the binary is missing or older than `opencode_cli_major_version` (V1 installer refuses 2.x)
+  - [x] `opencode-server.service` is a oneshot `opencode service start`/`stop` (running `serve --service` under systemd raced `opencode service restart`); listen address persisted via `opencode service set hostname/port`
+  - [x] Aliases: `opencode-remote` = `opencode --server http://127.0.0.1:4096`, `opencode-web` = `opencode pair` (V2 removed `attach` and `web`)
+  - [x] `main.yml` runs `ai_desktop` before `ai_workstation` (binaries before config)
+  - [x] Live 2.0.32 on localhost; idempotent rerun `ok=99, changed=0, failed=0`; one server process on `127.0.0.1:4096`; V1 credentials (`auth list`) and DragTokens models carried over
 - **US-14.2**: OpenCode on DragTokens: native CLI in `ai_desktop`, `DRAGTOKENS_API_KEY` secret in `ai_workstation` (3 SP) - **Done**
   - [x] `ai_desktop/tasks/opencode_cli.yml`: official installer (`--no-modify-path`, `~/.opencode/bin/opencode`), npm global `opencode-ai` removed, daily `opencode-cli-update.timer` (`opencode upgrade --method curl`)
   - [x] Standalone `roles/opencode` and `enable_opencode` removed

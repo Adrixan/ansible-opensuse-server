@@ -26,3 +26,9 @@ US-14.1: MCP stack overhaul after reviewing `~/Free Claude MCP Servers.md`. yadm
 - yadm `opencode.json##template` defines provider `dragtokens`; plan agent `dragtokens/gpt-6-astra`, build agent `dragtokens/gpt-6.1-sol`. Top-level `model` stays `anthropic/claude-sonnet-4-5`.
 - Open: no live API call verified because the current network's FortiGuard DNS blocks dragtokens.com. Test on another network: `opencode run -m dragtokens/gpt-6-astra "ping"`. Pool binding (codex-pro vs enterprise) is set on the DragTokens dashboard and cannot be checked from here.
 
+## 2026-10-19: US-14.3 OpenCode 2
+- OpenCode 2.0.32 installed via the V2 installer; `ai_desktop` migrates any V1 binary and the daily `opencode-cli-update.timer` runs `opencode upgrade --method curl`.
+- V2 owns its background server: `opencode-server.service` only runs `opencode service start` at login. Do not change it back to `serve --service`. Listen address lives in `~/.config/opencode/service.json` (also holds the server password; git-ignored).
+- The V1 config format in the yadm template stays (V2 reads it). Converting to the native V2 shape is optional; don't do it while any machine still runs V1.
+- Dropped: `@frankhommers/opencode-yolo` plugin and `/yolo` command (V1 plugin API, fails to load in V2). Closest built-in replacement: `opencode --auto` (auto-approves permissions that aren't explicitly denied).
+

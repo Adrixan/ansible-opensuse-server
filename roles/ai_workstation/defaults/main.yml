@@ -58,5 +58,9 @@ ai_workstation_antigravity_remote_control: true
 ai_workstation_opencode_remote_control: true
 ai_workstation_opencode_server_port: 4096
 ai_workstation_opencode_server_host: "127.0.0.1"
+# Persisted with `opencode service set` (~/.config/opencode/service.json, which also holds the generated server password)
+ai_workstation_opencode_service_settings:
+  hostname: "{{ ai_workstation_opencode_server_host }}"
+  port: "{{ ai_workstation_opencode_server_port }}"
 # Native install from the ai_desktop role
 ai_workstation_opencode_bin: "{{ ai_workstation_user_home }}/.opencode/bin/opencode"
