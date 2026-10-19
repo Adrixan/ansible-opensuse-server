@@ -1,0 +1,55 @@
+---
+# tasks file for edu_publisher
+
+- name: Check that the edu-publisher repository exists
+  ansible.builtin.stat:
+    path: "{{ edu_publisher_repo_dir }}/edupub.py"
+  register: edu_publisher_repo
+
+- name: Fail with instructions when the repository is missing
+  ansible.builtin.fail:
+    msg: "{{ edu_publisher_repo_dir }} is missing; copy or clone the edu-publisher repository there first."
+  when: not edu_publisher_repo.stat.exists
+
+- name: Link the edupub command into ~/.local/bin
+  ansible.builtin.file:
+    src: "{{ edu_publisher_repo_dir }}/edupub.py"
+    dest: "{{ edu_publisher_bin }}"
+    state: link
+    owner: "{{ edu_publisher_user }}"
+    group: "{{ edu_publisher_user }}"
+    force: true
+
+- name: Ensure the configuration directory is private
+  ansible.builtin.file:
+    path: "{{ edu_publisher_user_home }}/.config/edu-publish"
+    state: directory
+    owner: "{{ edu_publisher_user }}"
+    group: "{{ edu_publisher_user }}"
+    mode: '0700'
+
+- name: Deploy edu-publisher user systemd units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ edu_publisher_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ edu_publisher_user }}"
+    group: "{{ edu_publisher_user }}"
+    mode: '0644'
+  loop:
+    - edu-publisher.service
+    - edu-publisher.timer
+
+- name: Enable the edu-publisher timer
+  ansible.builtin.systemd_service:
+    name: edu-publisher.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+  # Units deployed in the same run do not exist yet during check mode
+  ignore_errors: "{{ ansible_check_mode }}"
+  become: true
+  become_user: "{{ edu_publisher_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ edu_publisher_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ edu_publisher_user_uid }}/bus"

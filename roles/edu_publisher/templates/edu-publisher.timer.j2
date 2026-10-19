@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Run edu-publisher every five minutes
+
+[Timer]
+OnCalendar={{ edu_publisher_on_calendar }}
+AccuracySec=30s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

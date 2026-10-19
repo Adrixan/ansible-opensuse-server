@@ -84,6 +84,14 @@
       when: enable_ai_workstation | default(false) | bool
       tags: [ai_workstation]
 
+    - name: Include edu_publisher role
+      ansible.builtin.include_role:
+        name: edu_publisher
+        apply:
+          tags: [edu_publisher]
+      when: enable_edu_publisher | default(false) | bool
+      tags: [edu_publisher]
+
 
 
     - name: Include desktop_fonts role

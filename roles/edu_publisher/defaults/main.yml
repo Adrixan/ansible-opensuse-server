@@ -1,0 +1,11 @@
+---
+# defaults file for edu_publisher (local scheduler/publisher for Prof. Aufner content)
+edu_publisher_user: "{{ target_user | default('Adrixan') }}"
+edu_publisher_user_home: "{{ target_user_home | default('/home/' + edu_publisher_user) }}"
+edu_publisher_user_uid: "{{ target_user_uid | default(1000) }}"
+# Local-only git repository (no remote yet); the role links it but does not clone it
+edu_publisher_repo_dir: "{{ edu_publisher_user_home }}/code/edu-publisher"
+edu_publisher_bin: "{{ edu_publisher_user_home }}/.local/bin/edupub"
+edu_publisher_on_calendar: "*:0/5"
+# Video uploads to YouTube can take long on slow uplinks
+edu_publisher_timeout: "2h"
