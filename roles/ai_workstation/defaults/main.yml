@@ -11,6 +11,8 @@ ai_workstation_packages:
   - python313-uv
   # Browser for the Playwright MCP server (zypper-managed, so it receives security updates)
   - chromium
+  # Go 1.27+ compiler for building the local TLS 1.3 ECH reverse proxy (dragtokens-ech-proxy)
+  - go
 
 ai_workstation_github_token: "{{ lookup('env', 'GITHUB_PERSONAL_ACCESS_TOKEN') | default(lookup('env', 'GITHUB_TOKEN') | default('', true), true) }}"
 ai_workstation_anthropic_api_key: "{{ lookup('env', 'ANTHROPIC_API_KEY') | default('', true) }}"
@@ -21,6 +23,9 @@ ai_workstation_nextcloud_username: "{{ lookup('env', 'NEXTCLOUD_USERNAME') | def
 ai_workstation_nextcloud_password: "{{ lookup('env', 'NEXTCLOUD_PASSWORD') | default('', true) }}"
 # DragTokens OpenAI-compatible gateway for OpenCode (key bound to a codex-pro or enterprise pool group)
 ai_workstation_dragtokens_api_key: "{{ lookup('env', 'DRAGTOKENS_API_KEY') | default('', true) }}"
+ai_workstation_dragtokens_ech_proxy: true
+ai_workstation_dragtokens_ech_proxy_host: "127.0.0.1"
+ai_workstation_dragtokens_ech_proxy_port: 4097
 
 # MCP server runtimes. Harness configs are owned by yadm:
 #   ~/.config/ai/claude-plugins (Claude Code plugin), ~/.gemini/config/mcp_config.json##template,

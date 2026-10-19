@@ -42,4 +42,10 @@ US-14.1: MCP stack overhaul after reviewing `~/Free Claude MCP Servers.md`. yadm
 - Enabled `/etc/dnscrypt-proxy/cloaking-rules.txt` (`localhost` -> `127.0.0.1` / `::1`, `cloak_ptr = true`) so pure-DNS clients that bypass `/etc/hosts` when `127.0.0.1:53` is in `/etc/resolv.conf` (such as Go's `cloudflared` daemon dialing `ssh://localhost:22`) resolve `localhost` instead of getting `NXDOMAIN` from `block_unqualified = true`.
 - NetworkManager uses `/etc/NetworkManager/conf.d/90-dnscrypt-proxy.conf` (`[global-dns-domain-*] servers=127.0.0.1`) so `/etc/resolv.conf` points to `127.0.0.1`. Live-verified and idempotent (`ok=10, changed=0, failed=0`).
 
+## 2026-10-19: US-15.2 DragTokens TLS 1.3 ECH Proxy for OpenCode (`ai_workstation`)
+- Root cause for OpenCode failing to reach `dragtokens.com`: OpenCode's bundled Bun v1.4.2 runtime does not query DNS `HTTPS` (`TYPE65`) records or negotiate TLS 1.3 Encrypted Client Hello (ECH), so it sends `dragtokens.com` in plaintext SNI and gets reset (`RST`) by the network's FortiGate (`FG200FT921914884`), whereas Firefox uses ECH (`cloudflare-ech.com` outer SNI from the `HTTPS` record).
+- Added `roles/ai_workstation/files/dragtokens-ech-proxy.go` and `tasks/dragtokens_ech_proxy.yml` (`dragtokens-ech-proxy.service` on `127.0.0.1:4097`, built with Go 1.27 `crypto/tls.Config.EncryptedClientHelloConfigList` using the `TYPE65` record from `127.0.0.1:53`).
+- Pointed yadm `~/.config/opencode/opencode.json##template` `providers.dragtokens.settings.baseURL` to `http://127.0.0.1:4097/v1`. OpenCode now reaches DragTokens cleanly (`GET /v1/models` returns 200; `opencode run -m dragtokens/gpt-6-astra` receives API response from DragTokens: `Insufficient user quota, remaining quota: ¥0.000000`). Top up or check pool binding on the DragTokens dashboard.
+
+
 

@@ -7,6 +7,10 @@ Replace archived MCP servers, add MarkItDown/Serena/Nextcloud/Context7/Docker (r
 None (Sprint 15 Complete)
 
 ## Completed Sprint Stories (Sprint 15)
+- **US-15.2**: Add local TLS 1.3 ECH reverse proxy (`dragtokens-ech-proxy.service`) to `ai_workstation` so OpenCode reaches `dragtokens.com` (3 SP) - **Done**
+  - [x] `roles/ai_workstation/files/dragtokens-ech-proxy.go` & `tasks/dragtokens_ech_proxy.yml`: installs `go` (1.27), builds `~/.local/bin/dragtokens-ech-proxy`, and runs `dragtokens-ech-proxy.service` on `127.0.0.1:4097`
+  - [x] Queries local DoH (`127.0.0.1:53`) for `dragtokens.com` `TYPE65` (`HTTPS`) record, extracts `ech` (`ECHConfigList`) and `ipv4hint`, and establishes TLS 1.3 with `EncryptedClientHelloConfigList` (outer SNI `cloudflare-ech.com`)
+  - [x] Updated yadm `~/.config/opencode/opencode.json##template` `dragtokens` `baseURL` to `http://127.0.0.1:4097/v1`; verified live API reachability (`/v1/models` returns 200 JSON model list; `opencode run -m dragtokens/gpt-6-astra` reaches DragTokens API and returns quota response instead of hanging/resetting)
 - **US-15.1**: Create `dns_setup` role for system-wide RethinkDNS DoH (`dnscrypt-proxy` + NetworkManager) matching Firefox TRR (3 SP) - **Done**
   - [x] `roles/dns_setup`: installs `dnscrypt-proxy`, configures static RethinkDNS DoH stamp (`https://sky.rethinkdns.com/1-5apwaaejaebrciqbftqiaacugaqaaaai`) validated via `dnscrypt-proxy -check`, enables `dnscrypt-proxy.socket` on `127.0.0.1:53`
   - [x] Local domain exclusions (`intern`, `local`) forwarded to active DHCP resolvers (`/run/dnscrypt-proxy-dhcp-resolv.conf` populated by `/etc/NetworkManager/dispatcher.d/10-dnscrypt-dhcp-dns.sh`) with bootstrap fallback

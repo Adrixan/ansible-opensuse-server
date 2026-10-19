@@ -1,0 +1,86 @@
+---
+# Build and manage the local TLS 1.3 ECH reverse proxy for DragTokens (OpenCode Bun lacks ECH support)
+
+- name: Ensure ~/.local/share/dragtokens-ech-proxy and ~/.local/bin directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: "0755"
+  loop:
+    - "{{ ai_workstation_user_home }}/.local/share/dragtokens-ech-proxy"
+    - "{{ ai_workstation_user_home }}/.local/bin"
+  when: ai_workstation_dragtokens_ech_proxy | default(true) | bool
+
+- name: Deploy dragtokens-ech-proxy Go source
+  ansible.builtin.copy:
+    src: dragtokens-ech-proxy.go
+    dest: "{{ ai_workstation_user_home }}/.local/share/dragtokens-ech-proxy/dragtokens-ech-proxy.go"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: "0644"
+  register: dragtokens_ech_proxy_src
+  when: ai_workstation_dragtokens_ech_proxy | default(true) | bool
+
+- name: Check if dragtokens-ech-proxy binary exists
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.local/bin/dragtokens-ech-proxy"
+  register: dragtokens_ech_proxy_bin
+  when: ai_workstation_dragtokens_ech_proxy | default(true) | bool
+
+- name: Compile dragtokens-ech-proxy binary
+  ansible.builtin.command:
+    argv:
+      - go
+      - build
+      - -o
+      - "{{ ai_workstation_user_home }}/.local/bin/dragtokens-ech-proxy"
+      - "{{ ai_workstation_user_home }}/.local/share/dragtokens-ech-proxy/dragtokens-ech-proxy.go"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    HOME: "{{ ai_workstation_user_home }}"
+    GOPATH: "{{ ai_workstation_user_home }}/.local/share/go"
+    GOCACHE: "{{ ai_workstation_user_home }}/.cache/go-build"
+  register: dragtokens_ech_proxy_build
+  when:
+    - ai_workstation_dragtokens_ech_proxy | default(true) | bool
+    - not ansible_check_mode
+    - dragtokens_ech_proxy_src.changed or not (dragtokens_ech_proxy_bin.stat.exists | default(false))
+
+- name: Ensure user systemd directory exists for dragtokens-ech-proxy
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: "0755"
+  when: ai_workstation_dragtokens_ech_proxy | default(true) | bool
+
+- name: Deploy dragtokens-ech-proxy user systemd unit
+  ansible.builtin.template:
+    src: dragtokens-ech-proxy.service.j2
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/dragtokens-ech-proxy.service"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: "0644"
+  register: dragtokens_ech_proxy_unit
+  when: ai_workstation_dragtokens_ech_proxy | default(true) | bool
+
+- name: Enable and start dragtokens-ech-proxy user service
+  ansible.builtin.systemd_service:
+    name: dragtokens-ech-proxy.service
+    scope: user
+    enabled: true
+    state: "{{ 'restarted' if (dragtokens_ech_proxy_unit.changed or (dragtokens_ech_proxy_build.changed | default(false))) else 'started' }}"
+    daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when:
+    - ai_workstation_dragtokens_ech_proxy | default(true) | bool
+    - not ansible_check_mode

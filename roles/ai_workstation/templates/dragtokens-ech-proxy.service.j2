@@ -1,0 +1,12 @@
+[Unit]
+Description=Local TLS 1.3 ECH Reverse Proxy for DragTokens ({{ ai_workstation_dragtokens_ech_proxy_host }}:{{ ai_workstation_dragtokens_ech_proxy_port }})
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart={{ ai_workstation_user_home }}/.local/bin/dragtokens-ech-proxy -listen {{ ai_workstation_dragtokens_ech_proxy_host }}:{{ ai_workstation_dragtokens_ech_proxy_port }} -target dragtokens.com -dns 127.0.0.1:53
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

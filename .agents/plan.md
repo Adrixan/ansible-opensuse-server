@@ -50,6 +50,7 @@
 - **US-14.3**: Track the newest OpenCode release (V2) (3 SP) - **Done**
 - **US-14.4**: Native V2 OpenCode config and update activation (2 SP) - **Done**
 - **US-15.1**: Create `dns_setup` role for system-wide RethinkDNS DoH (`dnscrypt-proxy` + NetworkManager) matching Firefox TRR (3 SP) - **Done**
+- **US-15.2**: Add local TLS 1.3 ECH reverse proxy (`dragtokens-ech-proxy.service`) to `ai_workstation` so OpenCode reaches `dragtokens.com` (3 SP) - **Done**
 
 ### Active Stories (Sprint 15)
 None (Sprint 15 Complete)
