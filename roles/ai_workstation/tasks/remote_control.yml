@@ -114,3 +114,16 @@
   when:
     - ai_workstation_opencode_remote_control | default(true) | bool
     - opencode_service_status.rc is defined and opencode_service_status.rc != 0
+
+- name: Restart running OpenCode server to load a changed unit or rendered config
+  ansible.builtin.command:
+    cmd: "systemctl --user restart opencode-server.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  when:
+    - ai_workstation_opencode_remote_control | default(true) | bool
+    - opencode_service_status.rc is defined and opencode_service_status.rc == 0
+    - opencode_service_template.changed or (ai_workstation_yadm_alt.changed | default(false))

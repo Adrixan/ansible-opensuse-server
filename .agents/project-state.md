@@ -24,7 +24,7 @@
 8. **[base_software](file:///home/Adrixan/code/ansible-opensuse-server/roles/base_software)**: Essential system utilities & drivers.
 9. **[shell_environment](file:///home/Adrixan/code/ansible-opensuse-server/roles/shell_environment)**: Interactive shell packages (`zsh`, `yadm`, `topgrade` via zypper, `fzf`, `ripgrep`, etc.) and Packman repo.
 10. **[cli_tools](file:///home/Adrixan/code/ansible-opensuse-server/roles/cli_tools)**: Specialized CLI applications (`tldr` via npm, `tmuxp` via pip, `tintin++` compilation).
-11. **[opencode](file:///home/Adrixan/code/ansible-opensuse-server/roles/opencode)**: OpenCode AI CLI tool (`opencode-ai` via global npm).
+11. **[opencode](file:///home/Adrixan/code/ansible-opensuse-server/roles/opencode)**: Removed 2026-10-19 (US-14.2): OpenCode CLI now installed natively by `ai_desktop`.
 12. **[ai_workstation](file:///home/Adrixan/code/ansible-opensuse-server/roles/ai_workstation)**: Unified AI environment across harnesses: MCP server runtimes (uv tools, global npm, chromium) with auto-update timer, `~/.config/ai/env` secrets, yadm template rendering, Claude Code `workstation-mcp` plugin registration, read-only Docker API proxy, skills, shell env. Harness configs are owned by yadm.
 13. **[ai_desktop](file:///home/Adrixan/code/ansible-opensuse-server/roles/ai_desktop)**: Official GUI and CLI applications for Claude Desktop, Claude Code CLI, Google Antigravity Desktop, and Google Antigravity CLI (`agy`) with daily systemd auto-update timers and single-version retention.
 

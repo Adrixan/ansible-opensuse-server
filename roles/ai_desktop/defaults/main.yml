@@ -10,6 +10,7 @@ enable_claude_desktop: true
 enable_claude_code: true
 enable_antigravity_desktop: true
 enable_antigravity_cli: true
+enable_opencode_cli: true
 
 # Claude Desktop (official Anthropic signed apt repository, unpacked into /opt)
 claude_desktop_repo_url: "https://downloads.claude.ai/claude-desktop/apt/stable"
@@ -53,3 +54,8 @@ antigravity_cli_install_url: "https://antigravity.google/cli/install.sh"
 antigravity_cli_bin: "{{ ai_desktop_user_home }}/.local/bin/agy"
 antigravity_cli_update_on_calendar: daily
 
+# OpenCode CLI v1 (official native installer, self-updating in ~/.opencode/bin; the installer hardcodes that directory)
+opencode_cli_install_url: "https://opencode.ai/install"
+opencode_cli_bin: "{{ ai_desktop_user_home }}/.opencode/bin/opencode"
+opencode_cli_update_on_calendar: daily
+opencode_cli_remove_npm_global: true

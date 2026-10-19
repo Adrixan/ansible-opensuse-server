@@ -107,6 +107,7 @@
     NEXTCLOUD_HOST: "{{ ai_workstation_nextcloud_host }}"
     NEXTCLOUD_USERNAME: "{{ ai_workstation_nextcloud_username }}"
     NEXTCLOUD_PASSWORD: "{{ ai_workstation_nextcloud_password }}"
+    DRAGTOKENS_API_KEY: "{{ ai_workstation_dragtokens_api_key }}"
   register: ai_workstation_yadm_alt
   changed_when: "'CHANGED' in ai_workstation_yadm_alt.stdout"
   no_log: true

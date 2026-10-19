@@ -19,6 +19,8 @@ ai_workstation_anthropic_workspace_id: "{{ lookup('env', 'ANTHROPIC_WORKSPACE_ID
 ai_workstation_nextcloud_host: "{{ lookup('env', 'NEXTCLOUD_HOST') | default('', true) }}"
 ai_workstation_nextcloud_username: "{{ lookup('env', 'NEXTCLOUD_USERNAME') | default('', true) }}"
 ai_workstation_nextcloud_password: "{{ lookup('env', 'NEXTCLOUD_PASSWORD') | default('', true) }}"
+# DragTokens OpenAI-compatible gateway for OpenCode (key bound to a codex-pro or enterprise pool group)
+ai_workstation_dragtokens_api_key: "{{ lookup('env', 'DRAGTOKENS_API_KEY') | default('', true) }}"
 
 # MCP server runtimes. Harness configs are owned by yadm:
 #   ~/.config/ai/claude-plugins (Claude Code plugin), ~/.gemini/config/mcp_config.json##template,
@@ -56,3 +58,5 @@ ai_workstation_antigravity_remote_control: true
 ai_workstation_opencode_remote_control: true
 ai_workstation_opencode_server_port: 4096
 ai_workstation_opencode_server_host: "127.0.0.1"
+# Native install from the ai_desktop role
+ai_workstation_opencode_bin: "{{ ai_workstation_user_home }}/.opencode/bin/opencode"

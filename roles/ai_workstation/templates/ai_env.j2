@@ -12,6 +12,11 @@ export NEXTCLOUD_HOST="{{ ai_workstation_nextcloud_host }}"
 export NEXTCLOUD_USERNAME="{{ ai_workstation_nextcloud_username }}"
 export NEXTCLOUD_PASSWORD="{{ ai_workstation_nextcloud_password }}"
 {% endif %}
+{% if ai_workstation_dragtokens_api_key | default('') | length > 0 %}
+
+# DragTokens gateway for OpenCode (rendered into opencode.json by yadm alt)
+export DRAGTOKENS_API_KEY="{{ ai_workstation_dragtokens_api_key }}"
+{% endif %}
 
 # Ensure Claude Code CLI uses native first-party OAuth subscription without custom gateway overrides
 unset ANTHROPIC_BASE_URL

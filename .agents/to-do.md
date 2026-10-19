@@ -7,6 +7,13 @@ Replace archived MCP servers, add MarkItDown/Serena/Nextcloud/Context7/Docker (r
 None (Sprint 14 Complete)
 
 ## Completed Sprint Stories (Sprint 14)
+- **US-14.2**: OpenCode on DragTokens: native CLI in `ai_desktop`, `DRAGTOKENS_API_KEY` secret in `ai_workstation` (3 SP) - **Done**
+  - [x] `ai_desktop/tasks/opencode_cli.yml`: official installer (`--no-modify-path`, `~/.opencode/bin/opencode`), npm global `opencode-ai` removed, daily `opencode-cli-update.timer` (`opencode upgrade --method curl`)
+  - [x] Standalone `roles/opencode` and `enable_opencode` removed
+  - [x] `DRAGTOKENS_API_KEY` read from env or `~/.config/ai/env`, exported there and passed to `yadm alt`; `opencode-server.service` uses the native binary and restarts on unit or rendered-config changes
+  - [x] yadm `opencode.json##template`: provider `dragtokens` (`@ai-sdk/openai`, `https://dragtokens.com/v1`), agents plan `gpt-6-astra`, build `gpt-6.1-sol`
+  - [x] Live run `ok=100, changed=9`; idempotent rerun `ok=98, changed=0, failed=0`; `opencode models dragtokens` lists all three models
+  - [ ] Live API call untested: FortiGuard DNS on the current network (10.106.81.0/24) blocks dragtokens.com by category
 - **US-14.1**: Overhaul MCP stack per free-MCP report review: yadm owns harness configs, `ai_workstation` installs runtimes only (8 SP) - **Done**
   - [x] Replace archived `server-github` (remote `api.githubcopilot.com/mcp/`) and `server-puppeteer` (`@playwright/mcp` + zypper `chromium`); drop unused `sqlite`
   - [x] Persist memory graph in `~/sync/ai/mcp-memory.jsonl` (Syncthing)

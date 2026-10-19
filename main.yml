@@ -63,12 +63,6 @@
       when: enable_cli_tools | default(false) | bool
       tags: [cli_tools]
 
-    - name: Include opencode role
-      ansible.builtin.include_role:
-        name: opencode
-      when: enable_opencode | default(false) | bool
-      tags: [opencode]
-
     - name: Include ai_workstation role
       ansible.builtin.include_role:
         name: ai_workstation

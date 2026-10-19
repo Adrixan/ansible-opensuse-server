@@ -24,7 +24,7 @@
     ai_workstation_anthropic_workspace_id: "{{ (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_WORKSPACE_ID=\"([^\"]*)\"') | first) if (ai_workstation_anthropic_workspace_id | length == 0 and (ai_workstation_env_content.content | b64decode | regex_findall('export ANTHROPIC_WORKSPACE_ID=\"([^\"]*)\"') | length > 0)) else ai_workstation_anthropic_workspace_id }}"
   when: ai_workstation_env_file.stat.exists
 
-- name: Populate Nextcloud secrets from existing ~/.config/ai/env if not provided
+- name: Populate Nextcloud and DragTokens secrets from existing ~/.config/ai/env if not provided
   ansible.builtin.set_fact:
     "{{ item.fact }}": "{{ (_existing | first) if (lookup('vars', item.fact) | length == 0 and _existing | length > 0) else lookup('vars', item.fact) }}"
   vars:
@@ -33,6 +33,7 @@
     - { var: NEXTCLOUD_HOST, fact: ai_workstation_nextcloud_host }
     - { var: NEXTCLOUD_USERNAME, fact: ai_workstation_nextcloud_username }
     - { var: NEXTCLOUD_PASSWORD, fact: ai_workstation_nextcloud_password }
+    - { var: DRAGTOKENS_API_KEY, fact: ai_workstation_dragtokens_api_key }
   loop_control:
     label: "{{ item.var }}"
   no_log: true
@@ -58,7 +59,8 @@
   ansible.builtin.assert:
     that: >-
       [ai_workstation_github_token, ai_workstation_anthropic_workspace_id,
-      ai_workstation_nextcloud_host, ai_workstation_nextcloud_username, ai_workstation_nextcloud_password]
+      ai_workstation_nextcloud_host, ai_workstation_nextcloud_username, ai_workstation_nextcloud_password,
+      ai_workstation_dragtokens_api_key]
       | select('search', '[\"$`\\\\]') | list | length == 0
     fail_msg: "A secret contains a double quote, dollar sign, backtick or backslash, which ~/.config/ai/env cannot hold safely"
     quiet: true

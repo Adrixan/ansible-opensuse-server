@@ -46,6 +46,7 @@
 - **US-12.1**: Enable Default Remote Control across Claude Code, Antigravity, and OpenCode (3 SP) - **Done**
 - **US-13.1**: Add Antigravity Desktop and Antigravity CLI (`agy`) with daily systemd auto-update timers and single-version pruning to `ai_desktop` role (5 SP) - **Done**
 - **US-14.1**: Overhaul MCP stack per free-MCP report review: yadm owns harness configs, `ai_workstation` installs runtimes only (8 SP) - **Done**
+- **US-14.2**: OpenCode on DragTokens: native CLI in `ai_desktop`, DragTokens secret in `ai_workstation` (3 SP) - **Done**
 
 ### Active Stories (Sprint 14)
 None (Sprint 14 Complete)

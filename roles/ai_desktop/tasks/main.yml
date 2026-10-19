@@ -28,3 +28,6 @@
   ansible.builtin.include_tasks: antigravity_cli.yml
   when: enable_antigravity_cli | default(true) | bool
 
+- name: Include OpenCode CLI installation and auto-update tasks
+  ansible.builtin.include_tasks: opencode_cli.yml
+  when: enable_opencode_cli | default(true) | bool

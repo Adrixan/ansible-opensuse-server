@@ -19,3 +19,10 @@ US-14.1: MCP stack overhaul after reviewing `~/Free Claude MCP Servers.md`. yadm
 - On Docker hosts: run `docker` + `ai_workstation` roles to get the read-only proxy.
 - Open decision: `laptops` and `master` have diverged (54 vs 15 commits). The new auto-merge rule deliberately does not merge `laptops` into `master`; do that only on explicit approval.
 - `roles/ai_workstation/templates/AGENTS.md.j2` mirrors the new auto-merge rule from the yadm-owned `~/.config/ai/AGENTS.md`.
+
+## 2026-10-19: US-14.2 OpenCode on DragTokens
+- OpenCode CLI v1 now comes from `ai_desktop` (`tasks/opencode_cli.yml`, native installer into `~/.opencode/bin`, daily `opencode-cli-update.timer`); `roles/opencode` and the npm global install are gone.
+- `ai_workstation` handles `DRAGTOKENS_API_KEY` like the Nextcloud secrets (env var or existing `~/.config/ai/env`). New machine: `DRAGTOKENS_API_KEY=… ansible-playbook main.yml -e enable_ai_workstation=true -e enable_ai_desktop=true`.
+- yadm `opencode.json##template` defines provider `dragtokens`; plan agent `dragtokens/gpt-6-astra`, build agent `dragtokens/gpt-6.1-sol`. Top-level `model` stays `anthropic/claude-sonnet-4-5`.
+- Open: no live API call verified because the current network's FortiGuard DNS blocks dragtokens.com. Test on another network: `opencode run -m dragtokens/gpt-6-astra "ping"`. Pool binding (codex-pro vs enterprise) is set on the DragTokens dashboard and cannot be checked from here.
+

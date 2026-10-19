@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Update OpenCode CLI (native install)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart={{ opencode_cli_bin }} upgrade --method curl
+Nice=10
