@@ -4,6 +4,11 @@ python_packages:
   - python3
   - python3-pip
   - python3-neovim
+  # OCR for scanned PDFs (Ph.D. literature pipeline); flavour matches system python3
+  - python313-ocrmypdf
+  - tesseract-ocr-traineddata-deu
+  - tesseract-ocr-traineddata-eng
+  - tesseract-ocr-traineddata-osd
 
 python_pip_packages:
   - manly
