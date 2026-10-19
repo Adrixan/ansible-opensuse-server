@@ -56,6 +56,20 @@ ai_workstation_docker_mcp_proxy_port: 2375
 ai_workstation_claude_remote_control: true
 ai_workstation_antigravity_remote_control: true
 ai_workstation_opencode_remote_control: true
+# Always-on `claude remote-control` servers, one per working directory (sessions started from the
+# Claude app run in that directory). Needs the one-time "Enable Remote Control?" consent and workspace
+# trust per directory, given interactively once; the role skips servers until both are present.
+ai_workstation_claude_rc_servers:
+  - name: phd
+    label: "PhD"
+    dir: "{{ ai_workstation_user_home }}/Obsidian/Ph.D."
+  - name: teaching
+    label: "Teaching"
+    dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Teaching"
+  - name: educator
+    label: "Educator"
+    dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Educator"
+ai_workstation_claude_rc_permission_mode: auto
 ai_workstation_opencode_server_port: 4096
 ai_workstation_opencode_server_host: "127.0.0.1"
 # Persisted with `opencode service set` (~/.config/opencode/service.json, which also holds the generated server password)

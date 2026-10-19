@@ -1,0 +1,25 @@
+# {{ ansible_managed }}
+# Always-on Claude Code Remote Control server for one working directory (instance = server name).
+# RC_DIR and RC_NAME come from ~/.config/claude-rc/%i.conf. ~/.config/ai/env uses `export` lines, which
+# EnvironmentFile cannot read, so bash sources it (MCP servers need its secrets). Server mode exits after
+# about 10 minutes without network; Restart=always brings it back.
+[Unit]
+Description=Claude Code Remote Control server (%i)
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=900
+StartLimitBurst=10
+
+[Service]
+Type=simple
+EnvironmentFile={{ ai_workstation_user_home }}/.config/claude-rc/%i.conf
+Environment=PATH={{ ai_workstation_user_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash -c 'set -a; for f in "$$HOME/.config/ai/env" "$$HOME/.research_stack.env"; do [ -r "$$f" ] && . "$$f"; done; set +a; cd -- "$$RC_DIR" && exec claude remote-control --name "$$RC_NAME" --permission-mode {{ ai_workstation_claude_rc_permission_mode }}'
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target

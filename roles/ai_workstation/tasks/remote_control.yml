@@ -158,3 +158,125 @@
     - >-
       opencode_service_template.changed or (ai_workstation_yadm_alt.changed | default(false))
       or (ai_workstation_opencode_service_set.changed | default(false))
+
+- name: Ensure Claude remote-control server config directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/claude-rc"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+  when: ai_workstation_claude_remote_control | default(true) | bool
+
+- name: Deploy Claude remote-control server template unit
+  ansible.builtin.template:
+    src: claude-remote-control@.service.j2
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/claude-remote-control@.service"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  register: claude_rc_unit
+  when: ai_workstation_claude_remote_control | default(true) | bool
+
+- name: Deploy per-directory Claude remote-control server settings
+  ansible.builtin.copy:
+    dest: "{{ ai_workstation_user_home }}/.config/claude-rc/{{ item.name }}.conf"
+    content: |
+      # Managed by Ansible (ai_workstation role, remote_control.yml)
+      RC_DIR="{{ item.dir }}"
+      RC_NAME="{{ item.label }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: "{{ ai_workstation_claude_rc_servers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: claude_rc_conf
+  when: ai_workstation_claude_remote_control | default(true) | bool
+
+- name: Reload user systemd daemon for Claude remote-control servers
+  ansible.builtin.command:
+    cmd: "systemctl --user daemon-reload"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  when:
+    - ai_workstation_claude_remote_control | default(true) | bool
+    - claude_rc_unit.changed or claude_rc_conf.changed
+
+- name: Read Claude Code state for remote-control consent and workspace trust
+  ansible.builtin.slurp:
+    src: "{{ ai_workstation_user_home }}/.claude.json"
+  register: claude_state_raw
+  failed_when: false
+  when: ai_workstation_claude_remote_control | default(true) | bool
+
+- name: Determine which Claude remote-control servers can start unattended
+  ansible.builtin.set_fact:
+    claude_rc_ready: "{{ claude_rc_ready | default([]) + ([item.name] if (claude_state.remoteDialogSeen | default(false) and (claude_state.projects[item.dir].hasTrustDialogAccepted | default(false))) else []) }}"
+  vars:
+    claude_state: "{{ (claude_state_raw.content | default('e30=') | b64decode | from_json) }}"
+  loop: "{{ ai_workstation_claude_rc_servers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: ai_workstation_claude_remote_control | default(true) | bool
+
+- name: Warn about Claude remote-control servers that need interactive consent or trust
+  ansible.builtin.debug:
+    msg: >-
+      Skipping claude-remote-control@{{ item.name }}: run `cd {{ item.dir }} && claude remote-control`
+      once in a terminal, answer the trust and "Enable Remote Control?" prompts with y, press Ctrl+C,
+      then rerun the playbook.
+  loop: "{{ ai_workstation_claude_rc_servers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - ai_workstation_claude_remote_control | default(true) | bool
+    - item.name not in (claude_rc_ready | default([]))
+
+- name: Check status of Claude remote-control servers
+  ansible.builtin.command:
+    cmd: "systemctl --user is-enabled claude-remote-control@{{ item }}.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  loop: "{{ claude_rc_ready | default([]) }}"
+  register: claude_rc_enabled
+  failed_when: false
+  changed_when: false
+  when: ai_workstation_claude_remote_control | default(true) | bool
+
+- name: Enable and start Claude remote-control servers
+  ansible.builtin.command:
+    cmd: "systemctl --user enable --now claude-remote-control@{{ item.item }}.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  loop: "{{ claude_rc_enabled.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when:
+    - ai_workstation_claude_remote_control | default(true) | bool
+    - item.rc != 0
+
+- name: Restart Claude remote-control servers after unit or settings changes
+  ansible.builtin.command:
+    cmd: "systemctl --user restart claude-remote-control@{{ item.item }}.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  loop: "{{ claude_rc_enabled.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when:
+    - ai_workstation_claude_remote_control | default(true) | bool
+    - item.rc == 0
+    - claude_rc_unit.changed or claude_rc_conf.changed
