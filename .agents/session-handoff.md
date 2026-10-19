@@ -1,10 +1,10 @@
 # Session Handoff State
 
 ## Active Intent
-US-14.1: MCP stack overhaul after reviewing `~/Free Claude MCP Servers.md`. yadm owns every harness config; the `ai_workstation` role only installs runtimes, keeps secrets in `~/.config/ai/env` and renders the yadm templates.
+US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR, `localhost` cloaking for `cloudflared`, and a local TLS 1.3 ECH reverse proxy (`dragtokens-ech-proxy.service` in `ai_workstation`) so OpenCode reaches `dragtokens.com` over ECH.
 
 ## Task & Story Status
-- Current Story: US-14.1, complete and verified live on localhost (2026-10-18), idempotent (`ok=55, changed=0, failed=0`).
+- Current Stories: US-15.1 (`dns_setup`) and US-15.2 (`dragtokens-ech-proxy`), complete and verified live on localhost (2026-10-19), idempotent (`dns_setup`: `ok=10, changed=0`; `ai_workstation`: `ok=65, changed=0`).
 
 ## Key Decisions & Architecture
 - Server set (all harnesses): github (remote `https://api.githubcopilot.com/mcp/`, PAT header), playwright (`/usr/local/bin/playwright-mcp`, system chromium, headless, isolated), memory (`MEMORY_FILE_PATH=~/sync/ai/mcp-memory.jsonl`), fetch, git, arxiv, zotero, markitdown, serena (`--project-from-cwd --open-web-dashboard False`), nextcloud, docker (`DOCKER_HOST=tcp://127.0.0.1:2375`). context7 only in Antigravity/OpenCode (Claude uses the claude.ai connector). sqlite and puppeteer removed.
