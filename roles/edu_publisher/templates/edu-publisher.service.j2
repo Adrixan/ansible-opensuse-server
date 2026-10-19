@@ -1,13 +1,13 @@
 # {{ ansible_managed }}
 [Unit]
-Description=Publish due Prof. Aufner posts (edu-publisher)
+Description=Push approved Prof. Aufner pieces to the publishing server (edu-publisher sync)
 Wants=network-online.target
 After=network-online.target
 
 [Service]
 Type=oneshot
 Environment=PATH={{ edu_publisher_user_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart={{ edu_publisher_bin }} run
+ExecStart={{ edu_publisher_bin }} sync
 TimeoutStartSec={{ edu_publisher_timeout }}
 Nice=10
 StandardOutput=journal
