@@ -39,6 +39,7 @@ US-14.1: MCP stack overhaul after reviewing `~/Free Claude MCP Servers.md`. yadm
 ## 2026-10-19: US-15.1 System-wide RethinkDNS DoH (`dns_setup`)
 - Added `roles/dns_setup` (`enable_dns_setup` in `group_vars/all.yml` and `main.yml`) to deploy `dnscrypt-proxy` on `127.0.0.1:53` via `dnscrypt-proxy.socket`, configured with Firefox's RethinkDNS DoH endpoint (`https://sky.rethinkdns.com/1-5apwaaejaebrciqbftqiaacugaqaaaai`, strict DoH with `ignore_system_dns = true`).
 - Only `.intern` and `.local` domains are excluded from DoH and forwarded via `/etc/dnscrypt-proxy/forwarding-rules.txt` to `/run/dnscrypt-proxy-dhcp-resolv.conf` (maintained by `/etc/NetworkManager/dispatcher.d/10-dnscrypt-dhcp-dns.sh`), with bootstrap fallback.
-- NetworkManager uses `/etc/NetworkManager/conf.d/90-dnscrypt-proxy.conf` (`[global-dns-domain-*] servers=127.0.0.1`) so `/etc/resolv.conf` points to `127.0.0.1`. Live-verified and idempotent (`ok=9, changed=0, failed=0`).
+- Enabled `/etc/dnscrypt-proxy/cloaking-rules.txt` (`localhost` -> `127.0.0.1` / `::1`, `cloak_ptr = true`) so pure-DNS clients that bypass `/etc/hosts` when `127.0.0.1:53` is in `/etc/resolv.conf` (such as Go's `cloudflared` daemon dialing `ssh://localhost:22`) resolve `localhost` instead of getting `NXDOMAIN` from `block_unqualified = true`.
+- NetworkManager uses `/etc/NetworkManager/conf.d/90-dnscrypt-proxy.conf` (`[global-dns-domain-*] servers=127.0.0.1`) so `/etc/resolv.conf` points to `127.0.0.1`. Live-verified and idempotent (`ok=10, changed=0, failed=0`).
 
 

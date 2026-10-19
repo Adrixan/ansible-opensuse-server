@@ -1,0 +1,4 @@
+# Managed by Ansible (dns_setup role)
+# Resolve localhost and *.localhost locally (RFC 6761) for pure-DNS clients like Go's net.Resolver (cloudflared)
+localhost 127.0.0.1
+localhost ::1

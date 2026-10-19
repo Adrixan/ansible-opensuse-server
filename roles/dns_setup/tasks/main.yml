@@ -10,8 +10,8 @@
     src: dnscrypt-proxy.toml.j2
     dest: /etc/dnscrypt-proxy/dnscrypt-proxy.toml
     owner: root
-    group: root
-    mode: "0644"
+    group: dnscrypt
+    mode: "0640"
     validate: "/usr/sbin/dnscrypt-proxy -config %s -check"
   register: dnscrypt_config
 
@@ -20,9 +20,18 @@
     src: forwarding-rules.txt.j2
     dest: /etc/dnscrypt-proxy/forwarding-rules.txt
     owner: root
-    group: root
-    mode: "0644"
+    group: dnscrypt
+    mode: "0640"
   register: dnscrypt_forwarding
+
+- name: Configure dnscrypt-proxy localhost cloaking rules
+  ansible.builtin.copy:
+    src: cloaking-rules.txt
+    dest: /etc/dnscrypt-proxy/cloaking-rules.txt
+    owner: root
+    group: dnscrypt
+    mode: "0640"
+  register: dnscrypt_cloaking
 
 - name: Deploy NetworkManager dispatcher script for DHCP DNS servers
   ansible.builtin.template:
@@ -60,7 +69,7 @@
     state: restarted
   when:
     - not ansible_check_mode
-    - dnscrypt_config.changed or dnscrypt_forwarding.changed
+    - dnscrypt_config.changed or dnscrypt_forwarding.changed or dnscrypt_cloaking.changed
 
 - name: Configure NetworkManager to use local dnscrypt-proxy resolver
   ansible.builtin.copy:
