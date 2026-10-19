@@ -3,8 +3,15 @@
 ## Sprint Goal
 Replace archived MCP servers, add MarkItDown/Serena/Nextcloud/Context7/Docker (read-only), and make yadm the single owner of harness configs while `ai_workstation` provisions runtimes and secrets.
 
-## Active Sprint Story (Sprint 14)
-None (Sprint 14 Complete)
+## Active Sprint Story (Sprint 15)
+None (Sprint 15 Complete)
+
+## Completed Sprint Stories (Sprint 15)
+- **US-15.1**: Create `dns_setup` role for system-wide RethinkDNS DoH (`dnscrypt-proxy` + NetworkManager) matching Firefox TRR (3 SP) - **Done**
+  - [x] `roles/dns_setup`: installs `dnscrypt-proxy`, configures static RethinkDNS DoH stamp (`https://sky.rethinkdns.com/1-5apwaaejaebrciqbftqiaacugaqaaaai`) validated via `dnscrypt-proxy -check`, enables `dnscrypt-proxy.socket` on `127.0.0.1:53`
+  - [x] Local domain exclusions (`intern`, `local`) forwarded to active DHCP resolvers (`/run/dnscrypt-proxy-dhcp-resolv.conf` populated by `/etc/NetworkManager/dispatcher.d/10-dnscrypt-dhcp-dns.sh`) with bootstrap fallback
+  - [x] NetworkManager global DNS drop-in `/etc/NetworkManager/conf.d/90-dnscrypt-proxy.conf` pointing `/etc/resolv.conf` to `127.0.0.1`
+  - [x] Registered `enable_dns_setup` in `group_vars/all.yml` and `main.yml`; verified `--syntax-check`, `--check`, live deployment (`ok=12, changed=10, failed=0`), and idempotent rerun (`ok=9, changed=0, failed=0`)
 
 ## Completed Sprint Stories (Sprint 14)
 - **US-14.4**: Native V2 OpenCode config and update activation (2 SP) - **Done**

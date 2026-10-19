@@ -15,6 +15,12 @@
       when: enable_ssh_setup | default(false) | bool
       tags: [ssh_setup]
 
+    - name: Include dns_setup role
+      ansible.builtin.include_role:
+        name: dns_setup
+      when: enable_dns_setup | default(false) | bool
+      tags: [dns_setup]
+
     - name: Include luks_boot_setup role
       ansible.builtin.include_role:
         name: luks_boot_setup

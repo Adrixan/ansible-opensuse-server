@@ -36,3 +36,9 @@ US-14.1: MCP stack overhaul after reviewing `~/Free Claude MCP Servers.md`. yadm
 - yadm template now uses the native V2 shape; machines still on OpenCode V1 cannot read it, so run the playbook (`ai_desktop` migrates to V2) right after `yadm pull`.
 - DragTokens is blocked on the `schule.intern` network: system DNS answers with the Fortinet block page (208.91.112.55), and connecting to the real Cloudflare IP gets a TLS reset on SNI `dragtokens.com`. Firefox only reaches it through DoH (`network.trr.mode=3`, RethinkDNS), probably plus ECH (unverified). Making OpenCode work there would mean evading the school's filter: the user decides, ideally via school IT. Test on another network instead.
 
+## 2026-10-19: US-15.1 System-wide RethinkDNS DoH (`dns_setup`)
+- Added `roles/dns_setup` (`enable_dns_setup` in `group_vars/all.yml` and `main.yml`) to deploy `dnscrypt-proxy` on `127.0.0.1:53` via `dnscrypt-proxy.socket`, configured with Firefox's RethinkDNS DoH endpoint (`https://sky.rethinkdns.com/1-5apwaaejaebrciqbftqiaacugaqaaaai`, strict DoH with `ignore_system_dns = true`).
+- Only `.intern` and `.local` domains are excluded from DoH and forwarded via `/etc/dnscrypt-proxy/forwarding-rules.txt` to `/run/dnscrypt-proxy-dhcp-resolv.conf` (maintained by `/etc/NetworkManager/dispatcher.d/10-dnscrypt-dhcp-dns.sh`), with bootstrap fallback.
+- NetworkManager uses `/etc/NetworkManager/conf.d/90-dnscrypt-proxy.conf` (`[global-dns-domain-*] servers=127.0.0.1`) so `/etc/resolv.conf` points to `127.0.0.1`. Live-verified and idempotent (`ok=9, changed=0, failed=0`).
+
+

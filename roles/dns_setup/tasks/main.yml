@@ -1,0 +1,80 @@
+---
+# tasks file for dns_setup
+- name: Install dnscrypt-proxy package
+  community.general.zypper:
+    name: "{{ dns_setup_packages }}"
+    state: present
+
+- name: Configure dnscrypt-proxy for RethinkDNS DoH
+  ansible.builtin.template:
+    src: dnscrypt-proxy.toml.j2
+    dest: /etc/dnscrypt-proxy/dnscrypt-proxy.toml
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "/usr/sbin/dnscrypt-proxy -config %s -check"
+  register: dnscrypt_config
+
+- name: Configure dnscrypt-proxy local domain forwarding rules
+  ansible.builtin.template:
+    src: forwarding-rules.txt.j2
+    dest: /etc/dnscrypt-proxy/forwarding-rules.txt
+    owner: root
+    group: root
+    mode: "0644"
+  register: dnscrypt_forwarding
+
+- name: Deploy NetworkManager dispatcher script for DHCP DNS servers
+  ansible.builtin.template:
+    src: 10-dnscrypt-dhcp-dns.sh.j2
+    dest: /etc/NetworkManager/dispatcher.d/10-dnscrypt-dhcp-dns.sh
+    owner: root
+    group: root
+    mode: "0755"
+  register: nm_dispatcher_script
+
+- name: Seed DHCP DNS servers file for dnscrypt-proxy forwarding
+  ansible.builtin.command:
+    cmd: /etc/NetworkManager/dispatcher.d/10-dnscrypt-dhcp-dns.sh lo up
+    creates: "{{ dns_setup_dhcp_resolvconf_path }}"
+  when: not ansible_check_mode
+
+- name: Refresh DHCP DNS servers file when dispatcher script changes
+  ansible.builtin.command:
+    cmd: /etc/NetworkManager/dispatcher.d/10-dnscrypt-dhcp-dns.sh lo up
+  when:
+    - not ansible_check_mode
+    - nm_dispatcher_script.changed
+
+- name: Enable and start dnscrypt-proxy socket
+  ansible.builtin.systemd:
+    name: dnscrypt-proxy.socket
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  when: not ansible_check_mode
+
+- name: Restart dnscrypt-proxy service on configuration change
+  ansible.builtin.systemd:
+    name: dnscrypt-proxy.service
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - dnscrypt_config.changed or dnscrypt_forwarding.changed
+
+- name: Configure NetworkManager to use local dnscrypt-proxy resolver
+  ansible.builtin.copy:
+    src: 90-dnscrypt-proxy.conf
+    dest: /etc/NetworkManager/conf.d/90-dnscrypt-proxy.conf
+    owner: root
+    group: root
+    mode: "0644"
+  register: nm_dns_config
+
+- name: Reload NetworkManager on DNS configuration change
+  ansible.builtin.systemd:
+    name: NetworkManager.service
+    state: reloaded
+  when:
+    - not ansible_check_mode
+    - nm_dns_config.changed

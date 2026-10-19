@@ -1,0 +1,22 @@
+---
+# defaults file for dns_setup
+dns_setup_packages:
+  - dnscrypt-proxy
+
+dns_setup_server_name: "rethinkdns"
+# RethinkDNS DNS-over-HTTPS stamp matching Firefox network.trr.uri:
+# https://sky.rethinkdns.com/1-5apwaaejaebrciqbftqiaacugaqaaaai
+dns_setup_doh_stamp: "sdns://AgMAAAAAAAAAAAASc2t5LnJldGhpbmtkbnMuY29tIy8xLTVhcHdhYWVqYWVicmNpcWJmdHFpYWFjdWdhcWFhYWFp"
+
+dns_setup_bootstrap_resolvers:
+  - "9.9.9.11:53"
+  - "1.1.1.1:53"
+  - "208.67.220.220:53"
+
+dns_setup_netprobe_address: "9.9.9.11:53"
+
+dns_setup_excluded_domains:
+  - "intern"
+  - "local"
+
+dns_setup_dhcp_resolvconf_path: "/run/dnscrypt-proxy-dhcp-resolv.conf"

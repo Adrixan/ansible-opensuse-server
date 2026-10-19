@@ -17,6 +17,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 ### ⚙️ System & Core Infrastructure
 * **`system_update`**: Installs `topgrade` upgrade utility via zypper, refreshes package repositories, and executes system-wide updates (`zypper dup`).
 * **`ssh_setup`**: Secures `.ssh` directory permissions and provisions `authorized_keys`.
+* **`dns_setup`**: Configures system-wide DNS-over-HTTPS via `dnscrypt-proxy` on `127.0.0.1:53` matching Firefox's RethinkDNS TRR endpoint (`https://sky.rethinkdns.com/1-5apwaaejaebrciqbftqiaacugaqaaaai`), forwards `.intern` and `.local` queries to active DHCP resolvers via NetworkManager dispatcher, and points NetworkManager global DNS to `127.0.0.1`.
 * **`luks_boot_setup`**: Manages root LUKS keyfiles, LVM discards/TRIM, Dracut initramfs modules, and GRUB kernel parameters.
 * **`power_management`**: Configures `powertop` and manages `tlp.service` for laptop battery optimization.
 * **`bluetooth_setup`**: Installs `bluez`, firmware packages, and enables system Bluetooth services.

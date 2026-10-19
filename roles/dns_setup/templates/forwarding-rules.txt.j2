@@ -1,0 +1,5 @@
+# Managed by Ansible (dns_setup role)
+# Excluded local domains forwarded to active DHCP resolvers (with bootstrap fallback)
+{% for domain in dns_setup_excluded_domains %}
+{{ domain }} $RESOLVCONF:{{ dns_setup_dhcp_resolvconf_path }},$BOOTSTRAP
+{% endfor %}

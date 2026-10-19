@@ -13,9 +13,10 @@
 - **Containerization**: Docker & Docker Compose
 - **Service Manager**: `systemd`
 
-## Compact Semantic Role Architecture (30 Roles)
+## Compact Semantic Role Architecture (31 Roles)
 1. **[system_update](file:///home/Adrixan/code/ansible-opensuse-server/roles/system_update)**: System package upgrade & `topgrade` utility via zypper.
 2. **[ssh_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/ssh_setup)**: User SSH access & `authorized_keys`.
+3. **[dns_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/dns_setup)**: System-wide DNS-over-HTTPS via `dnscrypt-proxy` (`127.0.0.1:53`, RethinkDNS DoH matching Firefox TRR, `.intern`/`.local` DHCP forwarding, NetworkManager global DNS).
 3. **[luks_boot_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/luks_boot_setup)**: Root LUKS keyfile, Dracut, GRUB parameters, initramfs.
 4. **[power_management](file:///home/Adrixan/code/ansible-opensuse-server/roles/power_management)**: Power management tools (`powertop`, `tlp.service`).
 5. **[bluetooth_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/bluetooth_setup)**: Bluetooth stack (`bluez`, `bluez-firmware`, `bluetooth.service`).

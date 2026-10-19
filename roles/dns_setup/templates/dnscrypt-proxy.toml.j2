@@ -1,0 +1,48 @@
+# Managed by Ansible (dns_setup role)
+# System-wide DNS-over-HTTPS matching Firefox TRR configuration (network.trr.mode=3)
+
+# Empty when using systemd socket activation (dnscrypt-proxy.socket on 127.0.0.1:53)
+listen_addresses = []
+max_clients = 250
+
+server_names = ['{{ dns_setup_server_name }}']
+
+ipv4_servers = true
+ipv6_servers = false
+dnscrypt_servers = false
+doh_servers = true
+odoh_servers = false
+
+require_dnssec = false
+require_nolog = true
+require_nofilter = false
+
+force_tcp = false
+http3 = false
+http3_probe = false
+timeout = 5000
+keepalive = 30
+cert_refresh_delay = 240
+
+bootstrap_resolvers = [{{ dns_setup_bootstrap_resolvers | map('to_json') | join(', ') }}]
+ignore_system_dns = true
+netprobe_timeout = 60
+netprobe_address = '{{ dns_setup_netprobe_address }}'
+
+block_ipv6 = false
+block_unqualified = true
+block_undelegated = true
+reject_ttl = 10
+
+forwarding_rules = '/etc/dnscrypt-proxy/forwarding-rules.txt'
+
+cache = true
+cache_size = 4096
+cache_min_ttl = 2400
+cache_max_ttl = 86400
+cache_neg_min_ttl = 60
+cache_neg_max_ttl = 600
+
+[static]
+  [static.'{{ dns_setup_server_name }}']
+  stamp = '{{ dns_setup_doh_stamp }}'

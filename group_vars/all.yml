@@ -9,6 +9,7 @@ target_user_uid: 1000
 # Role feature flags (Disabled by default)
 enable_system_update: false
 enable_ssh_setup: false
+enable_dns_setup: false
 enable_power_management: false
 enable_printing_setup: false
 enable_luks_boot_setup: false

@@ -1,0 +1,40 @@
+#!/bin/bash
+# Managed by Ansible (dns_setup role)
+# Populate {{ dns_setup_dhcp_resolvconf_path }} with active DHCP DNS servers for local domain forwarding
+
+set -euo pipefail
+
+DEST="{{ dns_setup_dhcp_resolvconf_path }}"
+TMP="${DEST}.tmp"
+
+write_resolvers() {
+    : > "$TMP"
+    local ns
+    for ns in ${IP4_NAMESERVERS:-} ${DHCP4_DOMAIN_NAME_SERVERS:-}; do
+        if [[ -n "$ns" && "$ns" != "127.0.0.1" ]] && ! grep -qxF "nameserver $ns" "$TMP"; then
+            echo "nameserver $ns" >> "$TMP"
+        fi
+    done
+
+    if [[ ! -s "$TMP" ]]; then
+        for dev_file in /run/NetworkManager/devices/*; do
+            [[ -f "$dev_file" ]] || continue
+            while IFS='=' read -r _ val; do
+                for ns in $val; do
+                    if [[ -n "$ns" && "$ns" != "127.0.0.1" ]] && ! grep -qxF "nameserver $ns" "$TMP"; then
+                        echo "nameserver $ns" >> "$TMP"
+                    fi
+                done
+            done < <(grep -E '^dhcp[46]\.domain_name_servers=' "$dev_file" 2>/dev/null || true)
+        done
+    fi
+
+    chmod 0644 "$TMP"
+    mv -f "$TMP" "$DEST"
+}
+
+case "${2:-up}" in
+    up|dhcp4-change|dhcp6-change| reapply|down|vpn-up|vpn-down)
+        write_resolvers
+        ;;
+esac
