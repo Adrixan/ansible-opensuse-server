@@ -3,8 +3,9 @@
 edu_publisher_user: "{{ target_user | default('Adrixan') }}"
 edu_publisher_user_home: "{{ target_user_home | default('/home/' + edu_publisher_user) }}"
 edu_publisher_user_uid: "{{ target_user_uid | default(1000) }}"
-# Local-only git repository (no remote yet); the role links it but does not clone it
+# Private GitHub repository (AGPL-3.0); cloned over SSH as the user when missing, never updated by the role
 edu_publisher_repo_dir: "{{ edu_publisher_user_home }}/code/edu-publisher"
+edu_publisher_repo_url: "git@github.com:Adrixan/edu-publisher.git"
 edu_publisher_bin: "{{ edu_publisher_user_home }}/.local/bin/edupub"
 edu_publisher_on_calendar: "*:0/5"
 # Pushing large videos to the hosting account can take long on slow uplinks

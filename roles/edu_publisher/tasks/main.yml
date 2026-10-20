@@ -6,9 +6,14 @@
     path: "{{ edu_publisher_repo_dir }}/edupub.py"
   register: edu_publisher_repo
 
-- name: Fail with instructions when the repository is missing
-  ansible.builtin.fail:
-    msg: "{{ edu_publisher_repo_dir }} is missing; copy or clone the edu-publisher repository there first."
+- name: Clone the edu-publisher repository when it is missing
+  ansible.builtin.git:
+    repo: "{{ edu_publisher_repo_url }}"
+    dest: "{{ edu_publisher_repo_dir }}"
+    version: main
+    update: false
+  become: true
+  become_user: "{{ edu_publisher_user }}"
   when: not edu_publisher_repo.stat.exists
 
 - name: Link the edupub command into ~/.local/bin
