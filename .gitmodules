@@ -1,3 +1,0 @@
-[submodule ".github/copilot-instructions"]
-	path = .github/copilot-instructions
-	url = git@github.com:Adrixan/copilot-instructions.git
