@@ -16,3 +16,7 @@ shell_packages:
   - npm-default
   - pdfgrep
   - fzf
+
+# Login shell of the target user (zsh is installed above)
+shell_environment_user: "{{ target_user | default('Adrixan') }}"
+shell_environment_login_shell: /usr/bin/zsh

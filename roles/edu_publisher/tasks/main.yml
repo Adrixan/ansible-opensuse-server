@@ -1,6 +1,11 @@
 ---
 # tasks file for edu_publisher
 
+- name: Enable lingering so the sync timer runs without a login session
+  ansible.builtin.command:
+    argv: [loginctl, enable-linger, "{{ edu_publisher_user }}"]
+    creates: "/var/lib/systemd/linger/{{ edu_publisher_user }}"
+
 - name: Check that the edu-publisher repository exists
   ansible.builtin.stat:
     path: "{{ edu_publisher_repo_dir }}/edupub.py"

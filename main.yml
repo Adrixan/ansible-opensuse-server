@@ -154,6 +154,12 @@
       when: enable_obsidian | default(false) | bool
       tags: [obsidian]
 
+    - name: Include zotero role
+      ansible.builtin.include_role:
+        name: zotero
+      when: enable_zotero | default(false) | bool
+      tags: [zotero]
+
     - name: Include syncthing_daemon role
       ansible.builtin.include_role:
         name: syncthing_daemon

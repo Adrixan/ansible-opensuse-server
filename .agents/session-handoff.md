@@ -46,5 +46,8 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Added `roles/ai_workstation/files/dragtokens-ech-proxy.go` and `tasks/dragtokens_ech_proxy.yml` (`dragtokens-ech-proxy.service` on `127.0.0.1:4097`, built with Go 1.27 `crypto/tls.Config.EncryptedClientHelloConfigList` using the `TYPE65` record from `127.0.0.1:53`).
 - Pointed yadm `~/.config/opencode/opencode.json##template` `providers.dragtokens.settings.baseURL` to `http://127.0.0.1:4097/v1`. OpenCode now reaches DragTokens cleanly (`GET /v1/models` returns 200; `opencode run -m dragtokens/gpt-6-astra` receives API response from DragTokens: `Insufficient user quota, remaining quota: ¥0.000000`). Top up or check pool binding on the DragTokens dashboard.
 
-
-
+## 2026-10-20: Document tooling, Zotero, linger, login shell
+- `office_suite`: pinned Marp CLI 4.5.1 in `/opt/marp-cli` (npm overrides, audit gate) and pandoc 3.12.1 (checksum-pinned).
+- New role `zotero` (`enable_zotero`): flatpak, default profile when missing, Better BibTeX 9.0.71 (checksum-pinned), `user.js` with local API, UTF-8 export, citekey format and `extensions.autoDisableScopes` 14 so the sideloaded add-on starts enabled (verified with an isolated Zotero instance on a fresh profile).
+- Lingering: `ai_workstation_linger` (default true) and in `edu_publisher`. Zsh login shell in `shell_environment`.
+- Verified: two consecutive runs of zotero, shell_environment, ai_workstation, edu_publisher; second run changed=0.

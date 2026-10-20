@@ -11,3 +11,8 @@
 - name: Install shell packages
   community.general.zypper:
     name: "{{ shell_packages }}"
+
+- name: Make Zsh the login shell of the target user
+  ansible.builtin.user:
+    name: "{{ shell_environment_user }}"
+    shell: "{{ shell_environment_login_shell }}"

@@ -1,4 +1,10 @@
 ---
+- name: Enable lingering so user services run without a login session
+  ansible.builtin.command:
+    argv: [loginctl, enable-linger, "{{ ai_workstation_user }}"]
+    creates: "/var/lib/systemd/linger/{{ ai_workstation_user }}"
+  when: ai_workstation_linger | bool
+
 # tasks for configuring remote control across AI harnesses
 
 - name: Ensure ~/.claude directory exists

@@ -1,0 +1,104 @@
+---
+# tasks file for zotero: Zotero (flatpak), Better BibTeX and the local API for the Ph.D. tooling.
+# Not managed: Zotero account sync login and the Better BibTeX auto-export (one machine owns it).
+- name: Ensure flatpak environment is configured
+  ansible.builtin.include_role:
+    name: flatpak_setup
+
+- name: Install Zotero via Flatpak
+  community.general.flatpak:
+    name: "{{ zotero_flatpak_name }}"
+    remote: "{{ zotero_flatpak_remote }}"
+    state: present
+    method: system
+
+- name: Check for an existing Zotero profile
+  ansible.builtin.stat:
+    path: "{{ zotero_profile_root }}/profiles.ini"
+  register: zotero_profiles_ini
+
+- name: Create a default profile when Zotero has never run here
+  when: not zotero_profiles_ini.stat.exists
+  block:
+    - name: Create the profile directory
+      ansible.builtin.file:
+        path: "{{ zotero_profile_root }}/{{ zotero_new_profile_dir }}"
+        state: directory
+        owner: "{{ zotero_user }}"
+        group: "{{ zotero_user }}"
+        mode: '0700'
+
+    - name: Register the profile in profiles.ini
+      ansible.builtin.copy:
+        dest: "{{ zotero_profile_root }}/profiles.ini"
+        content: |
+          [Profile0]
+          Name=default
+          IsRelative=1
+          Path={{ zotero_new_profile_dir }}
+          Default=1
+
+          [General]
+          StartWithLastProfile=1
+          Version=2
+        owner: "{{ zotero_user }}"
+        group: "{{ zotero_user }}"
+        mode: '0644'
+
+- name: Resolve the default Zotero profile
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -I
+      - -c
+      - |
+        import configparser, os, sys
+        root = sys.argv[1]
+        ini = configparser.ConfigParser(interpolation=None)
+        ini.read(os.path.join(root, "profiles.ini"))
+        profiles = [ini[s] for s in ini.sections() if s.startswith("Profile")]
+        if not profiles:
+            sys.exit("no profile in profiles.ini")
+        p = next((p for p in profiles if p.get("Default") == "1"), profiles[0])
+        path = p["Path"]
+        print(os.path.join(root, path) if p.get("IsRelative", "1") == "1" else path)
+      - "{{ zotero_profile_root }}"
+  register: zotero_profile
+  changed_when: false
+  check_mode: false
+
+- name: Ensure the profile extensions directory exists
+  ansible.builtin.file:
+    path: "{{ zotero_profile.stdout }}/extensions"
+    state: directory
+    owner: "{{ zotero_user }}"
+    group: "{{ zotero_user }}"
+    mode: '0700'
+
+- name: Install Better BibTeX {{ zotero_bbt_version }} (checksum-pinned)
+  ansible.builtin.get_url:
+    url: "https://github.com/retorquere/zotero-better-bibtex/releases/download/v{{ zotero_bbt_version }}/zotero-better-bibtex-{{ zotero_bbt_version }}.xpi"
+    dest: "{{ zotero_profile.stdout }}/extensions/better-bibtex@iris-advies.com.xpi"
+    checksum: "sha256:{{ zotero_bbt_sha256 }}"
+    owner: "{{ zotero_user }}"
+    group: "{{ zotero_user }}"
+    mode: '0644'
+  register: zotero_bbt
+
+- name: Enforce Zotero and Better BibTeX settings (user.js)
+  ansible.builtin.copy:
+    dest: "{{ zotero_profile.stdout }}/user.js"
+    content: |
+      // Managed by Ansible (role zotero); applied at every Zotero start. Edit roles/zotero/defaults/main.yml.
+      {% for key, value in zotero_prefs.items() %}
+      user_pref({{ key | to_json }}, {{ value | to_json }});
+      {% endfor %}
+    owner: "{{ zotero_user }}"
+    group: "{{ zotero_user }}"
+    mode: '0644'
+  register: zotero_userjs
+
+- name: Remind to restart Zotero
+  ansible.builtin.debug:
+    msg: "Restart Zotero to load the new Better BibTeX version or settings."
+  when: zotero_bbt.changed or zotero_userjs.changed
