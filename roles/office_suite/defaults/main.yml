@@ -10,3 +10,16 @@ office_packages:
   - libreoffice-writer
   - okular
   - filezilla
+  - chromium   # headless renderer for Marp PDF/PPTX export
+
+# Marp CLI (Markdown slide decks to PDF, PPTX, HTML), installed into its own prefix with exact pins.
+# overrides lift vulnerable transitive dependencies of the latest release (npm audit must stay clean):
+# puppeteer-core 25 drops extract-zip and proxy-agent; katex, xmldom and basic-ftp carry advisories.
+# Bump to the latest releases (npm view <pkg> version) and re-run the role; the audit task gates it.
+office_marp_dir: /opt/marp-cli
+office_marp_version: "4.5.1"
+office_marp_overrides:
+  puppeteer-core: "25.15.0"
+  katex: "0.19.0"
+  "@xmldom/xmldom": "0.9.12"
+  basic-ftp: "6.2.3"

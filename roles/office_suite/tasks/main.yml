@@ -4,3 +4,49 @@
   community.general.zypper:
     name: "{{ office_packages }}"
     state: present
+
+- name: Create the Marp CLI prefix
+  ansible.builtin.file:
+    path: "{{ office_marp_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Write the pinned Marp CLI manifest
+  ansible.builtin.copy:
+    dest: "{{ office_marp_dir }}/package.json"
+    content: "{{ {'name': 'marp-cli-pinned', 'private': true, 'dependencies': {'@marp-team/marp-cli': office_marp_version}, 'overrides': office_marp_overrides} | to_nice_json }}"
+    owner: root
+    group: root
+    mode: '0644'
+  register: office_marp_manifest
+
+- name: Install Marp CLI with exact pins (no browser download, no install scripts)
+  ansible.builtin.command:
+    argv: [npm, install, --omit=dev, --ignore-scripts, --no-fund, --no-audit]
+    chdir: "{{ office_marp_dir }}"
+  environment:
+    PUPPETEER_SKIP_DOWNLOAD: "1"
+  when: office_marp_manifest.changed or not (office_marp_dir + '/node_modules/.bin/marp') is exists
+  changed_when: true
+
+- name: Audit the Marp CLI dependency tree (fails on any known vulnerability)
+  ansible.builtin.command:
+    argv: [npm, audit, --omit=dev, --audit-level=low]
+    chdir: "{{ office_marp_dir }}"
+  changed_when: false
+  check_mode: false
+
+- name: Install the marp wrapper (uses the system Chromium)
+  ansible.builtin.copy:
+    dest: /usr/local/bin/marp
+    content: |
+      #!/bin/sh
+      # Managed by Ansible (office_suite): Marp CLI from {{ office_marp_dir }} with the system Chromium
+      : "${CHROME_PATH:=/usr/bin/chromium}"
+      export CHROME_PATH
+      exec {{ office_marp_dir }}/node_modules/.bin/marp "$@"
+    owner: root
+    group: root
+    mode: '0755'
