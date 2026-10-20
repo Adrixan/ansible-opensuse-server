@@ -23,3 +23,10 @@ office_marp_overrides:
   katex: "0.19.0"
   "@xmldom/xmldom": "0.9.12"
   basic-ftp: "6.2.3"
+
+# pandoc from the upstream release (Tumbleweed lags behind); bump version and checksums together
+# (gh api repos/jgm/pandoc/releases/latest -q '.assets[] | .name + " " + .digest').
+office_pandoc_version: "3.12.1"
+office_pandoc_sha256:
+  amd64: d0c90410e90204c9ca83b8539fac5c7aed01fd537207e4585849f8abc5df20b8
+  arm64: 445d96fd08801fe636cab1158b4f017ee320ac3b7446328b4fe2f902117b19b9

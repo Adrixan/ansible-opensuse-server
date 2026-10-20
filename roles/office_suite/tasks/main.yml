@@ -50,3 +50,30 @@
     owner: root
     group: root
     mode: '0755'
+
+- name: Set the pandoc release architecture
+  ansible.builtin.set_fact:
+    office_pandoc_arch: "{{ 'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'amd64' }}"
+
+- name: Download pandoc {{ office_pandoc_version }} (checksum-pinned)
+  ansible.builtin.get_url:
+    url: "https://github.com/jgm/pandoc/releases/download/{{ office_pandoc_version }}/pandoc-{{ office_pandoc_version }}-linux-{{ office_pandoc_arch }}.tar.gz"
+    dest: "/var/cache/pandoc-{{ office_pandoc_version }}-{{ office_pandoc_arch }}.tar.gz"
+    checksum: "sha256:{{ office_pandoc_sha256[office_pandoc_arch] }}"
+    mode: '0644'
+
+- name: Unpack pandoc into /opt
+  ansible.builtin.unarchive:
+    src: "/var/cache/pandoc-{{ office_pandoc_version }}-{{ office_pandoc_arch }}.tar.gz"
+    dest: /opt
+    remote_src: true
+    creates: "/opt/pandoc-{{ office_pandoc_version }}/bin/pandoc"
+    owner: root
+    group: root
+
+- name: Link pandoc into /usr/local/bin (shadows the older distribution package)
+  ansible.builtin.file:
+    src: "/opt/pandoc-{{ office_pandoc_version }}/bin/pandoc"
+    dest: /usr/local/bin/pandoc
+    state: link
+    force: true
