@@ -10,7 +10,7 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Server set (all harnesses): github (remote `https://api.githubcopilot.com/mcp/`, PAT header), playwright (`/usr/local/bin/playwright-mcp`, system chromium, headless, isolated), memory (`MEMORY_FILE_PATH=~/sync/ai/mcp-memory.jsonl`), fetch, git, arxiv, zotero, markitdown, serena (`--project-from-cwd --open-web-dashboard False`), nextcloud, docker (`DOCKER_HOST=tcp://127.0.0.1:2375`). context7 only in Antigravity/OpenCode (Claude uses the claude.ai connector). sqlite and puppeteer removed.
 - Antigravity/OpenCode: serena, nextcloud, docker disabled by default (those harnesses load all schemas up front; Nextcloud alone has 181 tools).
 - Claude Code: yadm-tracked plugin marketplace `~/.config/ai/claude-plugins` (`workstation-mcp@workstation`), `${VAR}` secrets expanded at runtime; `permissions.ask` rules for Nextcloud send/share/delete/trash and GitHub merge/delete.
-- `instructions.yml` only bootstraps `~/.config/ai/AGENTS.md` when missing (previous behaviour overwrote the yadm-owned file).
+- 2026-10-20: `instructions.yml`, `skills.yml` and `templates/AGENTS.md.j2` removed. Agent instructions, their symlinks and skills are tracked only in yadm; this repo covers technical setup only.
 - yadm auto-alt re-renders templates on ordinary yadm commands with the caller's environment; `~/.config/ai/env` must therefore export every templated secret (now includes `NEXTCLOUD_*`).
 
 ## Immediate Next Steps
@@ -18,7 +18,6 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - NowCoding provider and `NOWCODING_API_KEY` removed entirely (2026-10-18).
 - On Docker hosts: run `docker` + `ai_workstation` roles to get the read-only proxy.
 - Open decision: `laptops` and `master` have diverged (54 vs 15 commits). The new auto-merge rule deliberately does not merge `laptops` into `master`; do that only on explicit approval.
-- `roles/ai_workstation/templates/AGENTS.md.j2` mirrors the new auto-merge rule from the yadm-owned `~/.config/ai/AGENTS.md`.
 
 ## 2026-10-19: US-14.2 OpenCode on DragTokens
 - OpenCode CLI v1 now comes from `ai_desktop` (`tasks/opencode_cli.yml`, native installer into `~/.opencode/bin`, daily `opencode-cli-update.timer`); `roles/opencode` and the npm global install are gone.

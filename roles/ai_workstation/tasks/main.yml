@@ -6,14 +6,8 @@
 - name: Configure unified AI shell environment
   ansible.builtin.import_tasks: environment.yml
 
-- name: Deploy standalone core instructions
-  ansible.builtin.import_tasks: instructions.yml
-
 - name: Configure unified MCP servers across harnesses
   ansible.builtin.import_tasks: mcp.yml
-
-- name: Consolidate and link AI skills
-  ansible.builtin.import_tasks: skills.yml
 
 - name: Configure local TLS 1.3 ECH reverse proxy for DragTokens
   ansible.builtin.import_tasks: dragtokens_ech_proxy.yml
