@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Phở Research Tools MCP server (127.0.0.1:{{ ai_workstation_pho_port }})
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ ai_workstation_pho_dir }}/apps/mcp
+Environment=PHO_BIND_ADDRESS=127.0.0.1
+Environment=PORT={{ ai_workstation_pho_port }}
+Environment=PUBLIC_URL=http://127.0.0.1:{{ ai_workstation_pho_port }}
+# Single local user: lift the hosted service's anonymous allowances
+Environment=QUOTA_ANON_VERIFICATIONS_PER_DAY=100000
+Environment=QUOTA_ANON_CALLS_PER_DAY=100000
+ExecStart={{ ai_workstation_pho_dir }}/apps/mcp/node_modules/.bin/tsx src/local.ts
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+MemoryHigh=300M
+
+[Install]
+WantedBy=default.target

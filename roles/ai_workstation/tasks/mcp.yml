@@ -18,15 +18,45 @@
   changed_when: false
   check_mode: false
 
+- name: Ensure the uv override directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_mcp_uv_overrides_dir }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
+- name: Write uv override files (pinned fixes for vulnerable transitive dependencies)
+  ansible.builtin.copy:
+    dest: "{{ ai_workstation_mcp_uv_overrides_dir }}/{{ item.name }}.txt"
+    content: "{{ item.overrides | join('\n') }}\n"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: "{{ ai_workstation_mcp_uv_tools | selectattr('overrides', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ai_workstation_uv_overrides
+
+# The overrides are recorded in the uv tool receipt, so `uv tool upgrade --all` keeps them
 - name: Install Python MCP servers as uv tools
   ansible.builtin.command:
-    argv: "{{ ['uv', 'tool', 'install'] + (['--python', item.python] if item.python is defined else []) + [item.name] }}"
+    argv: >-
+      {{ ['uv', 'tool', 'install']
+         + (['--python', item.python] if item.python is defined else [])
+         + (['--overrides', ai_workstation_mcp_uv_overrides_dir + '/' + item.name + '.txt'] if item.overrides is defined else [])
+         + (['--force'] if item.name in ai_workstation_uv_overrides_changed else [])
+         + [item.name] }}
   become: true
   become_user: "{{ ai_workstation_user }}"
   loop: "{{ ai_workstation_mcp_uv_tools }}"
   loop_control:
     label: "{{ item.name }}"
-  when: item.name not in (ai_workstation_uv_tool_list.stdout | regex_findall('(?m)^(\\S+) v'))
+  vars:
+    ai_workstation_uv_overrides_changed: "{{ ai_workstation_uv_overrides.results | selectattr('changed') | map(attribute='item.name') | list }}"
+  when: >-
+    item.name not in (ai_workstation_uv_tool_list.stdout | regex_findall('(?m)^(\S+) v'))
+    or item.name in ai_workstation_uv_overrides_changed
 
 - name: Ensure user systemd directory exists
   ansible.builtin.file:
@@ -144,6 +174,15 @@
       become: true
       become_user: "{{ ai_workstation_user }}"
       when: "'workstation-mcp@workstation' not in (ai_workstation_claude_plugins.stdout | from_json | map(attribute='id') | list)"
+
+- name: Install pinned Node.js MCP servers
+  ansible.builtin.import_tasks: mcp_node.yml
+
+- name: Serve Phở Research Tools on loopback
+  ansible.builtin.import_tasks: pho.yml
+
+- name: Serve Obsidian Hybrid Search per vault on loopback
+  ansible.builtin.import_tasks: obsidian_search.yml
 
 - name: Configure read-only Docker API proxy for the docker MCP server
   ansible.builtin.import_tasks: docker_mcp.yml

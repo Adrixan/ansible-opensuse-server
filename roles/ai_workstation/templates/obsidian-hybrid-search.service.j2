@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Obsidian Hybrid Search MCP server for {{ item.path }} (127.0.0.1:{{ item.port }})
+
+[Service]
+Type=simple
+Environment=OBSIDIAN_VAULT_PATH={{ item.path }}
+ExecStart=/usr/local/bin/obsidian-hybrid-search serve --http --foreground --host 127.0.0.1 --port {{ item.port }}
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+# Indexing and the local models are CPU and memory heavy; keep them behind interactive work
+Nice=10
+MemoryHigh=900M
+MemoryMax=1200M
+
+[Install]
+WantedBy=default.target

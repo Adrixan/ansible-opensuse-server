@@ -1,0 +1,71 @@
+---
+# Pinned Node.js MCP servers: one npm prefix per server with exact versions, npm overrides for
+# vulnerable transitive dependencies and an install-script allowlist; npm audit gates the role.
+
+- name: Create the Node.js MCP server prefixes
+  ansible.builtin.file:
+    path: "{{ ai_workstation_mcp_node_dir }}/{{ item.name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ ai_workstation_mcp_node_servers }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Write the pinned Node.js MCP server manifests
+  ansible.builtin.copy:
+    dest: "{{ ai_workstation_mcp_node_dir }}/{{ item.name }}/package.json"
+    content: >-
+      {{ {'name': item.name + '-mcp-pinned', 'private': true,
+          'dependencies': {item.package: item.version}}
+         | combine({'overrides': item.overrides} if item.overrides is defined else {})
+         | combine({'allowScripts': item.allow_scripts} if item.allow_scripts is defined else {})
+         | to_nice_json }}
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ ai_workstation_mcp_node_servers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ai_workstation_mcp_node_manifests
+
+- name: Install the pinned Node.js MCP servers (install scripts only where allowlisted)
+  ansible.builtin.command:
+    argv: "{{ ['npm', 'install', '--omit=dev', '--no-fund', '--no-audit'] + ([] if item.item.allow_scripts is defined else ['--ignore-scripts']) }}"
+    chdir: "{{ ai_workstation_mcp_node_dir }}/{{ item.item.name }}"
+  loop: "{{ ai_workstation_mcp_node_manifests.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - not ansible_check_mode
+    - item.changed or not (ai_workstation_mcp_node_dir + '/' + item.item.name + '/node_modules/.bin/' + item.item.bin) is exists
+  changed_when: true
+
+- name: Audit the Node.js MCP server dependency trees (fails on any known vulnerability)
+  ansible.builtin.command:
+    argv: [npm, audit, --omit=dev, --audit-level=low]
+    chdir: "{{ ai_workstation_mcp_node_dir }}/{{ item.name }}"
+  loop: "{{ ai_workstation_mcp_node_servers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  changed_when: false
+  check_mode: false
+  when: (ai_workstation_mcp_node_dir + '/' + item.name + '/node_modules') is exists
+
+- name: Install the Node.js MCP server wrappers
+  ansible.builtin.copy:
+    dest: "/usr/local/bin/{{ item.bin }}"
+    content: |
+      #!/bin/sh
+      # Managed by Ansible (ai_workstation): {{ item.package }} {{ item.version }} from {{ ai_workstation_mcp_node_dir }}/{{ item.name }}
+      {% for key, value in (item.env | default({})).items() %}
+      export {{ key }}={{ value | quote }}
+      {% endfor %}
+      exec {{ ai_workstation_mcp_node_dir }}/{{ item.name }}/node_modules/.bin/{{ item.bin }} "$@"
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ ai_workstation_mcp_node_servers }}"
+  loop_control:
+    label: "{{ item.name }}"

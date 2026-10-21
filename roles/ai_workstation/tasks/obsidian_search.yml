@@ -1,0 +1,42 @@
+---
+# Obsidian Hybrid Search: one loopback HTTP MCP server per vault, shared by all harness sessions
+
+# The server keeps its SQLite index in the vault; each machine builds its own, so Syncthing skips it
+- name: Exclude the Obsidian Hybrid Search index from Syncthing
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_ohs_syncthing_root }}/.stignore"
+    line: "(?d).obsidian-hybrid-search.db*"
+    create: true
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  when: ai_workstation_ohs_vaults | length > 0
+
+- name: Deploy the Obsidian Hybrid Search user systemd units
+  ansible.builtin.template:
+    src: obsidian-hybrid-search.service.j2
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/obsidian-hybrid-search-{{ item.name }}.service"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: "{{ ai_workstation_ohs_vaults }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ai_workstation_ohs_units
+
+- name: Enable and start the Obsidian Hybrid Search user services
+  ansible.builtin.systemd_service:
+    name: "obsidian-hybrid-search-{{ item.item.name }}.service"
+    scope: user
+    enabled: true
+    state: "{{ 'restarted' if (item.changed or (ai_workstation_mcp_node_manifests.results | selectattr('item.name', 'equalto', 'obsidian-hybrid-search') | map(attribute='changed') | first)) else 'started' }}"
+    daemon_reload: true
+  loop: "{{ ai_workstation_ohs_units.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when: not ansible_check_mode

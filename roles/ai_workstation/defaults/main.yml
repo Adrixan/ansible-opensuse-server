@@ -13,6 +13,8 @@ ai_workstation_packages:
   - chromium
   # Go 1.27+ compiler for building the local TLS 1.3 ECH reverse proxy (dragtokens-ech-proxy)
   - go
+  # OSV dependency scanner; `osv-scanner experimental-mcp` is the OSV MCP server (stdio)
+  - osv-scanner
 
 ai_workstation_github_token: "{{ lookup('env', 'GITHUB_PERSONAL_ACCESS_TOKEN') | default(lookup('env', 'GITHUB_TOKEN') | default('', true), true) }}"
 ai_workstation_anthropic_api_key: "{{ lookup('env', 'ANTHROPIC_API_KEY') | default('', true) }}"
@@ -44,6 +46,71 @@ ai_workstation_mcp_uv_tools:
   - { name: zotero-mcp-server }
   - { name: mcp-server-fetch }
   - { name: mcp-server-git }
+  - { name: package-version-check-mcp }
+  # semgrep pins mcp==1.29.0 (CVE-2026-59951); the override lifts it to the fixed release
+  - { name: semgrep, overrides: ["mcp==1.30.0"] }
+ai_workstation_mcp_uv_overrides_dir: "{{ ai_workstation_user_home }}/.config/ai/uv-overrides"
+# Pinned Node.js MCP servers, one npm prefix each under ai_workstation_mcp_node_dir. `overrides` lift
+# vulnerable transitive dependencies (npm audit gates the role), `allow_scripts` is the npm
+# install-script allowlist (unset: no install scripts run), `env` is exported by the wrapper.
+ai_workstation_mcp_node_dir: /opt/mcp
+ai_workstation_mcp_node_servers:
+  - name: openalex
+    package: "@cyanheads/openalex-mcp-server"
+    version: "0.9.0"
+    bin: openalex-mcp-server
+  - name: excalidraw
+    package: mcp-excalidraw-server
+    version: "2.1.2"
+    bin: mcp-excalidraw-server
+    # The auto-started canvas server binds $HOST:$PORT; zsh exports HOST as the machine name
+    env:
+      HOST: 127.0.0.1
+      PORT: "{{ ai_workstation_excalidraw_port }}"
+      EXPRESS_SERVER_URL: "http://127.0.0.1:{{ ai_workstation_excalidraw_port }}"
+    overrides:
+      "@modelcontextprotocol/core": "2.3.1"
+      "@modelcontextprotocol/server": "2.3.1"
+      dompurify: "3.4.17"
+      katex: "0.19.0"
+      lodash-es: "4.18.1"
+      # sass 1.51 pulls chokidar 3 and braces (no fixed braces release); 1.106 uses chokidar 5
+      sass: "1.106.0"
+      "@excalidraw/excalidraw": { nanoid: "3.3.20" }
+      "@excalidraw/mermaid-to-excalidraw": { nanoid: "5.1.16" }
+      "mermaid@10": { ".": "10.9.8", uuid: "11.1.1" }
+  - name: drawio
+    package: "@drawio/mcp"
+    version: "1.10.0"
+    bin: drawio-mcp
+  - name: obsidian-hybrid-search
+    package: obsidian-hybrid-search
+    version: "0.16.3"
+    bin: obsidian-hybrid-search
+    # argparse 1.x (js-yaml 3 CLI only, unused by the library) pulls sprintf-js, which has no fixed release
+    overrides:
+      argparse: "2.0.1"
+    # onnxruntime-node ships its CPU runtime; its postinstall only downloads ~270 MB of CUDA providers
+    allow_scripts:
+      "better-sqlite3@12.11.1": true
+      onnxruntime-node: false
+      protobufjs: false
+ai_workstation_excalidraw_port: 3031
+# Phở Research Tools (reference verification, retractions, PRISMA 2020) served on loopback only.
+# Upstream ships no package; the role checks out a reviewed commit and audits its lockfile.
+ai_workstation_pho: true
+ai_workstation_pho_repo: https://github.com/thaohienhomes/pho-research-tools.git
+ai_workstation_pho_version: 42e4ea5ed565fe8d26099de82e5235bc420c736f
+ai_workstation_pho_pnpm: "pnpm@9.15.4"
+ai_workstation_pho_dir: "{{ ai_workstation_user_home }}/.local/share/pho-research-tools"
+ai_workstation_pho_port: 8787
+# Obsidian Hybrid Search HTTP servers (one per vault, loopback; about 700 MB RSS each with the
+# local embedding and reranker models). The index lives in the vault and is excluded from Syncthing.
+ai_workstation_ohs_vaults:
+  - name: phd
+    path: "{{ ai_workstation_user_home }}/Obsidian/Ph.D."
+    port: 3939
+ai_workstation_ohs_syncthing_root: "{{ ai_workstation_user_home }}/Obsidian"
 ai_workstation_mcp_tools_update_on_calendar: daily
 ai_workstation_claude_bin: "{{ ai_workstation_user_home }}/.local/bin/claude"
 ai_workstation_claude_marketplace_dir: "{{ ai_workstation_user_home }}/.config/ai/claude-plugins"

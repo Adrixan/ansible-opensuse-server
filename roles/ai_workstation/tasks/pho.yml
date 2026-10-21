@@ -1,0 +1,77 @@
+---
+# Phở Research Tools MCP server (Streamable HTTP) from a reviewed upstream commit, loopback only
+
+- name: Check out Phở Research Tools at the reviewed commit
+  ansible.builtin.git:
+    repo: "{{ ai_workstation_pho_repo }}"
+    dest: "{{ ai_workstation_pho_dir }}"
+    version: "{{ ai_workstation_pho_version }}"
+    update: true
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  register: ai_workstation_pho_checkout
+  when: ai_workstation_pho | bool
+
+- name: Deploy the loopback-only Phở entry point
+  ansible.builtin.copy:
+    src: pho-mcp-local.ts
+    dest: "{{ ai_workstation_pho_dir }}/apps/mcp/src/local.ts"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  register: ai_workstation_pho_entry
+  when: ai_workstation_pho | bool
+
+- name: Install Phở runtime dependencies from the lockfile (no install scripts)
+  ansible.builtin.command:
+    argv: [npm, exec, --yes, "--package={{ ai_workstation_pho_pnpm }}", --, pnpm, install, --frozen-lockfile, --prod, --ignore-scripts]
+    chdir: "{{ ai_workstation_pho_dir }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    HOME: "{{ ai_workstation_user_home }}"
+  when:
+    - ai_workstation_pho | bool
+    - not ansible_check_mode
+    - ai_workstation_pho_checkout.changed or not (ai_workstation_pho_dir + '/apps/mcp/node_modules/.bin/tsx') is exists
+  changed_when: true
+
+- name: Audit the Phở dependency tree (fails on any known vulnerability)
+  ansible.builtin.command:
+    argv: [npm, exec, --yes, "--package={{ ai_workstation_pho_pnpm }}", --, pnpm, audit, --prod, --audit-level=low]
+    chdir: "{{ ai_workstation_pho_dir }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    HOME: "{{ ai_workstation_user_home }}"
+  changed_when: false
+  check_mode: false
+  when:
+    - ai_workstation_pho | bool
+    - (ai_workstation_pho_dir + '/node_modules') is exists
+
+- name: Deploy the Phở user systemd unit
+  ansible.builtin.template:
+    src: pho-research-tools.service.j2
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/pho-research-tools.service"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  register: ai_workstation_pho_unit
+  when: ai_workstation_pho | bool
+
+- name: Enable and start the Phở user service
+  ansible.builtin.systemd_service:
+    name: pho-research-tools.service
+    scope: user
+    enabled: true
+    state: "{{ 'restarted' if (ai_workstation_pho_unit.changed or ai_workstation_pho_checkout.changed or ai_workstation_pho_entry.changed) else 'started' }}"
+    daemon_reload: true
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when:
+    - ai_workstation_pho | bool
+    - not ansible_check_mode
