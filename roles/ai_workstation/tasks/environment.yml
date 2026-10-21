@@ -34,6 +34,8 @@
     - { var: NEXTCLOUD_USERNAME, fact: ai_workstation_nextcloud_username }
     - { var: NEXTCLOUD_PASSWORD, fact: ai_workstation_nextcloud_password }
     - { var: DRAGTOKENS_API_KEY, fact: ai_workstation_dragtokens_api_key }
+    - { var: NASA_API_KEY, fact: ai_workstation_nasa_api_key }
+    - { var: OPENROUTESERVICE_API_KEY, fact: ai_workstation_openroute_api_key }
   loop_control:
     label: "{{ item.var }}"
   no_log: true
@@ -60,7 +62,7 @@
     that: >-
       [ai_workstation_github_token, ai_workstation_anthropic_workspace_id,
       ai_workstation_nextcloud_host, ai_workstation_nextcloud_username, ai_workstation_nextcloud_password,
-      ai_workstation_dragtokens_api_key]
+      ai_workstation_dragtokens_api_key, ai_workstation_nasa_api_key, ai_workstation_openroute_api_key]
       | select('search', '[\"$`\\\\]') | list | length == 0
     fail_msg: "A secret contains a double quote, dollar sign, backtick or backslash, which ~/.config/ai/env cannot hold safely"
     quiet: true

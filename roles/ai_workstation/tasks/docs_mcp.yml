@@ -1,0 +1,37 @@
+---
+# Grounded Docs (docs-mcp-server): one loopback HTTP server with its index in ~/.local/share
+
+- name: Ensure the Grounded Docs store directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_docs_mcp_store }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0700'
+  when: ai_workstation_docs_mcp | bool
+
+- name: Deploy the Grounded Docs user systemd unit
+  ansible.builtin.template:
+    src: docs-mcp-server.service.j2
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/docs-mcp-server.service"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  register: ai_workstation_docs_mcp_unit
+  when: ai_workstation_docs_mcp | bool
+
+- name: Enable and start the Grounded Docs user service
+  ansible.builtin.systemd_service:
+    name: docs-mcp-server.service
+    scope: user
+    enabled: true
+    state: "{{ 'restarted' if (ai_workstation_docs_mcp_unit.changed or (ai_workstation_mcp_node_manifests.results | selectattr('item.name', 'equalto', 'docs') | map(attribute='changed') | first)) else 'started' }}"
+    daemon_reload: true
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when:
+    - ai_workstation_docs_mcp | bool
+    - not ansible_check_mode

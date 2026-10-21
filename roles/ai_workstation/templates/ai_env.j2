@@ -17,6 +17,16 @@ export NEXTCLOUD_PASSWORD="{{ ai_workstation_nextcloud_password }}"
 # DragTokens gateway for OpenCode (rendered into opencode.json by yadm alt)
 export DRAGTOKENS_API_KEY="{{ ai_workstation_dragtokens_api_key }}"
 {% endif %}
+{% if ai_workstation_nasa_api_key | default('') | length > 0 %}
+
+# NASA MCP server (api.nasa.gov; without it the server uses the public DEMO_KEY)
+export NASA_API_KEY="{{ ai_workstation_nasa_api_key }}"
+{% endif %}
+{% if ai_workstation_openroute_api_key | default('') | length > 0 %}
+
+# OpenRouteService MCP server (openrouteservice.org; the server is configured only with a key)
+export OPENROUTESERVICE_API_KEY="{{ ai_workstation_openroute_api_key }}"
+{% endif %}
 
 # Ensure Claude Code CLI uses native first-party OAuth subscription without custom gateway overrides
 unset ANTHROPIC_BASE_URL

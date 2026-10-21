@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# Local SearXNG for the searxng MCP server, published on loopback only
+services:
+  searxng:
+    # Local image: the pinned upstream digest plus the patches in the Dockerfile
+    build: .
+    image: searxng-local:{{ ai_workstation_searxng_image | regex_replace('^.*:([^@]+)@.*$', '\\1') }}
+    pull_policy: build
+    container_name: searxng
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:{{ ai_workstation_searxng_port }}:8080"
+    volumes:
+      - ./settings.yml:/etc/searxng/settings.yml:ro,Z
+    # The image's own searxng user; the entrypoint then skips its root-only steps
+    user: "977:977"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m

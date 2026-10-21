@@ -58,6 +58,14 @@
     item.name not in (ai_workstation_uv_tool_list.stdout | regex_findall('(?m)^(\S+) v'))
     or item.name in ai_workstation_uv_overrides_changed
 
+- name: Ensure the openroute MCP route directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_openroute_routes_dir }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
 - name: Ensure user systemd directory exists
   ansible.builtin.file:
     path: "{{ ai_workstation_user_home }}/.config/systemd/user"
@@ -138,6 +146,8 @@
     NEXTCLOUD_USERNAME: "{{ ai_workstation_nextcloud_username }}"
     NEXTCLOUD_PASSWORD: "{{ ai_workstation_nextcloud_password }}"
     DRAGTOKENS_API_KEY: "{{ ai_workstation_dragtokens_api_key }}"
+    NASA_API_KEY: "{{ ai_workstation_nasa_api_key }}"
+    OPENROUTESERVICE_API_KEY: "{{ ai_workstation_openroute_api_key }}"
   register: ai_workstation_yadm_alt
   changed_when: "'CHANGED' in ai_workstation_yadm_alt.stdout"
   no_log: true
@@ -205,5 +215,11 @@
 - name: Serve Obsidian Hybrid Search per vault on loopback
   ansible.builtin.import_tasks: obsidian_search.yml
 
+- name: Serve Grounded Docs on loopback
+  ansible.builtin.import_tasks: docs_mcp.yml
+
 - name: Configure read-only Docker API proxy for the docker MCP server
   ansible.builtin.import_tasks: docker_mcp.yml
+
+- name: Run a local SearXNG for the searxng MCP server
+  ansible.builtin.import_tasks: searxng.yml

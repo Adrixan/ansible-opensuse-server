@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+FROM {{ ai_workstation_searxng_image }}
+{% if ai_workstation_searxng_certifi is defined %}
+# Upstream still bundles a vulnerable certifi; replace it until a newer SearXNG image ships the fix
+COPY searxng-certifi-fix.py /tmp/searxng-certifi-fix.py
+RUN /usr/local/searxng/.venv/bin/python /tmp/searxng-certifi-fix.py {{ ai_workstation_searxng_certifi.url }} {{ ai_workstation_searxng_certifi.sha256 }} \
+    && rm /tmp/searxng-certifi-fix.py
+{% endif %}

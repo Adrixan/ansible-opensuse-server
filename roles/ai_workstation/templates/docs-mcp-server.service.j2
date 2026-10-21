@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Grounded Docs MCP server (127.0.0.1:{{ ai_workstation_docs_mcp_port }})
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/docs-mcp-server server --protocol http --host 127.0.0.1 --port {{ ai_workstation_docs_mcp_port }} --store-path {{ ai_workstation_docs_mcp_store }} --telemetry false --no-logo
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+Nice=10
+MemoryHigh=500M
+
+[Install]
+WantedBy=default.target

@@ -53,6 +53,22 @@
   check_mode: false
   when: (ai_workstation_mcp_node_dir + '/' + item.name + '/node_modules') is exists
 
+- name: Install the sandbox-preserving Chromium wrapper for MCP-driven browsers
+  ansible.builtin.copy:
+    dest: "{{ ai_workstation_mcp_chromium }}"
+    content: |
+      #!/bin/sh
+      # Managed by Ansible (ai_workstation): drops --no-sandbox, which Lighthouse, the accessibility
+      # scanner and Playwright pass by default, so pages they load stay inside the Chromium sandbox
+      for arg do
+        shift
+        [ "$arg" = "--no-sandbox" ] || set -- "$@" "$arg"
+      done
+      exec /usr/bin/chromium "$@"
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Install the Node.js MCP server wrappers
   ansible.builtin.copy:
     dest: "/usr/local/bin/{{ item.bin }}"

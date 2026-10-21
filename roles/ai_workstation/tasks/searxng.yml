@@ -1,0 +1,63 @@
+---
+# Local SearXNG (loopback, JSON API) for the searxng MCP server; Docker hosts only.
+# Reuses ai_workstation_docker_presence from docker_mcp.yml.
+
+- name: Deploy SearXNG
+  when:
+    - ai_workstation_searxng | bool
+    - ai_workstation_docker_presence.results | map(attribute='stat.exists') | min
+  block:
+    - name: Create docker-compose directory for SearXNG
+      ansible.builtin.file:
+        path: /etc/docker-compose/searxng
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Generate the SearXNG secret key once
+      ansible.builtin.shell:
+        cmd: umask 077 && openssl rand -hex 32 > /etc/docker-compose/searxng/secret_key
+        creates: /etc/docker-compose/searxng/secret_key
+
+    - name: Read the SearXNG secret key
+      ansible.builtin.slurp:
+        src: /etc/docker-compose/searxng/secret_key
+      register: ai_workstation_searxng_secret_file
+      no_log: true
+      when: not ansible_check_mode
+
+    # The container runs as its own unprivileged user and must read the settings
+    - name: Upload SearXNG settings
+      ansible.builtin.template:
+        src: searxng-settings.yml.j2
+        dest: /etc/docker-compose/searxng/settings.yml
+        owner: root
+        group: root
+        mode: '0644'
+      vars:
+        ai_workstation_searxng_secret: "{{ ai_workstation_searxng_secret_file.content | b64decode | trim }}"
+      register: ai_workstation_searxng_settings
+      no_log: true
+      when: not ansible_check_mode
+
+    - name: Upload the SearXNG image build files
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "/etc/docker-compose/searxng/{{ item.dest }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - { src: searxng.compose.yml.j2, dest: docker-compose.yml }
+        - { src: searxng.Dockerfile.j2, dest: Dockerfile }
+        - { src: ../files/searxng-certifi-fix.py, dest: searxng-certifi-fix.py }
+      register: ai_workstation_searxng_build
+
+    # docker-compose@ builds the image (ExecStartPre) before starting it
+    - name: Start and enable SearXNG
+      ansible.builtin.systemd_service:
+        name: docker-compose@searxng
+        state: "{{ 'restarted' if (ai_workstation_searxng_build.changed or ai_workstation_searxng_settings.changed) else 'started' }}"
+        enabled: true
+      when: not ansible_check_mode
