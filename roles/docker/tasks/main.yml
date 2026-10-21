@@ -5,11 +5,6 @@
     name: "{{ docker_packages }}"
     state: present
 
-- name: Install docker-compose via pip
-  ansible.builtin.pip:
-    name: "{{ docker_pip_packages }}"
-    extra_args: "--break-system-packages"
-
 - name: Enable and start docker service
   ansible.builtin.systemd:
     name: docker

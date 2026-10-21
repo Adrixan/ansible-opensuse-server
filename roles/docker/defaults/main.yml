@@ -1,7 +1,6 @@
 ---
 # defaults file for docker
+# docker-compose is the Compose v2 CLI plugin (`docker compose`); the pip-based v1 is EOL.
 docker_packages:
   - docker
-
-docker_pip_packages:
   - docker-compose

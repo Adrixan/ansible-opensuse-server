@@ -51,3 +51,8 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - New role `zotero` (`enable_zotero`): flatpak, default profile when missing, Better BibTeX 9.0.71 (checksum-pinned), `user.js` with local API, UTF-8 export, citekey format and `extensions.autoDisableScopes` 14 so the sideloaded add-on starts enabled (verified with an isolated Zotero instance on a fresh profile).
 - Lingering: `ai_workstation_linger` (default true) and in `edu_publisher`. Zsh login shell in `shell_environment`.
 - Verified: two consecutive runs of zotero, shell_environment, ai_workstation, edu_publisher; second run changed=0.
+
+## 2026-10-21: Docker on schulpc
+- `docker` role updated: Compose v2 from zypper (`docker-compose` 5.6.0, `docker compose` CLI plugin) replaces the EOL pip Compose v1 (`--break-system-packages`); `docker-compose@.service` now calls `/usr/bin/docker compose` (used by `docker_pi_hole` and the `ai_workstation` socket proxy).
+- Applied on schulpc with `-e enable_docker=true` only: Docker 29.7.2-ce active and enabled, second run `changed=0`, test container pulled and resolved DNS, then removed. No compose units, no containers, user not in the `docker` group.
+- Not deployed on purpose (user asked for Docker only): the read-only docker-socket-proxy from `ai_workstation`, so the docker MCP server still fails on schulpc until `ai_workstation` runs with Docker present.
