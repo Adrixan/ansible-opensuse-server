@@ -64,3 +64,10 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Verified on schulpc: check mode clean, live run ok, second run changed=0, all eight servers connected in `claude mcp list`.
 - Open decisions (asked the user): Adrixan vault index (RAM), semgrep metrics, OpenAlex/Crossref contact mail, laptops rollout.
 - Replacements vs. the original proposal: Google `osv-scanner experimental-mcp` instead of StacklokLabs/osv-mcp (stdio, no 0.0.0.0 listener); official `@drawio/mcp` instead of lgazo/drawio-mcp-server (unfixable node-forge advisory).
+
+## 2026-10-21: Tier 2 MCP servers and Adrixan vault index
+- Adrixan vault index service on 3940 (user chose all machines; first index 22 min, 2154 of 2159 notes, ~530 MB RSS).
+- Tier 2 (user picks): lighthouse, accessibility-scanner (axe-core; replaces a11y-mcp-server, which pins puppeteer 13), Grounded Docs (user service 6280), NASA, Open-Meteo, mcp-searxng (ihor-sokoliuk, replaces SecretiveShell), wikipedia-mcp, openroute-mcp (mcp override). Security group (Ghidra, Wireshark, RSigma, Burp) not chosen.
+- Chromium wrapper strips `--no-sandbox`; SearXNG container uid 977, caps dropped, certifi patched (PYSEC-2026-4320), osv-scanner image scan clean.
+- Verified: idempotent (changed=0), all Tier 2 servers connected in Claude except openroute (no key yet).
+- Pending from the user: NASA and OpenRouteService API keys (`NASA_API_KEY=… OPENROUTESERVICE_API_KEY=… ansible-playbook main.yml -e enable_ai_workstation=true`), laptop rollout.
