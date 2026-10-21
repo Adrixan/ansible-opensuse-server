@@ -71,3 +71,4 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Chromium wrapper strips `--no-sandbox`; SearXNG container uid 977, caps dropped, certifi patched (PYSEC-2026-4320), osv-scanner image scan clean.
 - Verified: idempotent (changed=0), all Tier 2 servers connected in Claude except openroute (no key yet).
 - Pending from the user: NASA and OpenRouteService API keys (`NASA_API_KEY=… OPENROUTESERVICE_API_KEY=… ansible-playbook main.yml -e enable_ai_workstation=true`), laptop rollout.
+- 2026-10-21 (later): schulpc ran out of memory; Adrixan vault index now skipped there via `skip_hosts: [schulpc]` (stopped and disabled by the role), laptops only.
