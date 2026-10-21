@@ -175,6 +175,27 @@
       become_user: "{{ ai_workstation_user }}"
       when: "'workstation-mcp@workstation' not in (ai_workstation_claude_plugins.stdout | from_json | map(attribute='id') | list)"
 
+    - name: Read the yadm-tracked workstation-mcp plugin version
+      ansible.builtin.slurp:
+        src: "{{ ai_workstation_claude_marketplace_dir }}/plugins/workstation-mcp/.claude-plugin/plugin.json"
+      register: ai_workstation_claude_plugin_manifest
+
+    # Claude Code runs plugins from a versioned cache copy; refresh it when the yadm copy is newer
+    - name: Update the cached workstation-mcp plugin to the yadm version
+      ansible.builtin.shell:
+        cmd: >-
+          {{ ai_workstation_claude_bin | quote }} plugin marketplace update workstation
+          && {{ ai_workstation_claude_bin | quote }} plugin update workstation-mcp@workstation --scope user
+        executable: /bin/bash
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+      vars:
+        _installed: "{{ ai_workstation_claude_plugins.stdout | from_json | selectattr('id', 'equalto', 'workstation-mcp@workstation') | map(attribute='version') | first | default('') }}"
+        _source: "{{ (ai_workstation_claude_plugin_manifest.content | b64decode | from_json).version }}"
+      when:
+        - _installed | length > 0
+        - _installed is version(_source, '<')
+
 - name: Install pinned Node.js MCP servers
   ansible.builtin.import_tasks: mcp_node.yml
 
