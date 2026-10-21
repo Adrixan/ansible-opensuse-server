@@ -4,3 +4,6 @@
 docker_packages:
   - docker
   - docker-compose
+
+# Users added to the docker group (root-equivalent access to the Docker daemon)
+docker_users: []

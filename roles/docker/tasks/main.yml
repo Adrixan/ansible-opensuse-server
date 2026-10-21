@@ -5,6 +5,13 @@
     name: "{{ docker_packages }}"
     state: present
 
+- name: Add users to the docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+
 - name: Enable and start docker service
   ansible.builtin.systemd:
     name: docker

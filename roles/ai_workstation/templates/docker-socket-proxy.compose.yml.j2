@@ -16,5 +16,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "127.0.0.1:{{ ai_workstation_docker_mcp_proxy_port }}:2375"
+    # SELinux (Tumbleweed default) denies container_t access to docker.sock; unconfine only this
+    # container, the GET-only proxy is the security boundary
     security_opt:
       - no-new-privileges:true
+      - label:disable
