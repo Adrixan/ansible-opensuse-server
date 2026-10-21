@@ -110,6 +110,9 @@ ai_workstation_ohs_vaults:
   - name: phd
     path: "{{ ai_workstation_user_home }}/Obsidian/Ph.D."
     port: 3939
+  - name: adrixan
+    path: "{{ ai_workstation_user_home }}/Obsidian/Adrixan"
+    port: 3940
 ai_workstation_ohs_syncthing_root: "{{ ai_workstation_user_home }}/Obsidian"
 ai_workstation_mcp_tools_update_on_calendar: daily
 ai_workstation_claude_bin: "{{ ai_workstation_user_home }}/.local/bin/claude"
