@@ -221,5 +221,5 @@
 - name: Configure read-only Docker API proxy for the docker MCP server
   ansible.builtin.import_tasks: docker_mcp.yml
 
-- name: Run a local SearXNG for the searxng MCP server
+- name: Remove the retired SearXNG
   ansible.builtin.import_tasks: searxng.yml

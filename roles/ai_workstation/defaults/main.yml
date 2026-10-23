@@ -55,6 +55,8 @@ ai_workstation_mcp_uv_tools:
   - { name: wikipedia-mcp }
   # openroute-mcp leaves mcp unpinned and breaks on mcp 2.x (FastMCP renamed)
   - { name: openroute-mcp, overrides: ["mcp==1.30.0"] }
+  # Key-less web search; installed without the [browser] extra, so no curl TLS impersonation
+  - { name: duckduckgo-mcp-server }
 ai_workstation_mcp_uv_overrides_dir: "{{ ai_workstation_user_home }}/.config/ai/uv-overrides"
 # Pinned Node.js MCP servers, one npm prefix each under ai_workstation_mcp_node_dir. `overrides` lift
 # vulnerable transitive dependencies (npm audit gates the role), `allow_scripts` is the npm
@@ -139,12 +141,6 @@ ai_workstation_mcp_node_servers:
     package: open-meteo-mcp-server
     version: "2.5.3"
     bin: open-meteo-mcp-server
-  - name: searxng
-    package: mcp-searxng
-    version: "2.7.0"
-    bin: mcp-searxng
-    env:
-      SEARXNG_URL: "http://127.0.0.1:{{ ai_workstation_searxng_port }}"
 ai_workstation_excalidraw_port: 3031
 # Lighthouse, the accessibility scanner and Playwright hard-code --no-sandbox; this wrapper drops it
 ai_workstation_mcp_chromium: /usr/local/libexec/mcp-chromium-sandboxed
@@ -152,15 +148,6 @@ ai_workstation_mcp_chromium: /usr/local/libexec/mcp-chromium-sandboxed
 ai_workstation_docs_mcp: true
 ai_workstation_docs_mcp_port: 6280
 ai_workstation_docs_mcp_store: "{{ ai_workstation_user_home }}/.local/share/docs-mcp-server"
-# Local SearXNG for the searxng MCP server (Docker hosts only), loopback, JSON API, no limiter
-ai_workstation_searxng: true
-ai_workstation_searxng_image: "searxng/searxng:2026.10.19-81371861f@sha256:5ed0323b5f5f8701264ef65e239a2bd83cb57098f2b971fa30bf79c06eeae271"
-ai_workstation_searxng_port: 8888
-# PYSEC-2026-4320 (compromised emSign intermediates) in the image's certifi 2026.7.22; remove this
-# entry once an upstream image ships certifi >= 2026.10.19 (osv-scanner scan image shows it)
-ai_workstation_searxng_certifi:
-  url: https://files.pythonhosted.org/packages/c4/51/29046e48f693c54e5b7412216d447a1d8362c9653148d98c02cdf65fa733/certifi-2026.10.19-py3-none-any.whl
-  sha256: 42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b
 # GPX routes from the openroute MCP server (Documents is a Syncthing folder, so they reach the phone)
 ai_workstation_openroute_routes_dir: "{{ ai_workstation_user_home }}/Documents/Routes"
 # Free API keys (api.nasa.gov, openrouteservice.org); NASA falls back to the public DEMO_KEY

@@ -72,3 +72,9 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Verified: idempotent (changed=0), all Tier 2 servers connected in Claude except openroute (no key yet).
 - Pending from the user: NASA and OpenRouteService API keys (`NASA_API_KEY=… OPENROUTESERVICE_API_KEY=… ansible-playbook main.yml -e enable_ai_workstation=true`), laptop rollout.
 - 2026-10-21 (later): schulpc ran out of memory; Adrixan vault index now skipped there via `skip_hosts: [schulpc]` (stopped and disabled by the role), laptops only.
+
+## 2026-10-23: SearXNG retired, DuckDuckGo MCP added
+- Peter: SearXNG is too resource-intensive. `tasks/searxng.yml` now only removes it (container, local and upstream images, `/etc/docker-compose/searxng` with the secret key, `/opt/mcp/searxng`, `/usr/local/bin/mcp-searxng`); drop the file once m11x and xps13 have run the role. Templates, certifi fix and `ai_workstation_searxng*` vars deleted.
+- New uv tool `duckduckgo-mcp-server` (0.7.0, without the `[browser]` extra, so no curl TLS impersonation); OSV and pip-audit clean (43 packages). yadm templates for all three harnesses switched from searxng to duckduckgo (plugin 1.4.0).
+- Verified on schulpc: check mode clean, live run changed=8, second run changed=0; headless probes returned results in Claude Code, OpenCode (`-m dragtokens/gpt-6.1-sol`) and Antigravity.
+- Laptops: `yadm pull`, then `ansible-playbook main.yml -e enable_ai_workstation=true`.

@@ -1,63 +1,52 @@
 ---
-# Local SearXNG (loopback, JSON API) for the searxng MCP server; Docker hosts only.
-# Reuses ai_workstation_docker_presence from docker_mcp.yml.
+# SearXNG and its MCP server are retired (2026-10-23: too resource-intensive on schulpc);
+# web search comes from the duckduckgo-mcp-server uv tool. These tasks remove what earlier
+# runs deployed and can be dropped once every machine has run the role once.
 
-- name: Deploy SearXNG
-  when:
-    - ai_workstation_searxng | bool
-    - ai_workstation_docker_presence.results | map(attribute='stat.exists') | min
+- name: Check for a deployed SearXNG
+  ansible.builtin.stat:
+    path: /etc/docker-compose/searxng/docker-compose.yml
+  register: ai_workstation_searxng_compose
+
+- name: Remove the SearXNG container and its images
+  when: ai_workstation_searxng_compose.stat.exists
   block:
-    - name: Create docker-compose directory for SearXNG
-      ansible.builtin.file:
-        path: /etc/docker-compose/searxng
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Generate the SearXNG secret key once
-      ansible.builtin.shell:
-        cmd: umask 077 && openssl rand -hex 32 > /etc/docker-compose/searxng/secret_key
-        creates: /etc/docker-compose/searxng/secret_key
-
-    - name: Read the SearXNG secret key
-      ansible.builtin.slurp:
-        src: /etc/docker-compose/searxng/secret_key
-      register: ai_workstation_searxng_secret_file
-      no_log: true
-      when: not ansible_check_mode
-
-    # The container runs as its own unprivileged user and must read the settings
-    - name: Upload SearXNG settings
-      ansible.builtin.template:
-        src: searxng-settings.yml.j2
-        dest: /etc/docker-compose/searxng/settings.yml
-        owner: root
-        group: root
-        mode: '0644'
-      vars:
-        ai_workstation_searxng_secret: "{{ ai_workstation_searxng_secret_file.content | b64decode | trim }}"
-      register: ai_workstation_searxng_settings
-      no_log: true
-      when: not ansible_check_mode
-
-    - name: Upload the SearXNG image build files
-      ansible.builtin.template:
-        src: "{{ item.src }}"
-        dest: "/etc/docker-compose/searxng/{{ item.dest }}"
-        owner: root
-        group: root
-        mode: '0644'
-      loop:
-        - { src: searxng.compose.yml.j2, dest: docker-compose.yml }
-        - { src: searxng.Dockerfile.j2, dest: Dockerfile }
-        - { src: ../files/searxng-certifi-fix.py, dest: searxng-certifi-fix.py }
-      register: ai_workstation_searxng_build
-
-    # docker-compose@ builds the image (ExecStartPre) before starting it
-    - name: Start and enable SearXNG
+    - name: Stop and disable SearXNG
       ansible.builtin.systemd_service:
         name: docker-compose@searxng
-        state: "{{ 'restarted' if (ai_workstation_searxng_build.changed or ai_workstation_searxng_settings.changed) else 'started' }}"
-        enabled: true
-      when: not ansible_check_mode
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Remove the SearXNG container and the locally built image
+      ansible.builtin.command:
+        argv: [docker, compose, down, --rmi, all, --remove-orphans]
+        chdir: /etc/docker-compose/searxng
+      register: ai_workstation_searxng_down
+      changed_when: "'Removed' in ai_workstation_searxng_down.stderr"
+      failed_when: false
+
+    - name: Remove the upstream SearXNG base images
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail;
+          ids=$(docker images --quiet searxng/searxng | sort -u);
+          [ -z "$ids" ] && exit 0;
+          docker rmi $ids >/dev/null && echo removed
+        executable: /bin/bash
+      register: ai_workstation_searxng_rmi
+      changed_when: "'removed' in ai_workstation_searxng_rmi.stdout"
+      failed_when: false
+
+- name: Remove the SearXNG compose directory, secret key included
+  ansible.builtin.file:
+    path: /etc/docker-compose/searxng
+    state: absent
+
+- name: Remove the retired searxng MCP server
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ ai_workstation_mcp_node_dir }}/searxng"
+    - /usr/local/bin/mcp-searxng
