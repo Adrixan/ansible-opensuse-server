@@ -57,6 +57,10 @@ ai_workstation_mcp_uv_tools:
   - { name: openroute-mcp, overrides: ["mcp==1.30.0"] }
   # Key-less web search; installed without the [browser] extra, so no curl TLS impersonation
   - { name: duckduckgo-mcp-server }
+  - { name: oebb-mcp-server }
+  # PyPI stops at 0.3.5; releases continue on GitHub, so the tool is pinned to the v0.8.1 commit
+  - name: mcp-youtube-transcript
+    spec: "git+https://github.com/jkawamoto/mcp-youtube-transcript@c8b88693633d2f7b161b667ab8de0d4f4b303ca4"
 ai_workstation_mcp_uv_overrides_dir: "{{ ai_workstation_user_home }}/.config/ai/uv-overrides"
 # Pinned Node.js MCP servers, one npm prefix each under ai_workstation_mcp_node_dir. `overrides` lift
 # vulnerable transitive dependencies (npm audit gates the role), `allow_scripts` is the npm
@@ -141,7 +145,27 @@ ai_workstation_mcp_node_servers:
     package: open-meteo-mcp-server
     version: "2.5.3"
     bin: open-meteo-mcp-server
+  - name: ris-austria
+    package: "@cyanheads/ris-austria-mcp-server"
+    version: "0.5.2"
+    bin: ris-austria-mcp-server
+  - name: eur-lex
+    package: "@cyanheads/eur-lex-mcp-server"
+    version: "0.19.1"
+    bin: eur-lex-mcp-server
 ai_workstation_excalidraw_port: 3031
+# Thunderbird MCP: the Node bridge (no dependencies) is pinned to the release commit; the add-on
+# itself is installed by hand in Thunderbird from the checksum-verified .xpi next to it
+ai_workstation_thunderbird_mcp: true
+ai_workstation_thunderbird_mcp_dir: "{{ ai_workstation_mcp_node_dir }}/thunderbird-mcp"
+ai_workstation_thunderbird_mcp_version: "0.9.3"
+ai_workstation_thunderbird_mcp_commit: 58f6cb16b12349f2e8164971acebb0db22c4d137
+ai_workstation_thunderbird_mcp_files:
+  - path: mcp-bridge.cjs
+    sha256: d86cfa1b2e5464984732493e346866ee92f3e8959104494d57e56bf9075aa123
+  - path: package.json
+    sha256: 071a9bcc2bc1c5b5cd671c610642d7d723cab8f84655aaf052065a9ba7d96677
+ai_workstation_thunderbird_mcp_xpi_sha256: 8e5b8df388e932d6f150179cff60c97cd0c50573e1dac32b4d2f21fc4cc22863
 # Lighthouse, the accessibility scanner and Playwright hard-code --no-sandbox; this wrapper drops it
 ai_workstation_mcp_chromium: /usr/local/libexec/mcp-chromium-sandboxed
 # Grounded Docs: version-matched documentation index, one loopback HTTP server for all sessions

@@ -78,3 +78,8 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - New uv tool `duckduckgo-mcp-server` (0.7.0, without the `[browser]` extra, so no curl TLS impersonation); OSV and pip-audit clean (43 packages). yadm templates for all three harnesses switched from searxng to duckduckgo (plugin 1.4.0).
 - Verified on schulpc: check mode clean, live run changed=8, second run changed=0; headless probes returned results in Claude Code, OpenCode (`-m dragtokens/gpt-6.1-sol`) and Antigravity.
 - Laptops: `yadm pull`, then `ansible-playbook main.yml -e enable_ai_workstation=true`.
+
+## 2026-10-23: Law, YouTube, ÖBB and Thunderbird MCP servers
+- Node (pinned, npm audit gate): `@cyanheads/ris-austria-mcp-server` 0.5.2, `@cyanheads/eur-lex-mcp-server` 0.19.1. uv tools: `oebb-mcp-server` 0.2.8 (PyPI), `mcp-youtube-transcript` from the v0.8.1 commit (PyPI stops at 0.3.5; uv tool entries accept an optional `spec`). pip-audit clean for both.
+- `tasks/thunderbird_mcp.yml`: thunderbird-mcp 0.9.3 bridge (no dependencies) and the .xpi, checksum-pinned to the release commit, wrapper `/usr/local/bin/thunderbird-mcp`. The add-on is installed by hand in Thunderbird (153.4 ESR supported).
+- Verified on schulpc: headless probes in Claude Code (all four), OpenCode and Antigravity (RIS, EUR-Lex).

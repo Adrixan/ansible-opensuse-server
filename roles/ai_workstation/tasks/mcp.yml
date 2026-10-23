@@ -46,7 +46,7 @@
          + (['--python', item.python] if item.python is defined else [])
          + (['--overrides', ai_workstation_mcp_uv_overrides_dir + '/' + item.name + '.txt'] if item.overrides is defined else [])
          + (['--force'] if item.name in ai_workstation_uv_overrides_changed else [])
-         + [item.name] }}
+         + [item.spec | default(item.name)] }}
   become: true
   become_user: "{{ ai_workstation_user }}"
   loop: "{{ ai_workstation_mcp_uv_tools }}"
@@ -223,3 +223,6 @@
 
 - name: Remove the retired SearXNG
   ansible.builtin.import_tasks: searxng.yml
+
+- name: Install the Thunderbird MCP bridge
+  ansible.builtin.import_tasks: thunderbird_mcp.yml

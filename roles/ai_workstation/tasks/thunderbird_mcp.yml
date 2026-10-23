@@ -1,0 +1,47 @@
+---
+# Thunderbird MCP: stdio bridge for the thunderbird-mcp add-on, which serves its tools on
+# 127.0.0.1 from inside Thunderbird. The add-on (.xpi) is placed next to the bridge for a manual
+# install (Thunderbird > Add-ons > Install Add-on From File); account and tool access are set there.
+
+- name: Install the Thunderbird MCP bridge
+  when: ai_workstation_thunderbird_mcp | bool
+  block:
+    - name: Create the Thunderbird MCP directory
+      ansible.builtin.file:
+        path: "{{ ai_workstation_thunderbird_mcp_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Download the pinned Thunderbird MCP bridge files
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/TKasperczyk/thunderbird-mcp/{{ ai_workstation_thunderbird_mcp_commit }}/{{ item.path }}"
+        dest: "{{ ai_workstation_thunderbird_mcp_dir }}/{{ item.path }}"
+        checksum: "sha256:{{ item.sha256 }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ ai_workstation_thunderbird_mcp_files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Download the Thunderbird MCP add-on
+      ansible.builtin.get_url:
+        url: "https://github.com/TKasperczyk/thunderbird-mcp/releases/download/v{{ ai_workstation_thunderbird_mcp_version }}/thunderbird-mcp-v{{ ai_workstation_thunderbird_mcp_version }}.xpi"
+        dest: "{{ ai_workstation_thunderbird_mcp_dir }}/thunderbird-mcp-v{{ ai_workstation_thunderbird_mcp_version }}.xpi"
+        checksum: "sha256:{{ ai_workstation_thunderbird_mcp_xpi_sha256 }}"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install the Thunderbird MCP bridge wrapper
+      ansible.builtin.copy:
+        dest: /usr/local/bin/thunderbird-mcp
+        content: |
+          #!/bin/sh
+          # Managed by Ansible (ai_workstation): thunderbird-mcp {{ ai_workstation_thunderbird_mcp_version }} bridge from {{ ai_workstation_thunderbird_mcp_dir }}
+          exec /usr/bin/node {{ ai_workstation_thunderbird_mcp_dir }}/mcp-bridge.cjs "$@"
+        owner: root
+        group: root
+        mode: '0755'
