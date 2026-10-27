@@ -83,3 +83,7 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Node (pinned, npm audit gate): `@cyanheads/ris-austria-mcp-server` 0.5.2, `@cyanheads/eur-lex-mcp-server` 0.19.1. uv tools: `oebb-mcp-server` 0.2.8 (PyPI), `mcp-youtube-transcript` from the v0.8.1 commit (PyPI stops at 0.3.5; uv tool entries accept an optional `spec`). pip-audit clean for both.
 - `tasks/thunderbird_mcp.yml`: thunderbird-mcp 0.9.3 bridge (no dependencies) and the .xpi, checksum-pinned to the release commit, wrapper `/usr/local/bin/thunderbird-mcp`. The add-on is installed by hand in Thunderbird (153.4 ESR supported).
 - Verified on schulpc: headless probes in Claude Code (all four), OpenCode and Antigravity (RIS, EUR-Lex).
+
+## 2026-10-27: Research and Code remote-control servers
+- `ai_workstation_claude_rc_servers` gained `research` (`~/Obsidian/Adrixan/Research`, rules in its `AGENTS.md`) and `code` (`~/code`). On schulpc both configs are deployed by hand to match the role output; `code` runs, `research` waits for the one-time workspace trust (`cd ~/Obsidian/Adrixan/Research && claude`, accept, quit, then `systemctl --user start claude-remote-control@research`). Unit stays enabled.
+- The five servers were restarted 2026-10-27 so they load `TRIP_PLANNER_TOKEN`; servers read `~/.config/ai/env` only at start, so restart them after changing it.
