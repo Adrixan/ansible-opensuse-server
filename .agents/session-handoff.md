@@ -85,5 +85,5 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Verified on schulpc: headless probes in Claude Code (all four), OpenCode and Antigravity (RIS, EUR-Lex).
 
 ## 2026-10-27: Research and Code remote-control servers
-- `ai_workstation_claude_rc_servers` gained `research` (`~/Obsidian/Adrixan/Research`, rules in its `AGENTS.md`) and `code` (`~/code`). On schulpc both configs are deployed by hand to match the role output; `code` runs, `research` waits for the one-time workspace trust (`cd ~/Obsidian/Adrixan/Research && claude`, accept, quit, then `systemctl --user start claude-remote-control@research`). Unit stays enabled.
+- `ai_workstation_claude_rc_servers` gained `research` (`~/Obsidian/Adrixan/Research`, rules in its `AGENTS.md`) and `code` (`~/code`). On schulpc both configs are deployed by hand to match the role output; both run and are enabled (Research trust accepted by Peter 2026-10-27; a new directory needs `cd <dir> && claude` once to accept trust).
 - The five servers were restarted 2026-10-27 so they load `TRIP_PLANNER_TOKEN`; servers read `~/.config/ai/env` only at start, so restart them after changing it.
