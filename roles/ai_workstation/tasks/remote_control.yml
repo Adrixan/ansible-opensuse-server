@@ -271,6 +271,9 @@
     - ai_workstation_claude_remote_control | default(true) | bool
     - item.rc != 0
 
+# Only servers whose own settings changed (or all on a unit change): a restart ends every session it
+# serves, including the one running this playbook. A reattached session keeps its old name; a new
+# label needs the bridge-pointer reset described in the knowledge map.
 - name: Restart Claude remote-control servers after unit or settings changes
   ansible.builtin.command:
     cmd: "systemctl --user restart claude-remote-control@{{ item.item }}.service"
@@ -285,4 +288,7 @@
   when:
     - ai_workstation_claude_remote_control | default(true) | bool
     - item.rc == 0
-    - claude_rc_unit.changed or claude_rc_conf.changed
+    - >-
+      claude_rc_unit.changed
+      or item.item in (claude_rc_conf.results | default([]) | selectattr('changed', 'defined')
+      | selectattr('changed') | map(attribute='item.name') | list)

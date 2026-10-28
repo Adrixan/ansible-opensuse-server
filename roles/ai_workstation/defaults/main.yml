@@ -232,12 +232,14 @@ ai_workstation_claude_rc_servers:
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Educator"
   # General deep-research jobs; reports land in this vault folder (rules in its AGENTS.md)
   - name: research
-    label: "Research"
+    label: "Deep Research"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Research"
   # Coding across all projects; sessions cd into ~/code/<project> and follow its AGENTS.md
   - name: code
     label: "Code"
     dir: "{{ ai_workstation_user_home }}/code"
+# No server for the home directory itself: Claude Code never saves home-directory trust, so a
+# headless server there exits with "Workspace not trusted".
 ai_workstation_claude_rc_permission_mode: auto
 ai_workstation_opencode_server_port: 4096
 ai_workstation_opencode_server_host: "127.0.0.1"

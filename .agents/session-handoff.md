@@ -87,3 +87,8 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 ## 2026-10-27: Research and Code remote-control servers
 - `ai_workstation_claude_rc_servers` gained `research` (`~/Obsidian/Adrixan/Research`, rules in its `AGENTS.md`) and `code` (`~/code`). On schulpc both configs are deployed by hand to match the role output; both run and are enabled (Research trust accepted by Peter 2026-10-27; a new directory needs `cd <dir> && claude` once to accept trust).
 - The five servers were restarted 2026-10-27 so they load `TRIP_PLANNER_TOKEN`; servers read `~/.config/ai/env` only at start, so restart them after changing it.
+
+## 2026-10-28: Remote-control servers (relabel, restart scope, no home server)
+- `research` server relabelled "Deep Research" (fresh standby session after a bridge-pointer reset). A home-directory server was requested and dropped: Claude Code never saves trust for `$HOME`, so `claude remote-control` there exits "Workspace not trusted" (verified on schulpc).
+- Restart task now restarts only servers whose `.conf` changed (all on a unit change). The old condition restarted all five, which also killed the session running the playbook.
+- OPEN, blocks full `ai_workstation` runs: the Node MCP audit gate fails on GHSA-27r3-jxmh-p828 (body-parser, fix available) in accessibility-scanner, docs, drawio, excalidraw, lighthouse, obsidian-hybrid-search, open-meteo, and GHSA-mrhx-c7xc-m3w5 (zod <4.6.6, no fix; `mcp-excalidraw-server` pins it). Needs override bumps or an alternative for excalidraw. Until then apply remote-control changes alone with an `import_role` (`tasks_from: remote_control`) playbook in `.scratch/`.
