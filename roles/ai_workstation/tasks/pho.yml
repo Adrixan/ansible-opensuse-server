@@ -1,7 +1,21 @@
 ---
-# Phở Research Tools MCP server (Streamable HTTP) from a reviewed upstream commit, loopback only
+# Phở Research Tools MCP server (Streamable HTTP) from the upstream default branch, loopback only
 
-- name: Check out Phở Research Tools at the reviewed commit
+# The dependency update rewrites the tracked lockfile and workspace file; restore them first so the
+# checkout fast-forwards cleanly (the local entry point is untracked)
+- name: Restore the upstream lockfile and workspace file before updating the checkout
+  ansible.builtin.command:
+    argv: [git, checkout, --, pnpm-lock.yaml, pnpm-workspace.yaml]
+    chdir: "{{ ai_workstation_pho_dir }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  changed_when: false
+  when:
+    - ai_workstation_pho | bool
+    - not ansible_check_mode
+    - (ai_workstation_pho_dir + '/.git') is exists
+
+- name: Check out Phở Research Tools at the latest upstream commit
   ansible.builtin.git:
     repo: "{{ ai_workstation_pho_repo }}"
     dest: "{{ ai_workstation_pho_dir }}"
@@ -22,19 +36,21 @@
   register: ai_workstation_pho_entry
   when: ai_workstation_pho | bool
 
-- name: Install Phở runtime dependencies from the lockfile (no install scripts)
-  ansible.builtin.command:
-    argv: [npm, exec, --yes, "--package={{ ai_workstation_pho_pnpm }}", --, pnpm, install, --frozen-lockfile, --prod, --ignore-scripts]
-    chdir: "{{ ai_workstation_pho_dir }}"
+- name: Update Phở runtime dependencies to the latest versions their ranges allow (no install scripts)
+  ansible.builtin.script:
+    cmd: >-
+      pho-update-deps.sh {{ ai_workstation_pho_dir | quote }} {{ ai_workstation_pho_pnpm | quote }}
+      {% for name, spec in ai_workstation_pho_overrides.items() %}{{ (name + '=' + spec) | quote }} {% endfor %}
+    executable: /bin/bash
   become: true
   become_user: "{{ ai_workstation_user }}"
   environment:
     HOME: "{{ ai_workstation_user_home }}"
+  register: ai_workstation_pho_deps
   when:
     - ai_workstation_pho | bool
     - not ansible_check_mode
-    - ai_workstation_pho_checkout.changed or not (ai_workstation_pho_dir + '/apps/mcp/node_modules/.bin/tsx') is exists
-  changed_when: true
+  changed_when: "'lockfile changed' in ai_workstation_pho_deps.stdout"
 
 - name: Audit the Phở dependency tree (fails on any known vulnerability)
   ansible.builtin.command:
@@ -44,6 +60,7 @@
   become_user: "{{ ai_workstation_user }}"
   environment:
     HOME: "{{ ai_workstation_user_home }}"
+    npm_config_manage_package_manager_versions: "false"
   changed_when: false
   check_mode: false
   when:
@@ -65,7 +82,7 @@
     name: pho-research-tools.service
     scope: user
     enabled: true
-    state: "{{ 'restarted' if (ai_workstation_pho_unit.changed or ai_workstation_pho_checkout.changed or ai_workstation_pho_entry.changed) else 'started' }}"
+    state: "{{ 'restarted' if (ai_workstation_pho_unit.changed or ai_workstation_pho_checkout.changed or ai_workstation_pho_entry.changed or ai_workstation_pho_deps.changed | default(false)) else 'started' }}"
     daemon_reload: true
   become: true
   become_user: "{{ ai_workstation_user }}"

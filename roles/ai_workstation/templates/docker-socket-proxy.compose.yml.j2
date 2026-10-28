@@ -2,7 +2,7 @@
 # Read-only Docker API for the docker MCP server: POST=0 rejects every mutating call
 services:
   docker-socket-proxy:
-    image: {{ ai_workstation_docker_mcp_proxy_image }}
+    image: {{ ai_workstation_docker_mcp_proxy_image }}:{{ github_release.tag }}
     container_name: docker-socket-proxy
     restart: unless-stopped
     environment:

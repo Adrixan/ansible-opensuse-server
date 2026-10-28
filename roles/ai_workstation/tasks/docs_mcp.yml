@@ -25,7 +25,7 @@
     name: docs-mcp-server.service
     scope: user
     enabled: true
-    state: "{{ 'restarted' if (ai_workstation_docs_mcp_unit.changed or (ai_workstation_mcp_node_manifests.results | selectattr('item.name', 'equalto', 'docs') | map(attribute='changed') | first)) else 'started' }}"
+    state: "{{ 'restarted' if (ai_workstation_docs_mcp_unit.changed or (ai_workstation_mcp_node_update.results | default([]) | selectattr('item.item.name', 'equalto', 'docs') | map(attribute='changed') | first | default(false))) else 'started' }}"
     daemon_reload: true
   become: true
   become_user: "{{ ai_workstation_user }}"

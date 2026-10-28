@@ -5,8 +5,12 @@
     name: "{{ system_update_packages }}"
     state: present
 
-- name: Update system package cache and upgrade all packages
+# Tumbleweed only supports whole-snapshot upgrades: `zypper dup` brings every package to the latest
+# release, while per-package or `zypper update` upgrades end in dependency conflicts (e.g. a new
+# chromium needing a Qt release the rest of the desktop is not on yet). Roles therefore install with
+# state: present and this role keeps everything at the latest release.
+- name: Refresh repositories and upgrade the whole system to the latest snapshot (zypper dup)
   community.general.zypper:
     name: '*'
-    state: latest
+    state: dist-upgrade
     update_cache: yes

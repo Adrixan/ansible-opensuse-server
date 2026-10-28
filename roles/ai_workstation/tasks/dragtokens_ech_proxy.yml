@@ -29,6 +29,27 @@
   register: dragtokens_ech_proxy_bin
   when: ai_workstation_dragtokens_ech_proxy | default(true) | bool
 
+# Rebuild when the installed Go toolchain (kept at the latest release by zypper) is newer than the one
+# the binary was built with, so it picks up standard library and TLS fixes
+- name: Compare the Go toolchain with the one dragtokens-ech-proxy was built with
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      toolchain=$(go env GOVERSION)
+      built=$(go version "$BIN" 2>/dev/null | awk '{print $2}' || true)
+      [ "$toolchain" = "$built" ] && echo current || echo outdated
+    executable: /bin/bash
+  environment:
+    BIN: "{{ ai_workstation_user_home }}/.local/bin/dragtokens-ech-proxy"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  register: dragtokens_ech_proxy_toolchain
+  changed_when: false
+  check_mode: false
+  when:
+    - ai_workstation_dragtokens_ech_proxy | default(true) | bool
+    - dragtokens_ech_proxy_bin.stat.exists | default(false)
+
 - name: Compile dragtokens-ech-proxy binary
   ansible.builtin.command:
     argv:
@@ -47,7 +68,9 @@
   when:
     - ai_workstation_dragtokens_ech_proxy | default(true) | bool
     - not ansible_check_mode
-    - dragtokens_ech_proxy_src.changed or not (dragtokens_ech_proxy_bin.stat.exists | default(false))
+    - >-
+      dragtokens_ech_proxy_src.changed or not (dragtokens_ech_proxy_bin.stat.exists | default(false))
+      or (dragtokens_ech_proxy_toolchain.stdout | default('')) == 'outdated'
 
 - name: Ensure user systemd directory exists for dragtokens-ech-proxy
   ansible.builtin.file:

@@ -1,0 +1,9 @@
+---
+# Update the flatpaks in flatpak_update_apps (and their runtimes) to the latest release on the remote;
+# community.general.flatpak only installs and never upgrades.
+- name: Update flatpaks to the latest release
+  ansible.builtin.command:
+    argv: "{{ ['flatpak', 'update', '--system', '--noninteractive', '-y'] + flatpak_update_apps }}"
+  register: flatpak_update_result
+  changed_when: "'Nothing to do' not in flatpak_update_result.stdout and 'Nothing to update' not in flatpak_update_result.stdout"
+  when: not ansible_check_mode

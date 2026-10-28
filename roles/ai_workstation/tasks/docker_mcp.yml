@@ -15,6 +15,12 @@
     - ai_workstation_docker_mcp_proxy | bool
     - ai_workstation_docker_presence.results | map(attribute='stat.exists') | min
   block:
+    - name: Resolve the latest docker-socket-proxy release (image tag)
+      ansible.builtin.include_role:
+        name: github_release
+      vars:
+        github_release_repo: "{{ ai_workstation_docker_mcp_proxy_repo }}"
+
     - name: Create docker-compose directory for docker-socket-proxy
       ansible.builtin.file:
         path: /etc/docker-compose/docker-socket-proxy

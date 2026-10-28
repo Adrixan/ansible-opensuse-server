@@ -12,21 +12,17 @@ office_packages:
   - filezilla
   - chromium   # headless renderer for Marp PDF/PPTX export
 
-# Marp CLI (Markdown slide decks to PDF, PPTX, HTML), installed into its own prefix with exact pins.
-# overrides lift vulnerable transitive dependencies of the latest release (npm audit must stay clean):
-# puppeteer-core 25 drops extract-zip and proxy-agent; katex, xmldom and basic-ftp carry advisories.
-# Bump to the latest releases (npm view <pkg> version) and re-run the role; the audit task gates it.
+# Marp CLI (Markdown slide decks to PDF, PPTX, HTML) in its own prefix, always on the latest release:
+# every run updates the whole tree. Its latest release still ranges onto affected puppeteer-core 24
+# (extract-zip, proxy-agent chain), katex, @xmldom/xmldom, basic-ftp and zod, so these are forced to
+# their latest release (HTML and PDF export verified); npm audit gates the role.
 office_marp_dir: /opt/marp-cli
-office_marp_version: "4.5.1"
 office_marp_overrides:
-  puppeteer-core: "25.15.0"
-  katex: "0.19.0"
-  "@xmldom/xmldom": "0.9.12"
-  basic-ftp: "6.2.3"
+  puppeteer-core: latest
+  katex: latest
+  "@xmldom/xmldom": latest
+  basic-ftp: latest
+  zod: latest
 
-# pandoc from the upstream release (Tumbleweed lags behind); bump version and checksums together
-# (gh api repos/jgm/pandoc/releases/latest -q '.assets[] | .name + " " + .digest').
-office_pandoc_version: "3.12.1"
-office_pandoc_sha256:
-  amd64: d0c90410e90204c9ca83b8539fac5c7aed01fd537207e4585849f8abc5df20b8
-  arm64: 445d96fd08801fe636cab1158b4f017ee320ac3b7446328b4fe2f902117b19b9
+# pandoc from its latest upstream release (Tumbleweed lags behind), verified against the release digest
+office_pandoc_repo: jgm/pandoc

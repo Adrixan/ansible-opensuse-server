@@ -91,4 +91,28 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 ## 2026-10-28: Remote-control servers (relabel, restart scope, no home server)
 - `research` server relabelled "Deep Research" (fresh standby session after a bridge-pointer reset). A home-directory server was requested and dropped: Claude Code never saves trust for `$HOME`, so `claude remote-control` there exits "Workspace not trusted" (verified on schulpc).
 - Restart task now restarts only servers whose `.conf` changed (all on a unit change). The old condition restarted all five, which also killed the session running the playbook.
-- OPEN, blocks full `ai_workstation` runs: the Node MCP audit gate fails on GHSA-27r3-jxmh-p828 (body-parser, fix available) in accessibility-scanner, docs, drawio, excalidraw, lighthouse, obsidian-hybrid-search, open-meteo, and GHSA-mrhx-c7xc-m3w5 (zod <4.6.6, no fix; `mcp-excalidraw-server` pins it). Needs override bumps or an alternative for excalidraw. Until then apply remote-control changes alone with an `import_role` (`tasks_from: remote_control`) playbook in `.scratch/`.
+- Resolved 2026-10-28 (next section): the npm audit gate failures.
+
+## 2026-10-28: Latest releases everywhere, no version pins (Peter's order)
+- Node MCP servers and Marp: manifests depend on `latest`, every run `npm update`s the whole tree,
+  overrides force affected transitive deps to `latest` (excalidraw: zod, mermaid, dompurify, katex,
+  lodash-es, nanoid, uuid, chevrotain, langium, MCP SDK, sass; Marp: puppeteer-core, katex, xmldom,
+  basic-ftp, zod), `allowScripts` keyed by name. Runtime checked: excalidraw tools/list and
+  create_element on zod 4, Marp HTML and PDF, docs native modules, Phở tools and a live tool call.
+- uv: `mcp<2` caps for semgrep (still pins vulnerable mcp==1.29.0) and openroute-mcp (breaks on 2.x);
+  youtube-transcript from its latest GitHub release tag; `uv tool upgrade --all` every run.
+- GitHub downloads (pandoc, Better BibTeX, Thunderbird MCP add-on and bridge, docker-socket-proxy tag)
+  resolve the latest stable release via the new `github_release` role; files verified against the
+  sha256 digest in the release metadata.
+- Phở follows upstream HEAD with pnpm@latest (`manage-package-manager-versions=false`, upstream names
+  pnpm 9.15.4), `files/pho-update-deps.sh` updates the lockfile in a manifest copy, override zod=latest;
+  the old lockfile had 7 advisories.
+- Flatpaks (Zotero, Obsidian, Signal) updated via `flatpak_setup` `tasks_from: update`. ECH proxy is
+  rebuilt when the Go toolchain is newer than the binary's.
+- zypper: per-package `state: latest` failed (new chromium needs Qt 6.12 while KDE is on 6.11; only
+  "solution" was removing the X11 session). Tumbleweed supports only `zypper dup`, so roles keep
+  `state: present` and `system_update` now uses `state: dist-upgrade` (not run by me). Pending
+  Tumbleweed snapshot on schulpc: run `system_update` or `sudo zypper dup`.
+- Verified: ai_workstation, office_suite, zotero run clean twice (second run 0 changed); all Node
+  servers on the registry's latest; docs and obsidian-hybrid-search restarted onto the new code (now
+  restarted automatically when `npm update` changes their tree).

@@ -15,7 +15,7 @@ ai_workstation_packages:
   - go
   # OSV dependency scanner; `osv-scanner experimental-mcp` is the OSV MCP server (stdio)
   - osv-scanner
-  # node-gyp toolchain for native modules of the pinned Node.js MCP servers (Grounded Docs)
+  # node-gyp toolchain for native modules of the Node.js MCP servers (Grounded Docs)
   - gcc-c++
   - make
 
@@ -50,122 +50,108 @@ ai_workstation_mcp_uv_tools:
   - { name: mcp-server-fetch }
   - { name: mcp-server-git }
   - { name: package-version-check-mcp }
-  # semgrep pins mcp==1.29.0 (CVE-2026-59951); the override lifts it to the fixed release
-  - { name: semgrep, overrides: ["mcp==1.30.0"] }
+  # semgrep pins mcp==1.29.0 (CVE-2026-59951); the override takes the newest 1.x (1.30.0 has the fix,
+  # 2.x renamed FastMCP and breaks it)
+  - { name: semgrep, overrides: ["mcp<2"] }
   - { name: wikipedia-mcp }
   # openroute-mcp leaves mcp unpinned and breaks on mcp 2.x (FastMCP renamed)
-  - { name: openroute-mcp, overrides: ["mcp==1.30.0"] }
+  - { name: openroute-mcp, overrides: ["mcp<2"] }
   # Key-less web search; installed without the [browser] extra, so no curl TLS impersonation
   - { name: duckduckgo-mcp-server }
   - { name: oebb-mcp-server }
-  # PyPI stops at 0.3.5; releases continue on GitHub, so the tool is pinned to the v0.8.1 commit
+  # PyPI stops at 0.3.5; releases continue on GitHub, so the tool follows the latest GitHub release tag
   - name: mcp-youtube-transcript
-    spec: "git+https://github.com/jkawamoto/mcp-youtube-transcript@c8b88693633d2f7b161b667ab8de0d4f4b303ca4"
+    github_release: jkawamoto/mcp-youtube-transcript
 ai_workstation_mcp_uv_overrides_dir: "{{ ai_workstation_user_home }}/.config/ai/uv-overrides"
-# Pinned Node.js MCP servers, one npm prefix each under ai_workstation_mcp_node_dir. `overrides` lift
-# vulnerable transitive dependencies (npm audit gates the role), `allow_scripts` is the npm
-# install-script allowlist (unset: no install scripts run), `env` is exported by the wrapper.
+# Node.js MCP servers, one npm prefix each under ai_workstation_mcp_node_dir, always on the latest
+# release: every run updates the whole tree (`npm update`). `overrides` force vulnerable transitive
+# dependencies to their latest release where the server's own ranges keep an affected one (npm audit
+# gates the role), `allow_scripts` is the npm install-script allowlist by package name (unset: no
+# install scripts run), `env` is exported by the wrapper.
 ai_workstation_mcp_node_dir: /opt/mcp
 ai_workstation_mcp_node_servers:
   - name: openalex
     package: "@cyanheads/openalex-mcp-server"
-    version: "0.9.0"
     bin: openalex-mcp-server
   - name: excalidraw
     package: mcp-excalidraw-server
-    version: "2.1.2"
     bin: mcp-excalidraw-server
     # The auto-started canvas server binds $HOST:$PORT; zsh exports HOST as the machine name
     env:
       HOST: 127.0.0.1
       PORT: "{{ ai_workstation_excalidraw_port }}"
       EXPRESS_SERVER_URL: "http://127.0.0.1:{{ ai_workstation_excalidraw_port }}"
+    # Its latest release still ranges onto affected zod 3, mermaid 10, dompurify, katex, lodash-es,
+    # nanoid, uuid and the chevrotain/langium parser chain; tool schemas and calls verified on zod 4
     overrides:
-      "@modelcontextprotocol/core": "2.3.1"
-      "@modelcontextprotocol/server": "2.3.1"
-      dompurify: "3.4.17"
-      katex: "0.19.0"
-      lodash-es: "4.18.1"
-      # sass 1.51 pulls chokidar 3 and braces (no fixed braces release); 1.106 uses chokidar 5
-      sass: "1.106.0"
-      "@excalidraw/excalidraw": { nanoid: "3.3.20" }
-      "@excalidraw/mermaid-to-excalidraw": { nanoid: "5.1.16" }
-      "mermaid@10": { ".": "10.9.8", uuid: "11.1.1" }
+      "@modelcontextprotocol/core": latest
+      "@modelcontextprotocol/server": latest
+      chevrotain: latest
+      dompurify: latest
+      katex: latest
+      langium: latest
+      lodash-es: latest
+      mermaid: latest
+      nanoid: latest
+      sass: latest
+      uuid: latest
+      zod: latest
   - name: drawio
     package: "@drawio/mcp"
-    version: "1.10.0"
     bin: drawio-mcp
   - name: obsidian-hybrid-search
     package: obsidian-hybrid-search
-    version: "0.16.3"
     bin: obsidian-hybrid-search
-    # argparse 1.x (js-yaml 3 CLI only, unused by the library) pulls sprintf-js, which has no fixed release
-    overrides:
-      argparse: "2.0.1"
     # onnxruntime-node ships its CPU runtime; its postinstall only downloads ~270 MB of CUDA providers
     allow_scripts:
-      "better-sqlite3@12.11.1": true
+      better-sqlite3: true
       onnxruntime-node: false
       protobufjs: false
   - name: lighthouse
     package: "@danielsogl/lighthouse-mcp"
-    version: "2.0.1"
     bin: lighthouse-mcp-server
     env:
       CHROME_PATH: "{{ ai_workstation_mcp_chromium }}"
   - name: accessibility-scanner
     package: accessibility-scanner-mcp
-    version: "0.3.1"
     bin: accessibility-scanner-mcp
     env:
       CHROME_PATH: "{{ ai_workstation_mcp_chromium }}"
   - name: docs
     package: "@arabold/docs-mcp-server"
-    version: "3.3.0"
     bin: docs-mcp-server
     env:
       DOCS_MCP_TELEMETRY: "false"
       PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH: "{{ ai_workstation_mcp_chromium }}"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
-    overrides:
-      argparse: "2.0.1"
     # Native modules compile with node-gyp (gcc-c++, make); the package's own postinstall only echoes
     allow_scripts:
-      "better-sqlite3@12.11.1": true
-      "tree-sitter@0.21.1": true
-      "tree-sitter-javascript@0.23.1": true
-      "tree-sitter-python@0.21.0": true
-      "tree-sitter-typescript@0.23.2": true
+      better-sqlite3: true
+      tree-sitter: true
+      tree-sitter-javascript: true
+      tree-sitter-python: true
+      tree-sitter-typescript: true
       "@arabold/docs-mcp-server": false
   - name: nasa
     package: "@programcomputer/nasa-mcp-server"
-    version: "1.3.1"
     bin: nasa-mcp-server
   - name: open-meteo
     package: open-meteo-mcp-server
-    version: "2.5.3"
     bin: open-meteo-mcp-server
   - name: ris-austria
     package: "@cyanheads/ris-austria-mcp-server"
-    version: "0.5.2"
     bin: ris-austria-mcp-server
   - name: eur-lex
     package: "@cyanheads/eur-lex-mcp-server"
-    version: "0.19.1"
     bin: eur-lex-mcp-server
 ai_workstation_excalidraw_port: 3031
-# Thunderbird MCP: the Node bridge (no dependencies) is pinned to the release commit; the add-on
-# itself is installed by hand in Thunderbird from the checksum-verified .xpi next to it
+# Thunderbird MCP from its latest GitHub release: the Node bridge (no dependencies) from the release
+# tag, the add-on (.xpi, verified against the release digest) next to it for a manual install in
+# Thunderbird
 ai_workstation_thunderbird_mcp: true
+ai_workstation_thunderbird_mcp_repo: TKasperczyk/thunderbird-mcp
 ai_workstation_thunderbird_mcp_dir: "{{ ai_workstation_mcp_node_dir }}/thunderbird-mcp"
-ai_workstation_thunderbird_mcp_version: "0.9.3"
-ai_workstation_thunderbird_mcp_commit: 58f6cb16b12349f2e8164971acebb0db22c4d137
-ai_workstation_thunderbird_mcp_files:
-  - path: mcp-bridge.cjs
-    sha256: d86cfa1b2e5464984732493e346866ee92f3e8959104494d57e56bf9075aa123
-  - path: package.json
-    sha256: 071a9bcc2bc1c5b5cd671c610642d7d723cab8f84655aaf052065a9ba7d96677
-ai_workstation_thunderbird_mcp_xpi_sha256: 8e5b8df388e932d6f150179cff60c97cd0c50573e1dac32b4d2f21fc4cc22863
+ai_workstation_thunderbird_mcp_files: [mcp-bridge.cjs, package.json]
 # Lighthouse, the accessibility scanner and Playwright hard-code --no-sandbox; this wrapper drops it
 ai_workstation_mcp_chromium: /usr/local/libexec/mcp-chromium-sandboxed
 # Grounded Docs: version-matched documentation index, one loopback HTTP server for all sessions
@@ -178,11 +164,15 @@ ai_workstation_openroute_routes_dir: "{{ ai_workstation_user_home }}/Documents/R
 ai_workstation_nasa_api_key: "{{ lookup('env', 'NASA_API_KEY') | default('', true) }}"
 ai_workstation_openroute_api_key: "{{ lookup('env', 'OPENROUTESERVICE_API_KEY') | default('', true) }}"
 # Phở Research Tools (reference verification, retractions, PRISMA 2020) served on loopback only.
-# Upstream ships no package; the role checks out a reviewed commit and audits its lockfile.
+# Upstream ships no package or releases; the role follows the default branch, updates the dependency
+# tree to the latest versions its ranges allow and audits it.
 ai_workstation_pho: true
 ai_workstation_pho_repo: https://github.com/thaohienhomes/pho-research-tools.git
-ai_workstation_pho_version: 42e4ea5ed565fe8d26099de82e5235bc420c736f
-ai_workstation_pho_pnpm: "pnpm@9.15.4"
+ai_workstation_pho_version: HEAD
+ai_workstation_pho_pnpm: "pnpm@latest"
+# Its MCP SDK 1.x and its own code range onto affected zod 3 (GHSA-mrhx-c7xc-m3w5); tools verified on zod 4
+ai_workstation_pho_overrides:
+  zod: latest
 ai_workstation_pho_dir: "{{ ai_workstation_user_home }}/.local/share/pho-research-tools"
 ai_workstation_pho_port: 8787
 # Obsidian Hybrid Search HTTP servers (one per vault, loopback; about 700 MB RSS each with the
@@ -207,7 +197,9 @@ ai_workstation_legacy_claude_mcp_servers: [github, puppeteer, sqlite, memory, fe
 
 # Read-only Docker API for the docker MCP server (deployed only where Docker is installed)
 ai_workstation_docker_mcp_proxy: true
-ai_workstation_docker_mcp_proxy_image: "tecnativa/docker-socket-proxy:v0.5.0"
+# Image tag = latest GitHub release of the proxy (docker-compose@ pulls it at every start)
+ai_workstation_docker_mcp_proxy_image: tecnativa/docker-socket-proxy
+ai_workstation_docker_mcp_proxy_repo: Tecnativa/docker-socket-proxy
 ai_workstation_docker_mcp_proxy_port: 2375
 
 # Keep user services (remote control, update timers) running without a login session

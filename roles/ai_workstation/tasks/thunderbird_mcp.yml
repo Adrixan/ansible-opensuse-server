@@ -14,33 +14,53 @@
         group: root
         mode: '0755'
 
-    - name: Download the pinned Thunderbird MCP bridge files
+    - name: Resolve the latest Thunderbird MCP release
+      ansible.builtin.include_role:
+        name: github_release
+      vars:
+        github_release_repo: "{{ ai_workstation_thunderbird_mcp_repo }}"
+        github_release_asset: '^thunderbird-mcp-.*\.xpi$'
+
+    - name: Download the Thunderbird MCP bridge files of the release
       ansible.builtin.get_url:
-        url: "https://raw.githubusercontent.com/TKasperczyk/thunderbird-mcp/{{ ai_workstation_thunderbird_mcp_commit }}/{{ item.path }}"
-        dest: "{{ ai_workstation_thunderbird_mcp_dir }}/{{ item.path }}"
-        checksum: "sha256:{{ item.sha256 }}"
+        url: "https://raw.githubusercontent.com/{{ ai_workstation_thunderbird_mcp_repo }}/{{ github_release.tag }}/{{ item }}"
+        dest: "{{ ai_workstation_thunderbird_mcp_dir }}/{{ item }}"
+        force: true
         owner: root
         group: root
         mode: '0644'
       loop: "{{ ai_workstation_thunderbird_mcp_files }}"
-      loop_control:
-        label: "{{ item.path }}"
 
-    - name: Download the Thunderbird MCP add-on
+    - name: Download the Thunderbird MCP add-on (release digest verified)
       ansible.builtin.get_url:
-        url: "https://github.com/TKasperczyk/thunderbird-mcp/releases/download/v{{ ai_workstation_thunderbird_mcp_version }}/thunderbird-mcp-v{{ ai_workstation_thunderbird_mcp_version }}.xpi"
-        dest: "{{ ai_workstation_thunderbird_mcp_dir }}/thunderbird-mcp-v{{ ai_workstation_thunderbird_mcp_version }}.xpi"
-        checksum: "sha256:{{ ai_workstation_thunderbird_mcp_xpi_sha256 }}"
+        url: "{{ github_release.asset_url }}"
+        dest: "{{ ai_workstation_thunderbird_mcp_dir }}/{{ github_release.asset_name }}"
+        checksum: "sha256:{{ github_release.sha256 }}"
         owner: root
         group: root
         mode: '0644'
+
+    - name: Find add-on files of older Thunderbird MCP releases
+      ansible.builtin.find:
+        paths: "{{ ai_workstation_thunderbird_mcp_dir }}"
+        patterns: ["thunderbird-mcp-*.xpi"]
+        excludes: ["{{ github_release.asset_name }}"]
+      register: ai_workstation_thunderbird_old_xpi
+
+    - name: Remove add-on files of older Thunderbird MCP releases
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ ai_workstation_thunderbird_old_xpi.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
 
     - name: Install the Thunderbird MCP bridge wrapper
       ansible.builtin.copy:
         dest: /usr/local/bin/thunderbird-mcp
         content: |
           #!/bin/sh
-          # Managed by Ansible (ai_workstation): thunderbird-mcp {{ ai_workstation_thunderbird_mcp_version }} bridge from {{ ai_workstation_thunderbird_mcp_dir }}
+          # Managed by Ansible (ai_workstation): thunderbird-mcp {{ github_release.tag }} bridge from {{ ai_workstation_thunderbird_mcp_dir }}
           exec /usr/bin/node {{ ai_workstation_thunderbird_mcp_dir }}/mcp-bridge.cjs "$@"
         owner: root
         group: root

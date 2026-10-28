@@ -9,6 +9,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 * **Modular Feature-Flag Architecture**: Every subsystem is decoupled into a compact, single-responsibility role controlled via booleans in `group_vars/all.yml` or runtime CLI flags (`-e "enable_<role>=true"`).
 * **Idempotent Playbook Execution**: Follows strict Ansible best practices with TDD verification, check-mode support (`--check`), and full idempotency.
 * **openSUSE Tumbleweed Ready**: Optimized for Tumbleweed's rolling release model, featuring PEP 668 pip isolation handling, PipeWire audio integration, and vendor-priority codec alignment via Packman.
+* **Always the Latest Release, No Version Pins**: roles install zypper packages with `state: present` and `system_update` keeps the whole system at the latest snapshot with `zypper dup` (Tumbleweed does not support per-package upgrades), flatpaks are updated, npm prefixes and uv tools are updated on every run, and GitHub downloads resolve the latest stable release (`github_release` helper role) and are verified against the sha256 digest in the release metadata. npm overrides force vulnerable transitive dependencies to their `latest` release; uv overrides only cap a major version where a tool breaks on the next one. `npm audit` still gates every Node prefix, so a run fails when the newest release has a known vulnerability.
 
 ---
 
@@ -37,7 +38,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 * **`graphical_environment`**: Core desktop software suite (`MozillaFirefox`, `MozillaThunderbird`, `partitionmanager`, `gwenview`, `ark`, `tigervnc` VNC viewer).
 * **`desktop_messaging`**: Removes legacy zypper repository/packages and installs Signal Desktop client via Flatpak (`org.signal.Signal`).
 * **`multimedia_codecs`**: Configures high-priority Packman repository and installs unrestricted audio/video codecs (`ffmpeg`, `vlc`, `mpv`, `gstreamer-plugins-*`, `x264`, `x265`, `faac`, `faad2`).
-* **`office_suite`**: Installs full LibreOffice productivity suite, Okular PDF viewer, FileZilla FTP client, pandoc from the upstream release (checksum-pinned) and Marp CLI in `/opt/marp-cli` (exact pins, npm overrides for vulnerable transitive dependencies, `npm audit` gates the role, wrapper uses the system Chromium).
+* **`office_suite`**: Installs full LibreOffice productivity suite, Okular PDF viewer, FileZilla FTP client, pandoc from the latest upstream release (verified against the GitHub release digest) and Marp CLI in `/opt/marp-cli` (latest release, whole tree updated on every run, npm overrides force vulnerable transitive dependencies to their latest release, `npm audit` gates the role, wrapper uses the system Chromium).
 * **`graphics_tools`**: Image manipulation and editing tools (GIMP, Gwenview).
 * **`gaming_environment`**: Installs Linux gaming platforms and emulators (`steam`, `lutris`, `dosbox`, `doomsday`).
 
@@ -45,7 +46,7 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 * **`docker`**: Installs Docker engine, container utilities, and manages `docker.service`.
 * **`flatpak_setup`**: Installs Flatpak daemon and configures the Flathub remote repository.
 * **`obsidian`**: Installs Obsidian knowledge management app via Flatpak (automatically includes `flatpak_setup`).
-* **`zotero`**: Installs Zotero via Flatpak, creates a default profile if Zotero never ran, installs Better BibTeX from the upstream release (checksum-pinned) into the profile and enforces the local API, UTF-8 BibTeX export and the citekey format through `user.js`. Zotero sync login and the Better BibTeX auto-export stay manual.
+* **`zotero`**: Installs Zotero via Flatpak, creates a default profile if Zotero never ran, installs Better BibTeX from the latest upstream release (verified against the GitHub release digest) into the profile, keeps the flatpak updated and enforces the local API, UTF-8 BibTeX export and the citekey format through `user.js`. Zotero sync login and the Better BibTeX auto-export stay manual.
 
 ### 🖥️ Services & Daemons
 * **`syncthing_daemon`**: Configures Syncthing continuous file synchronization daemon.

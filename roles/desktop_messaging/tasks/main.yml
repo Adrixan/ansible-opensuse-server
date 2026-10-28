@@ -21,3 +21,10 @@
     remote: "{{ signal_flatpak_remote }}"
     state: present
     method: system
+
+- name: Keep the flatpak at the latest release
+  ansible.builtin.include_role:
+    name: flatpak_setup
+    tasks_from: update
+  vars:
+    flatpak_update_apps: ["{{ signal_flatpak_name }}"]

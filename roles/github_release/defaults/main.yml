@@ -1,0 +1,5 @@
+---
+# owner/name of the GitHub repository (required)
+github_release_repo: ""
+# Regex on the asset name; empty resolves only the release tag
+github_release_asset: ""

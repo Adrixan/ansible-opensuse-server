@@ -1,6 +1,7 @@
 ---
-# Pinned Node.js MCP servers: one npm prefix per server with exact versions, npm overrides for
-# vulnerable transitive dependencies and an install-script allowlist; npm audit gates the role.
+# Node.js MCP servers on their latest release: one npm prefix per server, the whole tree updated on
+# every run, npm overrides for vulnerable transitive dependencies and an install-script allowlist;
+# npm audit gates the role.
 
 - name: Create the Node.js MCP server prefixes
   ansible.builtin.file:
@@ -13,12 +14,12 @@
   loop_control:
     label: "{{ item.name }}"
 
-- name: Write the pinned Node.js MCP server manifests
+- name: Write the Node.js MCP server manifests (latest release)
   ansible.builtin.copy:
     dest: "{{ ai_workstation_mcp_node_dir }}/{{ item.name }}/package.json"
     content: >-
-      {{ {'name': item.name + '-mcp-pinned', 'private': true,
-          'dependencies': {item.package: item.version}}
+      {{ {'name': item.name + '-mcp', 'private': true,
+          'dependencies': {item.package: 'latest'}}
          | combine({'overrides': item.overrides} if item.overrides is defined else {})
          | combine({'allowScripts': item.allow_scripts} if item.allow_scripts is defined else {})
          | to_nice_json }}
@@ -30,17 +31,23 @@
     label: "{{ item.name }}"
   register: ai_workstation_mcp_node_manifests
 
-- name: Install the pinned Node.js MCP servers (install scripts only where allowlisted)
+# `npm update` resolves `latest` past the lockfile and lifts every transitive dependency to the newest
+# release its range allows; a fresh prefix gets `npm install` first
+- name: Install or update the Node.js MCP servers (install scripts only where allowlisted)
   ansible.builtin.command:
-    argv: "{{ ['npm', 'install', '--omit=dev', '--no-fund', '--no-audit'] + ([] if item.item.allow_scripts is defined else ['--ignore-scripts']) }}"
+    argv: >-
+      {{ ['npm', 'install' if not (ai_workstation_mcp_node_dir + '/' + item.item.name + '/node_modules') is exists else 'update',
+          '--omit=dev', '--no-fund', '--no-audit']
+         + ([] if item.item.allow_scripts is defined else ['--ignore-scripts']) }}
     chdir: "{{ ai_workstation_mcp_node_dir }}/{{ item.item.name }}"
   loop: "{{ ai_workstation_mcp_node_manifests.results }}"
   loop_control:
     label: "{{ item.item.name }}"
-  when:
-    - not ansible_check_mode
-    - item.changed or not (ai_workstation_mcp_node_dir + '/' + item.item.name + '/node_modules/.bin/' + item.item.bin) is exists
-  changed_when: true
+  register: ai_workstation_mcp_node_update
+  when: not ansible_check_mode
+  changed_when: "'up to date' not in ai_workstation_mcp_node_update.stdout"
+  environment:
+    PUPPETEER_SKIP_DOWNLOAD: "1"
 
 - name: Audit the Node.js MCP server dependency trees (fails on any known vulnerability)
   ansible.builtin.command:
@@ -74,7 +81,7 @@
     dest: "/usr/local/bin/{{ item.bin }}"
     content: |
       #!/bin/sh
-      # Managed by Ansible (ai_workstation): {{ item.package }} {{ item.version }} from {{ ai_workstation_mcp_node_dir }}/{{ item.name }}
+      # Managed by Ansible (ai_workstation): {{ item.package }} (latest release) from {{ ai_workstation_mcp_node_dir }}/{{ item.name }}
       {% for key, value in (item.env | default({})).items() %}
       export {{ key }}={{ value | quote }}
       {% endfor %}

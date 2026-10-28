@@ -26,7 +26,7 @@
     group: "{{ ai_workstation_user }}"
     mode: '0755'
 
-- name: Write uv override files (pinned fixes for vulnerable transitive dependencies)
+- name: Write uv override files (fixes for vulnerable or incompatible transitive dependencies)
   ansible.builtin.copy:
     dest: "{{ ai_workstation_mcp_uv_overrides_dir }}/{{ item.name }}.txt"
     content: "{{ item.overrides | join('\n') }}\n"
@@ -38,25 +38,59 @@
     label: "{{ item.name }}"
   register: ai_workstation_uv_overrides
 
-# The overrides are recorded in the uv tool receipt, so `uv tool upgrade --all` keeps them
+# Tools released only on GitHub install from their latest release tag
+- name: Resolve the latest GitHub release of GitHub-only uv tools
+  ansible.builtin.include_role:
+    name: github_release
+  vars:
+    github_release_repo: "{{ ai_workstation_uv_github_tool.github_release }}"
+  loop: "{{ ai_workstation_mcp_uv_tools | selectattr('github_release', 'defined') | list }}"
+  loop_control:
+    loop_var: ai_workstation_uv_github_tool
+    label: "{{ ai_workstation_uv_github_tool.name }}"
+
+- name: Record the release tags of GitHub-only uv tools
+  ansible.builtin.set_fact:
+    ai_workstation_uv_git_tags: "{{ (ai_workstation_uv_git_tags | default({})) | combine({item.name: github_release.tag}) }}"
+  loop: "{{ ai_workstation_mcp_uv_tools | selectattr('github_release', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: github_release is defined
+
+# The overrides are recorded in the uv tool receipt, so `uv tool upgrade --all` keeps them; a
+# GitHub-only tool is reinstalled when its latest release tag differs from the installed version
 - name: Install Python MCP servers as uv tools
   ansible.builtin.command:
     argv: >-
       {{ ['uv', 'tool', 'install']
          + (['--python', item.python] if item.python is defined else [])
          + (['--overrides', ai_workstation_mcp_uv_overrides_dir + '/' + item.name + '.txt'] if item.overrides is defined else [])
-         + (['--force'] if item.name in ai_workstation_uv_overrides_changed else [])
-         + [item.spec | default(item.name)] }}
+         + (['--force'] if item.name in ai_workstation_uv_overrides_changed or ai_workstation_uv_git_outdated | bool else [])
+         + (['git+https://github.com/' + item.github_release + '@' + ai_workstation_uv_git_tags[item.name]] if item.github_release is defined else [item.name]) }}
   become: true
   become_user: "{{ ai_workstation_user }}"
   loop: "{{ ai_workstation_mcp_uv_tools }}"
   loop_control:
     label: "{{ item.name }}"
   vars:
+    ai_workstation_uv_installed: "{{ dict(ai_workstation_uv_tool_list.stdout | regex_findall('(?m)^(\\S+) v(\\S+)')) }}"
     ai_workstation_uv_overrides_changed: "{{ ai_workstation_uv_overrides.results | selectattr('changed') | map(attribute='item.name') | list }}"
+    ai_workstation_uv_git_outdated: >-
+      {{ item.github_release is defined
+         and (ai_workstation_uv_git_tags[item.name] | regex_replace('^v', '')) != ai_workstation_uv_installed.get(item.name, '') }}
   when: >-
-    item.name not in (ai_workstation_uv_tool_list.stdout | regex_findall('(?m)^(\S+) v'))
+    item.name not in ai_workstation_uv_installed
     or item.name in ai_workstation_uv_overrides_changed
+    or ai_workstation_uv_git_outdated | bool
+
+- name: Upgrade all uv tools to their latest releases
+  ansible.builtin.command:
+    argv: [uv, tool, upgrade, --all]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  register: ai_workstation_uv_upgrade
+  changed_when: "'Updated' in (ai_workstation_uv_upgrade.stdout + ai_workstation_uv_upgrade.stderr)"
+  when: not ansible_check_mode
 
 - name: Ensure the openroute MCP route directory exists
   ansible.builtin.file:
@@ -206,7 +240,7 @@
         - _installed | length > 0
         - _installed is version(_source, '<')
 
-- name: Install pinned Node.js MCP servers
+- name: Install the Node.js MCP servers (latest releases)
   ansible.builtin.import_tasks: mcp_node.yml
 
 - name: Serve Phở Research Tools on loopback

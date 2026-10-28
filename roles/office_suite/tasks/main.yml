@@ -13,23 +13,31 @@
     group: root
     mode: '0755'
 
-- name: Write the pinned Marp CLI manifest
+- name: Write the Marp CLI manifest (latest release)
   ansible.builtin.copy:
     dest: "{{ office_marp_dir }}/package.json"
-    content: "{{ {'name': 'marp-cli-pinned', 'private': true, 'dependencies': {'@marp-team/marp-cli': office_marp_version}, 'overrides': office_marp_overrides} | to_nice_json }}"
+    content: "{{ {'name': 'marp-cli', 'private': true, 'dependencies': {'@marp-team/marp-cli': 'latest'}, 'overrides': office_marp_overrides} | to_nice_json }}"
     owner: root
     group: root
     mode: '0644'
   register: office_marp_manifest
 
-- name: Install Marp CLI with exact pins (no browser download, no install scripts)
+# `npm update` resolves `latest` past the lockfile and lifts the whole tree; a fresh prefix installs first
+- name: Install or update Marp CLI (no browser download, no install scripts)
   ansible.builtin.command:
-    argv: [npm, install, --omit=dev, --ignore-scripts, --no-fund, --no-audit]
+    argv:
+      - npm
+      - "{{ 'update' if (office_marp_dir + '/node_modules') is exists else 'install' }}"
+      - --omit=dev
+      - --ignore-scripts
+      - --no-fund
+      - --no-audit
     chdir: "{{ office_marp_dir }}"
   environment:
     PUPPETEER_SKIP_DOWNLOAD: "1"
-  when: office_marp_manifest.changed or not (office_marp_dir + '/node_modules/.bin/marp') is exists
-  changed_when: true
+  register: office_marp_update
+  when: not ansible_check_mode
+  changed_when: "'up to date' not in office_marp_update.stdout"
 
 - name: Audit the Marp CLI dependency tree (fails on any known vulnerability)
   ansible.builtin.command:
@@ -55,16 +63,27 @@
   ansible.builtin.set_fact:
     office_pandoc_arch: "{{ 'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'amd64' }}"
 
-- name: Download pandoc {{ office_pandoc_version }} (checksum-pinned)
+- name: Resolve the latest pandoc release
+  ansible.builtin.include_role:
+    name: github_release
+  vars:
+    github_release_repo: "{{ office_pandoc_repo }}"
+    github_release_asset: "^pandoc-[0-9.]+-linux-{{ office_pandoc_arch }}\\.tar\\.gz$"
+
+- name: Set the pandoc version
+  ansible.builtin.set_fact:
+    office_pandoc_version: "{{ github_release.version }}"
+
+- name: Download pandoc {{ office_pandoc_version }} (release digest verified)
   ansible.builtin.get_url:
-    url: "https://github.com/jgm/pandoc/releases/download/{{ office_pandoc_version }}/pandoc-{{ office_pandoc_version }}-linux-{{ office_pandoc_arch }}.tar.gz"
-    dest: "/var/cache/pandoc-{{ office_pandoc_version }}-{{ office_pandoc_arch }}.tar.gz"
-    checksum: "sha256:{{ office_pandoc_sha256[office_pandoc_arch] }}"
+    url: "{{ github_release.asset_url }}"
+    dest: "/var/cache/{{ github_release.asset_name }}"
+    checksum: "sha256:{{ github_release.sha256 }}"
     mode: '0644'
 
 - name: Unpack pandoc into /opt
   ansible.builtin.unarchive:
-    src: "/var/cache/pandoc-{{ office_pandoc_version }}-{{ office_pandoc_arch }}.tar.gz"
+    src: "/var/cache/{{ github_release.asset_name }}"
     dest: /opt
     remote_src: true
     creates: "/opt/pandoc-{{ office_pandoc_version }}/bin/pandoc"

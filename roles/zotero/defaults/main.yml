@@ -9,10 +9,8 @@ zotero_profile_root: "{{ zotero_user_home }}/.zotero/zotero"
 # Profile created when Zotero has never run on this machine
 zotero_new_profile_dir: "ansible.default"
 
-# Better BibTeX from the upstream release; bump version and digest together
-# (gh api repos/retorquere/zotero-better-bibtex/releases/latest -q '.assets[] | .name + " " + .digest').
-zotero_bbt_version: "9.0.71"
-zotero_bbt_sha256: "bf61a1690dc8a2b7ab09be9de2c89986f4fb6d495c82407d89b102b26fbaa9d5"
+# Better BibTeX from its latest upstream release, verified against the release digest
+zotero_bbt_repo: retorquere/zotero-better-bibtex
 
 # Enforced at every Zotero start through user.js in the profile.
 # autoDisableScopes 14 auto-enables add-ons placed in the profile itself (Zotero default 15 leaves the

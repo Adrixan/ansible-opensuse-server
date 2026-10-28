@@ -12,6 +12,13 @@
     state: present
     method: system
 
+- name: Keep the flatpak at the latest release
+  ansible.builtin.include_role:
+    name: flatpak_setup
+    tasks_from: update
+  vars:
+    flatpak_update_apps: ["{{ zotero_flatpak_name }}"]
+
 - name: Check for an existing Zotero profile
   ansible.builtin.stat:
     path: "{{ zotero_profile_root }}/profiles.ini"
@@ -75,11 +82,18 @@
     group: "{{ zotero_user }}"
     mode: '0700'
 
-- name: Install Better BibTeX {{ zotero_bbt_version }} (checksum-pinned)
+- name: Resolve the latest Better BibTeX release
+  ansible.builtin.include_role:
+    name: github_release
+  vars:
+    github_release_repo: "{{ zotero_bbt_repo }}"
+    github_release_asset: '^zotero-better-bibtex-[0-9.]+\.xpi$'
+
+- name: Install Better BibTeX {{ github_release.version }} (release digest verified)
   ansible.builtin.get_url:
-    url: "https://github.com/retorquere/zotero-better-bibtex/releases/download/v{{ zotero_bbt_version }}/zotero-better-bibtex-{{ zotero_bbt_version }}.xpi"
+    url: "{{ github_release.asset_url }}"
     dest: "{{ zotero_profile.stdout }}/extensions/better-bibtex@iris-advies.com.xpi"
-    checksum: "sha256:{{ zotero_bbt_sha256 }}"
+    checksum: "sha256:{{ github_release.sha256 }}"
     owner: "{{ zotero_user }}"
     group: "{{ zotero_user }}"
     mode: '0644'

@@ -46,7 +46,7 @@
     name: "obsidian-hybrid-search-{{ item.item.name }}.service"
     scope: user
     enabled: true
-    state: "{{ 'restarted' if (item.changed or (ai_workstation_mcp_node_manifests.results | selectattr('item.name', 'equalto', 'obsidian-hybrid-search') | map(attribute='changed') | first)) else 'started' }}"
+    state: "{{ 'restarted' if (item.changed or (ai_workstation_mcp_node_update.results | default([]) | selectattr('item.item.name', 'equalto', 'obsidian-hybrid-search') | map(attribute='changed') | first | default(false))) else 'started' }}"
     daemon_reload: true
   loop: "{{ ai_workstation_ohs_units.results }}"
   loop_control:
