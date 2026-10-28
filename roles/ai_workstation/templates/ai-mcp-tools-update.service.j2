@@ -7,4 +7,6 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/uv tool upgrade --all
+# Load the upgraded servers (a no-op where the shared MCP service is not running)
+ExecStartPost=-/usr/bin/systemctl --user try-restart mcp-shared.service
 Nice=10
