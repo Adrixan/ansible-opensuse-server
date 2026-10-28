@@ -42,8 +42,15 @@
     name: mcp-shared.service
     scope: user
     enabled: true
-    state: "{{ 'restarted' if (ai_workstation_mcp_shared_launcher_file.changed or ai_workstation_mcp_shared_config.changed or ai_workstation_mcp_shared_unit.changed) else 'started' }}"
+    state: "{{ 'restarted' if (_own_files_changed or _servers_updated) else 'started' }}"
     daemon_reload: true
+  vars:
+    _own_files_changed: "{{ ai_workstation_mcp_shared_launcher_file.changed or ai_workstation_mcp_shared_config.changed or ai_workstation_mcp_shared_unit.changed }}"
+    # Upgraded uv tools or Node servers in this run (docs and Obsidian search run as their own services)
+    _servers_updated: >-
+      {{ (ai_workstation_uv_upgrade.changed | default(false))
+         or (ai_workstation_mcp_node_update.results | default([]) | rejectattr('item.item.name', 'in', ['docs', 'obsidian-hybrid-search'])
+             | selectattr('changed') | list | length > 0) }}
   become: true
   become_user: "{{ ai_workstation_user }}"
   environment:
