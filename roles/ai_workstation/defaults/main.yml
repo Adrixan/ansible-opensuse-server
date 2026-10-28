@@ -194,6 +194,8 @@ ai_workstation_ohs_syncthing_root: "{{ ai_workstation_user_home }}/Obsidian"
 # 1.9 GB per Claude Code session before). URL: http://127.0.0.1:<port>/servers/<name>/mcp.
 # Servers that hold per-session state or resolve paths against the session's working directory
 # (playwright, serena, git, osv, semgrep) stay stdio in the harness configs.
+# newspaper-testground stays stdio too: locally it is only an ssh client, and a network drop would
+# make it exit, which stops every shared server.
 # mcp-proxy stops every server when one exits, so the launcher skips an entry whose command is not
 # installed, whose `requires_env` variable is empty or whose `requires_path` is missing.
 # `default_env` applies only where ~/.config/ai/env leaves the variable unset.
@@ -260,6 +262,16 @@ ai_workstation_mcp_shared_servers:
     command: "{{ ai_workstation_user_home }}/.local/bin/trip-planner"
     args: [mcp]
     requires_env: [TRIP_PLANNER_TOKEN]
+  # Own projects, installed by hand (PTSD from ~/code/PTSD, File Accountant as uv tool); both hold
+  # confidential data (minors' submissions, client books) and keep their confirm tokens server-side
+  - name: ptsd
+    command: /usr/bin/node
+    args: ["{{ ai_workstation_user_home }}/code/PTSD/mcp/dist/server.mjs"]
+    requires_path: ["{{ ai_workstation_user_home }}/code/PTSD/mcp/dist/server.mjs"]
+  - name: file-accountant
+    command: "{{ ai_workstation_user_home }}/.local/bin/fa"
+    args: [mcp]
+    requires_path: ["{{ ai_workstation_user_home }}/.config/file-accountant/config.json"]
 ai_workstation_mcp_tools_update_on_calendar: daily
 ai_workstation_claude_bin: "{{ ai_workstation_user_home }}/.local/bin/claude"
 ai_workstation_claude_marketplace_dir: "{{ ai_workstation_user_home }}/.config/ai/claude-plugins"
