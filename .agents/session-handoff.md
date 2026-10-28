@@ -17,7 +17,7 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Supply Nextcloud app password and re-run: `NEXTCLOUD_HOST=… NEXTCLOUD_USERNAME=… NEXTCLOUD_PASSWORD=… ansible-playbook main.yml -e enable_ai_workstation=true`.
 - NowCoding provider and `NOWCODING_API_KEY` removed entirely (2026-10-18).
 - On Docker hosts: run `docker` + `ai_workstation` roles to get the read-only proxy.
-- Open decision: `laptops` and `master` have diverged (54 vs 15 commits). The new auto-merge rule deliberately does not merge `laptops` into `master`; do that only on explicit approval.
+- Resolved 2026-10-28 (Peter): `laptops` merged into `master` (strategy `ours`: master's history kept, laptops' tree wins); see the entry of that date.
 
 ## 2026-10-19: US-14.2 OpenCode on DragTokens
 - OpenCode CLI v1 now comes from `ai_desktop` (`tasks/opencode_cli.yml`, native installer into `~/.opencode/bin`, daily `opencode-cli-update.timer`); `roles/opencode` and the npm global install are gone.
@@ -133,3 +133,8 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - `remote_control.yml`: enables only autostart roles, disables (never stops) the others, and no longer restarts anything; it reports running roles with old settings (`rc restart <role>`). The trust warning covers autostart roles only; `rc up` checks trust for the rest (parent trust for non-git folders, own trust for a git repo).
 - yadm: `~/.local/bin/rc` (ls, up, down, restart, new, rm, logs; busy guard 15 min, RAM guard, ttl via systemd-run timer `rc-ttl-<role>`), global skill `rc-roles`. An `rc trust` command (writing `hasTrustDialogAccepted` into `~/.claude.json`) and a `permissions.allow` rule for `rc` in the Greeter were refused by the auto-mode classifier and dropped: trust stays a manual `cd <dir> && claude`.
 - Open: Peter must trust Greeter, Travel and the Roles root once interactively, then `rc up greeter` (or rerun the role, which enables it). phd, teaching, educator, research and code still run from before and are disabled for boot; they keep running until `rc down`.
+
+## 2026-10-28: laptops merged into master
+- Peter: laptops is the only maintained setup. `master` had 15 own commits (old home-server roles: sickgear, jackett, radarr, bitwarden_rs, nginx reverse proxy, minecraft server, xbrowsersync, rclone backup folders, ssh keys, bpytop, YouCompleteMe deps); they stay in history (`git log` on master before this merge), their files are gone from the tree.
+- `master` now equals `laptops`; both were pushed as fast-forwards (no force). Default branch for new work: `master` (feature branch, `--no-ff` merge); `laptops` stays as an alias until no session uses it.
+- Also 2026-10-28: ptsd and file-accountant joined the shared MCP service (27 servers); newspaper-testground stays per session.
