@@ -1,18 +1,32 @@
 ---
-# Resolve the latest stable GitHub release of github_release_repo (owner/name). With
+# Resolve the newest stable GitHub release of github_release_repo (owner/name) that is past the
+# supply-chain cooldown (github_release_cooldown_hours, Peter's rule: 24 h). With
 # github_release_asset (a regex on the asset name) the matching asset's URL and its sha256 digest
 # from the release metadata are returned too, so downloads stay checksum-verified without pins.
 # Result: fact github_release = {tag, version, asset_name, asset_url, sha256}.
 
-- name: Look up the latest release of {{ github_release_repo }}
+- name: List the recent releases of {{ github_release_repo }}
   ansible.builtin.uri:
-    url: "https://api.github.com/repos/{{ github_release_repo }}/releases/latest"
+    url: "https://api.github.com/repos/{{ github_release_repo }}/releases?per_page=30"
     headers:
       Accept: application/vnd.github+json
       X-GitHub-Api-Version: "2022-11-28"
     return_content: true
-  register: github_release_response
+  register: github_release_list
   check_mode: false
+
+# ISO 8601 UTC timestamps from the API compare correctly as strings
+- name: Pick the newest stable release of {{ github_release_repo }} past the cooldown
+  ansible.builtin.set_fact:
+    github_release_response:
+      json: >-
+        {{ github_release_list.json
+           | rejectattr('draft') | rejectattr('prerelease')
+           | selectattr('published_at', 'le', github_release_cutoff)
+           | sort(attribute='published_at', reverse=true) | first | default({}) }}
+  vars:
+    github_release_cutoff: >-
+      {{ '%Y-%m-%dT%H:%M:%SZ' | strftime(now(utc=true).timestamp() - github_release_cooldown_hours | int * 3600, utc=true) }}
 
 - name: Select the release asset of {{ github_release_repo }}
   ansible.builtin.set_fact:
@@ -24,13 +38,13 @@
 - name: Fail on a missing asset or digest for {{ github_release_repo }}
   ansible.builtin.assert:
     that:
-      - not github_release_response.json.prerelease | bool
+      - github_release_response.json.tag_name is defined
       - github_release_asset | length == 0 or github_release_assets | length == 1
       - >-
         github_release_asset | length == 0
         or (github_release_assets[0].digest | default('') | regex_search('^sha256:[0-9a-f]{64}$')) is not none
     fail_msg: >-
-      {{ github_release_repo }} {{ github_release_response.json.tag_name }}: expected exactly one asset
+      {{ github_release_repo }} {{ github_release_response.json.tag_name | default('(no stable release past the cooldown)') }}: expected exactly one asset
       matching '{{ github_release_asset }}' with a sha256 digest, found
       {{ github_release_assets | map(attribute='name') | list }}
     quiet: true

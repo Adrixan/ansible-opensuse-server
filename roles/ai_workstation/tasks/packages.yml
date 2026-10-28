@@ -3,3 +3,15 @@
   community.general.zypper:
     name: "{{ ai_workstation_packages }}"
     state: present
+
+# Supply-chain cooldown for every npm run on the machine (root installs in /opt/mcp and /opt/marp-cli
+# included): only releases published at least one day ago (Peter's rule, 2026-10-28)
+- name: Enforce the npm release cooldown in the global npmrc
+  ansible.builtin.lineinfile:
+    path: /usr/etc/npmrc
+    regexp: '^min-release-age='
+    line: min-release-age=1
+    create: true
+    owner: root
+    group: root
+    mode: '0644'

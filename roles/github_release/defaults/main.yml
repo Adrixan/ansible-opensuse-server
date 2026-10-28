@@ -3,3 +3,5 @@
 github_release_repo: ""
 # Regex on the asset name; empty resolves only the release tag
 github_release_asset: ""
+# Supply-chain cooldown: ignore releases published less than this many hours ago
+github_release_cooldown_hours: 24
