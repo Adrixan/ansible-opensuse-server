@@ -59,6 +59,8 @@ ai_workstation_mcp_uv_tools:
   # Key-less web search; installed without the [browser] extra, so no curl TLS impersonation
   - { name: duckduckgo-mcp-server }
   - { name: oebb-mcp-server }
+  # stdio-to-HTTP bridge behind the shared MCP services (tasks/mcp_shared.yml)
+  - { name: mcp-proxy }
   # PyPI stops at 0.3.5; releases continue on GitHub, so the tool follows the latest GitHub release tag
   - name: mcp-youtube-transcript
     github_release: jkawamoto/mcp-youtube-transcript
@@ -163,6 +165,8 @@ ai_workstation_openroute_routes_dir: "{{ ai_workstation_user_home }}/Documents/R
 # Free API keys (api.nasa.gov, openrouteservice.org); NASA falls back to the public DEMO_KEY
 ai_workstation_nasa_api_key: "{{ lookup('env', 'NASA_API_KEY') | default('', true) }}"
 ai_workstation_openroute_api_key: "{{ lookup('env', 'OPENROUTESERVICE_API_KEY') | default('', true) }}"
+# trip-planner API token (schulpc only); kept in ~/.config/ai/env like the other secrets
+ai_workstation_trip_planner_token: "{{ lookup('env', 'TRIP_PLANNER_TOKEN') | default('', true) }}"
 # Phở Research Tools (reference verification, retractions, PRISMA 2020) served on loopback only.
 # Upstream ships no package or releases; the role follows the default branch, updates the dependency
 # tree to the latest versions its ranges allow and audits it.
@@ -187,9 +191,83 @@ ai_workstation_ohs_vaults:
     # schulpc (7.5 GB RAM, many concurrent agent sessions) ran out of memory with this index
     skip_hosts: [schulpc]
 ai_workstation_ohs_syncthing_root: "{{ ai_workstation_user_home }}/Obsidian"
+# Shared MCP services: the stdio servers without per-session state run once behind one loopback
+# mcp-proxy, and every harness session connects over HTTP instead of starting its own copy (about
+# 1.9 GB per Claude Code session before). URL: http://127.0.0.1:<port>/servers/<name>/mcp.
+# Servers that hold per-session state or resolve paths against the session's working directory
+# (playwright, serena, git, osv, semgrep) stay stdio in the harness configs.
+# mcp-proxy stops every server when one exits, so the launcher skips an entry whose command is not
+# installed, whose `requires_env` variable is empty or whose `requires_path` is missing.
+# `default_env` applies only where ~/.config/ai/env leaves the variable unset.
+ai_workstation_mcp_shared: true
+ai_workstation_mcp_shared_port: 8790
+ai_workstation_mcp_shared_dir: "{{ ai_workstation_user_home }}/.config/mcp-shared"
+ai_workstation_mcp_shared_launcher: /usr/local/libexec/mcp-shared-proxy.py
+ai_workstation_mcp_shared_python: "{{ ai_workstation_user_home }}/.local/share/uv/tools/mcp-proxy/bin/python"
+ai_workstation_mcp_shared_servers:
+  - name: memory
+    command: /usr/local/bin/mcp-server-memory
+    env: { MEMORY_FILE_PATH: "{{ ai_workstation_mcp_memory_dir }}/mcp-memory.jsonl" }
+  - { name: fetch, command: "{{ ai_workstation_user_home }}/.local/bin/mcp-server-fetch" }
+  - { name: markitdown, command: "{{ ai_workstation_user_home }}/.local/bin/markitdown-mcp" }
+  - name: arxiv
+    command: "{{ ai_workstation_user_home }}/.local/bin/arxiv-mcp-server"
+    args: ["--storage-path", "{{ ai_workstation_user_home }}/Obsidian/Ph.D./Papers/arxiv"]
+  - name: zotero
+    command: "{{ ai_workstation_user_home }}/.local/bin/zotero-mcp"
+    env: { ZOTERO_LOCAL: "true" }
+  - name: nextcloud
+    command: "{{ ai_workstation_user_home }}/.local/bin/nextcloud-mcp-server"
+    args: ["run", "--transport", "stdio"]
+    requires_env: [NEXTCLOUD_HOST, NEXTCLOUD_USERNAME, NEXTCLOUD_PASSWORD]
+  - name: docker
+    command: "{{ ai_workstation_user_home }}/.local/bin/mcp-server-docker"
+    env: { DOCKER_HOST: "tcp://127.0.0.1:{{ ai_workstation_docker_mcp_proxy_port }}" }
+    requires_path: [/run/docker.sock]
+  - name: package-versions
+    command: "{{ ai_workstation_user_home }}/.local/bin/package-version-check-mcp"
+    args: ["--mode=stdio"]
+  - name: openalex
+    command: /usr/local/bin/openalex-mcp-server
+    env: { MCP_TRANSPORT_TYPE: stdio, MCP_LOG_LEVEL: error }
+  - { name: excalidraw, command: /usr/local/bin/mcp-excalidraw-server }
+  - { name: drawio, command: /usr/local/bin/drawio-mcp }
+  - { name: lighthouse, command: /usr/local/bin/lighthouse-mcp-server }
+  - { name: accessibility, command: /usr/local/bin/accessibility-scanner-mcp }
+  # Without a key from ~/.config/ai/env the server uses the public DEMO_KEY
+  - name: nasa
+    command: /usr/local/bin/nasa-mcp-server
+    default_env: { NASA_API_KEY: DEMO_KEY }
+  - { name: open-meteo, command: /usr/local/bin/open-meteo-mcp-server }
+  - name: openroute
+    command: "{{ ai_workstation_user_home }}/.local/bin/openroute-mcp"
+    args: ["--data-folder", "{{ ai_workstation_openroute_routes_dir }}"]
+    requires_env: [OPENROUTESERVICE_API_KEY]
+  - name: wikipedia
+    command: "{{ ai_workstation_user_home }}/.local/bin/wikipedia-mcp"
+    args: ["--language", "en"]
+  - name: duckduckgo
+    command: "{{ ai_workstation_user_home }}/.local/bin/duckduckgo-mcp-server"
+    env: { DDG_SAFE_SEARCH: MODERATE }
+  - { name: ris-austria, command: /usr/local/bin/ris-austria-mcp-server }
+  - { name: eur-lex, command: /usr/local/bin/eur-lex-mcp-server }
+  - { name: youtube-transcript, command: "{{ ai_workstation_user_home }}/.local/bin/mcp-youtube-transcript" }
+  - { name: oebb, command: "{{ ai_workstation_user_home }}/.local/bin/oebb-mcp-server" }
+  - { name: thunderbird, command: /usr/local/bin/thunderbird-mcp }
+  # trip-scout and trip-planner are installed by hand (uv tool install from ~/code); skipped where absent
+  - name: trip-scout
+    command: "{{ ai_workstation_user_home }}/.local/bin/trip-scout"
+    args: [mcp]
+  - name: trip-planner
+    command: "{{ ai_workstation_user_home }}/.local/bin/trip-planner"
+    args: [mcp]
+    requires_env: [TRIP_PLANNER_TOKEN]
 ai_workstation_mcp_tools_update_on_calendar: daily
 ai_workstation_claude_bin: "{{ ai_workstation_user_home }}/.local/bin/claude"
 ai_workstation_claude_marketplace_dir: "{{ ai_workstation_user_home }}/.config/ai/claude-plugins"
+# Plugins of that marketplace: workstation-mcp holds the core servers, the others are switched off
+# per directory in .claude/settings.json (enabledPlugins) where they are not needed
+ai_workstation_claude_plugins_list: [workstation-mcp, workstation-dev, workstation-research, workstation-travel]
 # Knowledge graph of the memory MCP server, inside the Syncthing "sync" folder
 ai_workstation_mcp_memory_dir: "{{ ai_workstation_user_home }}/sync/ai"
 # User-scope servers previously written to ~/.claude.json, now provided by the workstation-mcp plugin

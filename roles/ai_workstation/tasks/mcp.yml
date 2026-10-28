@@ -197,7 +197,7 @@
     - "{{ ai_workstation_claude_marketplace_dir }}/.claude-plugin/marketplace.json"
   register: ai_workstation_claude_plugin_prereqs
 
-- name: Register workstation MCP plugin with Claude Code
+- name: Register the workstation MCP plugins with Claude Code
   when: ai_workstation_claude_plugin_prereqs.results | map(attribute='stat.exists') | min
   block:
     - name: List installed Claude Code plugins
@@ -209,33 +209,51 @@
       changed_when: false
       check_mode: false
 
-    - name: Add marketplace and install workstation-mcp plugin
-      ansible.builtin.shell:
-        cmd: >-
-          {{ ai_workstation_claude_bin | quote }} plugin marketplace add {{ ai_workstation_claude_marketplace_dir | quote }}
-          && {{ ai_workstation_claude_bin | quote }} plugin install workstation-mcp@workstation --scope user
-        executable: /bin/bash
+    - name: List known Claude Code plugin marketplaces
+      ansible.builtin.command:
+        argv: ["{{ ai_workstation_claude_bin }}", plugin, marketplace, list, --json]
       become: true
       become_user: "{{ ai_workstation_user }}"
-      when: "'workstation-mcp@workstation' not in (ai_workstation_claude_plugins.stdout | from_json | map(attribute='id') | list)"
+      register: ai_workstation_claude_marketplaces
+      changed_when: false
+      check_mode: false
 
-    - name: Read the yadm-tracked workstation-mcp plugin version
+    - name: Add the yadm-tracked workstation plugin marketplace
+      ansible.builtin.command:
+        argv: ["{{ ai_workstation_claude_bin }}", plugin, marketplace, add, "{{ ai_workstation_claude_marketplace_dir }}"]
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+      when: "'workstation' not in (ai_workstation_claude_marketplaces.stdout | from_json | map(attribute='name') | list)"
+
+    - name: Install the workstation MCP plugins
+      ansible.builtin.command:
+        argv: ["{{ ai_workstation_claude_bin }}", plugin, install, "{{ item }}@workstation", --scope, user]
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+      loop: "{{ ai_workstation_claude_plugins_list }}"
+      when: "(item + '@workstation') not in (ai_workstation_claude_plugins.stdout | from_json | map(attribute='id') | list)"
+
+    - name: Read the yadm-tracked workstation plugin versions
       ansible.builtin.slurp:
-        src: "{{ ai_workstation_claude_marketplace_dir }}/plugins/workstation-mcp/.claude-plugin/plugin.json"
-      register: ai_workstation_claude_plugin_manifest
+        src: "{{ ai_workstation_claude_marketplace_dir }}/plugins/{{ item }}/.claude-plugin/plugin.json"
+      loop: "{{ ai_workstation_claude_plugins_list }}"
+      register: ai_workstation_claude_plugin_manifests
 
     # Claude Code runs plugins from a versioned cache copy; refresh it when the yadm copy is newer
-    - name: Update the cached workstation-mcp plugin to the yadm version
+    - name: Update cached workstation plugins to the yadm version
       ansible.builtin.shell:
         cmd: >-
           {{ ai_workstation_claude_bin | quote }} plugin marketplace update workstation
-          && {{ ai_workstation_claude_bin | quote }} plugin update workstation-mcp@workstation --scope user
+          && {{ ai_workstation_claude_bin | quote }} plugin update {{ (item.item + '@workstation') | quote }} --scope user
         executable: /bin/bash
       become: true
       become_user: "{{ ai_workstation_user }}"
+      loop: "{{ ai_workstation_claude_plugin_manifests.results }}"
+      loop_control:
+        label: "{{ item.item }}"
       vars:
-        _installed: "{{ ai_workstation_claude_plugins.stdout | from_json | selectattr('id', 'equalto', 'workstation-mcp@workstation') | map(attribute='version') | first | default('') }}"
-        _source: "{{ (ai_workstation_claude_plugin_manifest.content | b64decode | from_json).version }}"
+        _installed: "{{ ai_workstation_claude_plugins.stdout | from_json | selectattr('id', 'equalto', item.item + '@workstation') | map(attribute='version') | first | default('') }}"
+        _source: "{{ (item.content | b64decode | from_json).version }}"
       when:
         - _installed | length > 0
         - _installed is version(_source, '<')
@@ -260,3 +278,7 @@
 
 - name: Install the Thunderbird MCP bridge
   ansible.builtin.import_tasks: thunderbird_mcp.yml
+
+- name: Serve the stateless MCP servers once on loopback for all sessions
+  ansible.builtin.import_tasks: mcp_shared.yml
+  when: ai_workstation_mcp_shared

@@ -116,3 +116,13 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Verified: ai_workstation, office_suite, zotero run clean twice (second run 0 changed); all Node
   servers on the registry's latest; docs and obsidian-hybrid-search restarted onto the new code (now
   restarted automatically when `npm update` changes their tree).
+
+## 2026-10-28: Shared MCP services and Claude plugin split
+- Peter approved (from the Research session): stateless stdio MCP servers now run once in `mcp-shared.service` (user unit, `tasks/mcp_shared.yml`): `mcp-proxy` (uv tool, latest 0.13.0, pip-audit clean) behind `/usr/local/libexec/mcp-shared-proxy.py` on `127.0.0.1:8790`, URL `/servers/<name>/mcp`, `--stateless` (clients survive restarts), `--pass-environment` (secrets from `~/.config/ai/env`, none in `~/.config/mcp-shared/servers.json`). 25 servers in `ai_workstation_mcp_shared_servers`; playwright, serena, git, osv and semgrep stay stdio (per-session state or cwd-relative paths).
+- Launcher safeguards: TrustedHostMiddleware (loopback Host only; verified 400 for a foreign Host, mcp-proxy has no DNS rebinding protection); skips an entry whose command is missing, `requires_env` empty or `requires_path` missing, because mcp-proxy stops all servers when one exits (reproduced with openroute without a key); `default_env` for fallbacks (NASA DEMO_KEY).
+- Measured on schulpc: one idle Claude Code session had 33 to 35 processes, about 2.3 GB (RSS plus swap); a fresh session now has 6 processes and 222 MB in a vault folder (dev plugin off), 14 processes and 657 MB in a code repo; the shared service is about 2.2 GB RSS once, right after start.
+- Restart rules: on launcher/config/unit change, after `uv tool upgrade` or Node server updates in the role, and nightly via `ExecStartPost` in `ai-mcp-tools-update.service`.
+- `TRIP_PLANNER_TOKEN` is now kept in `ai_env.j2` (the 2026-10-27 22:29 run had dropped it; the token must be supplied again: `TRIP_PLANNER_TOKEN=… ansible-playbook main.yml -e enable_ai_workstation=true`). Until then trip-planner (and openroute without a key) are skipped by the shared service.
+- yadm side (same day): plugin split `workstation-mcp` 2.0.0 (core) plus `workstation-dev`, `workstation-research`, `workstation-travel` 1.0.0; OpenCode and Antigravity templates point the same 25 servers at the shared URLs (Termux keeps stdio). The role task now registers all four plugins.
+- Laptops: run this role BEFORE `yadm pull`, otherwise the new templates point at a service that is not there yet.
+- Verified: full `ai_workstation` run changed=0 on the second run; `claude mcp list` in Research (no dev servers) and in a code repo (all dev servers); headless probes called memory and RIS through the plugin tool names.

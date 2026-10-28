@@ -1,0 +1,5 @@
+{% set servers = {} %}
+{% for s in ai_workstation_mcp_shared_servers %}
+{% set _ = servers.update({s.name: {'command': s.command, 'args': s.args | default([]), 'env': s.env | default({}), 'requiresEnv': s.requires_env | default([]), 'requiresPath': s.requires_path | default([]), 'defaultEnv': s.default_env | default({})}}) %}
+{% endfor %}
+{{ {'mcpServers': servers} | to_nice_json(indent=2) }}

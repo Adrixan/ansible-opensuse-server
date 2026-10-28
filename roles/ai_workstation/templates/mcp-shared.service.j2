@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# Shared MCP servers for all harness sessions: one mcp-proxy serves every entry of
+# {{ ai_workstation_mcp_shared_dir }}/servers.json at http://127.0.0.1:{{ ai_workstation_mcp_shared_port }}/servers/<name>/mcp.
+# ~/.config/ai/env uses `export` lines, which EnvironmentFile cannot read, so bash sources it (the
+# servers need its secrets). Stateless mode: no MCP sessions to lose, so clients survive a restart.
+[Unit]
+Description=Shared MCP servers (127.0.0.1:{{ ai_workstation_mcp_shared_port }})
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+Environment=PATH={{ ai_workstation_user_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash -c 'set -a; [ -r "$$HOME/.config/ai/env" ] && . "$$HOME/.config/ai/env"; set +a; exec {{ ai_workstation_mcp_shared_python }} -I {{ ai_workstation_mcp_shared_launcher }} {{ ai_workstation_mcp_shared_dir }}/servers.json --host 127.0.0.1 --port {{ ai_workstation_mcp_shared_port }} --stateless --pass-environment'
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

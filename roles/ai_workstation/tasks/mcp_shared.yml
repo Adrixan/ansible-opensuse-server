@@ -1,0 +1,79 @@
+---
+# Shared MCP services: stateless stdio servers behind one loopback mcp-proxy for all harness sessions
+
+- name: Install the shared MCP proxy launcher
+  ansible.builtin.copy:
+    src: mcp-shared-proxy.py
+    dest: "{{ ai_workstation_mcp_shared_launcher }}"
+    owner: root
+    group: root
+    mode: '0755'
+  register: ai_workstation_mcp_shared_launcher_file
+
+- name: Ensure the shared MCP config directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_mcp_shared_dir }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
+# No secrets in this file: the servers read them from the service environment (~/.config/ai/env)
+- name: Deploy the shared MCP server list
+  ansible.builtin.template:
+    src: mcp-shared-servers.json.j2
+    dest: "{{ ai_workstation_mcp_shared_dir }}/servers.json"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  register: ai_workstation_mcp_shared_config
+
+- name: Deploy the shared MCP user systemd unit
+  ansible.builtin.template:
+    src: mcp-shared.service.j2
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/mcp-shared.service"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  register: ai_workstation_mcp_shared_unit
+
+- name: Enable and start the shared MCP user service
+  ansible.builtin.systemd_service:
+    name: mcp-shared.service
+    scope: user
+    enabled: true
+    state: "{{ 'restarted' if (_own_files_changed or _servers_updated) else 'started' }}"
+    daemon_reload: true
+  vars:
+    _own_files_changed: "{{ ai_workstation_mcp_shared_launcher_file.changed or ai_workstation_mcp_shared_config.changed or ai_workstation_mcp_shared_unit.changed }}"
+    # Upgraded uv tools or Node servers in this run (docs and Obsidian search run as their own services)
+    _servers_updated: >-
+      {{ (ai_workstation_uv_upgrade.changed | default(false))
+         or (ai_workstation_mcp_node_update.results | default([]) | rejectattr('item.item.name', 'in', ['docs', 'obsidian-hybrid-search'])
+             | selectattr('changed') | list | length > 0) }}
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when: not ansible_check_mode
+
+# The servers start one after another (about 30 s for all of them)
+- name: Wait for the shared MCP servers
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ ai_workstation_mcp_shared_port }}/status"
+    return_content: true
+  register: ai_workstation_mcp_shared_status
+  until: ai_workstation_mcp_shared_status.status == 200
+  retries: 30
+  delay: 4
+  when: not ansible_check_mode
+
+- name: Report shared MCP servers that are not running
+  ansible.builtin.debug:
+    msg: "Not served (skipped at start, see journalctl --user -u mcp-shared): {{ _missing | join(', ') }}"
+  vars:
+    _missing: "{{ ai_workstation_mcp_shared_servers | map(attribute='name') | difference(ai_workstation_mcp_shared_status.json.server_instances.keys() | list) }}"
+  when:
+    - not ansible_check_mode
+    - _missing | length > 0
