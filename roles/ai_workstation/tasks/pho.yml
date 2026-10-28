@@ -21,6 +21,8 @@
     dest: "{{ ai_workstation_pho_dir }}"
     version: "{{ ai_workstation_pho_version }}"
     update: true
+    # Check mode skips the restore above, so the lockfile rewritten by the last run would block it
+    force: "{{ ansible_check_mode }}"
   become: true
   become_user: "{{ ai_workstation_user }}"
   register: ai_workstation_pho_checkout
