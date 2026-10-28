@@ -165,8 +165,6 @@ ai_workstation_openroute_routes_dir: "{{ ai_workstation_user_home }}/Documents/R
 # Free API keys (api.nasa.gov, openrouteservice.org); NASA falls back to the public DEMO_KEY
 ai_workstation_nasa_api_key: "{{ lookup('env', 'NASA_API_KEY') | default('', true) }}"
 ai_workstation_openroute_api_key: "{{ lookup('env', 'OPENROUTESERVICE_API_KEY') | default('', true) }}"
-# trip-planner API token (schulpc only); kept in ~/.config/ai/env like the other secrets
-ai_workstation_trip_planner_token: "{{ lookup('env', 'TRIP_PLANNER_TOKEN') | default('', true) }}"
 # Phở Research Tools (reference verification, retractions, PRISMA 2020) served on loopback only.
 # Upstream ships no package or releases; the role follows the default branch, updates the dependency
 # tree to the latest versions its ranges allow and audits it.

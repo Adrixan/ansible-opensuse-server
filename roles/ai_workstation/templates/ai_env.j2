@@ -27,11 +27,9 @@ export NASA_API_KEY="{{ ai_workstation_nasa_api_key }}"
 # OpenRouteService MCP server (openrouteservice.org; the server is configured only with a key)
 export OPENROUTESERVICE_API_KEY="{{ ai_workstation_openroute_api_key }}"
 {% endif %}
-{% if ai_workstation_trip_planner_token | default('') | length > 0 %}
 
-# trip-planner MCP server (trip-planner.aufner.org API token; schulpc only)
-export TRIP_PLANNER_TOKEN="{{ ai_workstation_trip_planner_token }}"
-{% endif %}
+# Secrets owned by yadm (encrypted archive), never rendered by this role, e.g. TRIP_PLANNER_TOKEN
+[ -r "$HOME/.config/ai/env.local" ] && . "$HOME/.config/ai/env.local"
 
 # Ensure Claude Code CLI uses native first-party OAuth subscription without custom gateway overrides
 unset ANTHROPIC_BASE_URL
