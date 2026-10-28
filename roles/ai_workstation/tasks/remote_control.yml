@@ -191,6 +191,9 @@
       # Managed by Ansible (ai_workstation role, remote_control.yml)
       RC_DIR="{{ item.dir }}"
       RC_NAME="{{ item.label }}"
+      RC_ARGS="{{ item.args | default('') }}"
+      RC_AUTOSTART="{{ 'yes' if item.autostart | default(false) else 'no' }}"
+      RC_DESCRIPTION="{{ item.description | default('') }}"
     owner: "{{ ai_workstation_user }}"
     group: "{{ ai_workstation_user }}"
     mode: '0644'
@@ -229,7 +232,8 @@
     label: "{{ item.name }}"
   when: ai_workstation_claude_remote_control | default(true) | bool
 
-- name: Warn about Claude remote-control servers that need interactive consent or trust
+# Roles started on request are checked by `rc up`, which also accepts trust inherited from a parent folder
+- name: Warn about autostart Claude remote-control servers that need interactive consent or trust
   ansible.builtin.debug:
     msg: >-
       Skipping claude-remote-control@{{ item.name }}: run `cd {{ item.dir }} && claude remote-control`
@@ -240,25 +244,29 @@
     label: "{{ item.name }}"
   when:
     - ai_workstation_claude_remote_control | default(true) | bool
+    - item.autostart | default(false)
     - item.name not in (claude_rc_ready | default([]))
 
-- name: Check status of Claude remote-control servers
+- name: Check boot state of Claude remote-control servers
   ansible.builtin.command:
-    cmd: "systemctl --user is-enabled claude-remote-control@{{ item }}.service"
+    cmd: "systemctl --user is-enabled claude-remote-control@{{ item.name }}.service"
   become: true
   become_user: "{{ ai_workstation_user }}"
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
-  loop: "{{ claude_rc_ready | default([]) }}"
+  loop: "{{ ai_workstation_claude_rc_servers }}"
+  loop_control:
+    label: "{{ item.name }}"
   register: claude_rc_enabled
   failed_when: false
   changed_when: false
   when: ai_workstation_claude_remote_control | default(true) | bool
 
-- name: Enable and start Claude remote-control servers
+# Only autostart roles (the greeter) come up at boot; the others start on request with `rc up <role>`
+- name: Enable and start the autostart Claude remote-control servers
   ansible.builtin.command:
-    cmd: "systemctl --user enable --now claude-remote-control@{{ item.item }}.service"
+    cmd: "systemctl --user enable --now claude-remote-control@{{ item.item.name }}.service"
   become: true
   become_user: "{{ ai_workstation_user }}"
   environment:
@@ -266,17 +274,17 @@
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
   loop: "{{ claude_rc_enabled.results | default([]) }}"
   loop_control:
-    label: "{{ item.item }}"
+    label: "{{ item.item.name }}"
   when:
     - ai_workstation_claude_remote_control | default(true) | bool
+    - item.item.autostart | default(false)
+    - item.item.name in (claude_rc_ready | default([]))
     - item.rc != 0
 
-# Only servers whose own settings changed (or all on a unit change): a restart ends every session it
-# serves, including the one running this playbook. A reattached session keeps its old name; a new
-# label needs the bridge-pointer reset described in the knowledge map.
-- name: Restart Claude remote-control servers after unit or settings changes
+# Disable only: a running server keeps serving its sessions until `rc down`
+- name: Remove the other Claude remote-control servers from boot
   ansible.builtin.command:
-    cmd: "systemctl --user restart claude-remote-control@{{ item.item }}.service"
+    cmd: "systemctl --user disable claude-remote-control@{{ item.item.name }}.service"
   become: true
   become_user: "{{ ai_workstation_user }}"
   environment:
@@ -284,11 +292,36 @@
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
   loop: "{{ claude_rc_enabled.results | default([]) }}"
   loop_control:
-    label: "{{ item.item }}"
+    label: "{{ item.item.name }}"
   when:
     - ai_workstation_claude_remote_control | default(true) | bool
+    - not (item.item.autostart | default(false))
     - item.rc == 0
-    - >-
-      claude_rc_unit.changed
-      or item.item in (claude_rc_conf.results | default([]) | selectattr('changed', 'defined')
-      | selectattr('changed') | map(attribute='item.name') | list)
+
+- name: Check which Claude remote-control servers are running
+  ansible.builtin.command:
+    cmd: "systemctl --user is-active claude-remote-control@{{ item.name }}.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  loop: "{{ ai_workstation_claude_rc_servers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: claude_rc_active
+  failed_when: false
+  changed_when: false
+  when: ai_workstation_claude_remote_control | default(true) | bool
+
+# No automatic restart: it ends every session the server holds, including the one running this playbook
+- name: Report running Claude remote-control servers that need a restart for new settings
+  ansible.builtin.debug:
+    msg: "Running with old settings (apply with `rc restart <role>` when no session needs them): {{ _stale | join(', ') }}"
+  vars:
+    _changed: "{{ claude_rc_conf.results | default([]) | selectattr('changed', 'defined') | selectattr('changed') | map(attribute='item.name') | list }}"
+    _running: "{{ claude_rc_active.results | default([]) | selectattr('rc', 'defined') | selectattr('rc', 'equalto', 0) | map(attribute='item.name') | list }}"
+    _stale: "{{ (_running if claude_rc_unit.changed else (_running | intersect(_changed))) }}"
+  when:
+    - ai_workstation_claude_remote_control | default(true) | bool
+    - _stale | length > 0

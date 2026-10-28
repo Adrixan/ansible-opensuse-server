@@ -287,29 +287,44 @@ ai_workstation_linger: true
 ai_workstation_claude_remote_control: true
 ai_workstation_antigravity_remote_control: true
 ai_workstation_opencode_remote_control: true
-# Always-on `claude remote-control` servers, one per working directory (sessions started from the
-# Claude app run in that directory). Needs the one-time "Enable Remote Control?" consent and workspace
-# trust per directory, given interactively once; the role skips servers until both are present.
+# Claude remote-control roles, one server per working directory (sessions started from the Claude app
+# run in that directory). Only `autostart` roles start at boot (the greeter); the others start on
+# request with `rc up <role>` (yadm ~/.local/bin/rc, skill rc-roles). `args` adds remote-control flags
+# (e.g. "--spawn worktree"), `description` is what `rc ls` shows. Custom roles from `rc new` live in
+# ~/Obsidian/Adrixan/AI/Roles and are not managed here. Needs the one-time "Enable Remote Control?"
+# consent and workspace trust per directory; the role skips autostart servers until both are present.
 ai_workstation_claude_rc_servers:
+  - name: greeter
+    label: "Greeter"
+    dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/AI/Greeter"
+    description: "Starts, stops and creates the other roles (no MCP plugins)"
+    autostart: true
   - name: phd
     label: "PhD"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Ph.D."
+    description: "Ph.D. vault: scoping review, Zotero, writing"
   - name: teaching
     label: "Teaching"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Teaching"
+    description: "Teacher: lessons, Typst material, grading"
   - name: educator
     label: "Educator"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Educator"
+    description: "Educator brand Prof. Aufner: content pipeline"
   # General deep-research jobs; reports land in this vault folder (rules in its AGENTS.md)
   - name: research
     label: "Deep Research"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Research"
+    description: "Deep-research reports"
   # Coding across all projects; sessions cd into ~/code/<project> and follow its AGENTS.md
   - name: code
     label: "Code"
     dir: "{{ ai_workstation_user_home }}/code"
-# No server for the home directory itself: Claude Code never saves home-directory trust, so a
-# headless server there exits with "Workspace not trusted".
+    description: "Coding across ~/code projects"
+  - name: travel
+    label: "Travel Planner"
+    dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Travel"
+    description: "Trip plans with trip-scout and trip-planner"
 ai_workstation_claude_rc_permission_mode: auto
 ai_workstation_opencode_server_port: 4096
 ai_workstation_opencode_server_host: "127.0.0.1"
