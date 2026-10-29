@@ -317,15 +317,18 @@ ai_workstation_claude_rc_servers:
     label: "Teaching"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Teaching"
     description: "Teacher: lessons, Typst material, grading"
+    autostart: true
   - name: educator
     label: "Educator"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Educator"
     description: "Educator brand Prof. Aufner: content pipeline"
-  # General deep-research jobs; reports land in this vault folder (rules in its AGENTS.md)
+  # General deep-research jobs; reports land in this vault folder (rules in its AGENTS.md).
+  # Starts at boot like teaching (Peter, 2026-10-29); the server reattaches its previous session
   - name: research
     label: "Deep Research"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Research"
     description: "Deep-research reports"
+    autostart: true
   # Coding across all projects; sessions cd into ~/code/<project> and follow its AGENTS.md
   - name: code
     label: "Code"
@@ -333,6 +336,7 @@ ai_workstation_claude_rc_servers:
     description: "Coding across ~/code projects"
   - name: travel
     label: "Travel Planner"
+    # Not offered by the Greeter: trips run as their own roles (`rc trip <destination>`)
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Travel"
     description: "Trip plans with trip-scout and trip-planner"
 ai_workstation_claude_rc_permission_mode: auto

@@ -263,7 +263,7 @@
   changed_when: false
   when: ai_workstation_claude_remote_control | default(true) | bool
 
-# Only autostart roles (the greeter) come up at boot; the others start on request with `rc up <role>`
+# Only autostart roles (greeter, teaching, research) come up at boot; the others start on request with `rc up <role>`
 - name: Enable and start the autostart Claude remote-control servers
   ansible.builtin.command:
     cmd: "systemctl --user enable --now claude-remote-control@{{ item.item.name }}.service"
