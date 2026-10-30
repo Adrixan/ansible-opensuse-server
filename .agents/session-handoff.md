@@ -1,7 +1,7 @@
 # Session Handoff State
 
 ## Active Intent
-No story in progress (2026-10-30). Session trajectory: housekeeping (AGENTS.md/CLAUDE.md, state files), open-item audit, then an "is schulpc up to date" check. Stopped by the Greeter before any update was applied. Branches `laptops`, `chore/housekeeping-2026-10-30` and `docs/laptops-branch-pending` were deleted by Peter.
+No story in progress (2026-10-30). This session: Garmin `upload_course` allowlist, Cockpit login fix behind Cloudflare Access (Worker confirmed working), Cloudflare plugin and `cf` CLI, Garmin and Cloudflare in all harnesses, Node 26.12 on schulpc, knowledge map trimmed, inventory credential item closed. Stopped by the Greeter with nothing in progress and no open decision from this session; the schulpc `zypper dup` stays Peter's call.
 
 ## Task & Story Status
 - Sprint 15 (US-15.1 `dns_setup`, US-15.2 `dragtokens-ech-proxy`) complete since 2026-10-19; everything after it was unplanned work logged as dated entries below.
