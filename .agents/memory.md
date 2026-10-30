@@ -42,4 +42,4 @@ It is configured to run pull-style deployments (`ansible_connection=local`) targ
 - **Dynamic Role Evaluation**: [main.yml](file:///home/Adrixan/code/ansible-opensuse-server/main.yml) uses `ansible.builtin.include_role` with `when: enable_<role> | default(false) | bool`.
 
 ## Deferred / Technical Debt Log
-- **Host inventory**: `hosts` is untracked (gitignored); copy `hosts.example` to `hosts`. The former plaintext `ansible_ssh_pass` was purged from all git history on 2026-10-12 (force-push) and must be treated as compromised.
+- **Host inventory**: `hosts` is untracked (gitignored); copy `hosts.example` to `hosts`. The former plaintext `ansible_ssh_pass` was purged from the `hosts` history on 2026-10-12 (force-push), but older `.agents/` doc commits still quote the value (found 2026-10-30, repo is public): treat it as compromised and never reuse it.
