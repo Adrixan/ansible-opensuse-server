@@ -14,6 +14,7 @@ No story in progress (2026-10-30). Session trajectory: housekeeping (AGENTS.md/C
 - yadm auto-alt re-renders templates on ordinary yadm commands with the caller's environment; `~/.config/ai/env` must therefore export every templated secret (now includes `NEXTCLOUD_*`).
 
 ## Immediate Next Steps
+- Garmin MCP (2026-10-30): role changes merged and applied on schulpc by hand (uv tool install plus `tasks_from: mcp_shared`, no global upgrades). Open: Peter runs `garmin-mcp-auth`, then `systemctl --user restart mcp-shared`; the first real data call is still unverified. m11x needs the role run and its own `claude mcp add` if wanted there.
 - Open decision (Peter): old inventory credential still quoted in public history (`ae0be12`, `1bc1ff5`): rotate it wherever used; accept exposure or approve a `git filter-repo --replace-text` rewrite plus force-push.
 - Open decision (Peter): bring schulpc up to date (see 2026-10-30 host check): `ansible-playbook main.yml -e enable_system_update=true`, then rerun `ai_workstation` for npm globals. A reboot afterwards needs Peter at the machine (manual LUKS unlock).
 - Uncommitted yadm changes on schulpc (`~/.gemini/config/config.json`, `~/.agents/session-handoff.md`), probably from another session: commit there or drop; not touched here.
