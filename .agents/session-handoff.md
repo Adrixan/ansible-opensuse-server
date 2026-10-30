@@ -1,7 +1,7 @@
 # Session Handoff State
 
 ## Active Intent
-No story in progress (2026-10-30). Housekeeping done: `AGENTS.md`/`CLAUDE.md` added, open items re-checked against the live system; deleting the `laptops` branch is pending Peter (blocked by the auto-mode classifier). Waiting on Peter's decision about the old inventory credential still visible in public git history (see 2026-10-30 entry).
+No story in progress (2026-10-30). Session trajectory: housekeeping (AGENTS.md/CLAUDE.md, state files), open-item audit, then an "is schulpc up to date" check. Stopped by the Greeter before any update was applied. Branches `laptops`, `chore/housekeeping-2026-10-30` and `docs/laptops-branch-pending` were deleted by Peter.
 
 ## Task & Story Status
 - Sprint 15 (US-15.1 `dns_setup`, US-15.2 `dragtokens-ech-proxy`) complete since 2026-10-19; everything after it was unplanned work logged as dated entries below.
@@ -14,9 +14,10 @@ No story in progress (2026-10-30). Housekeeping done: `AGENTS.md`/`CLAUDE.md` ad
 - yadm auto-alt re-renders templates on ordinary yadm commands with the caller's environment; `~/.config/ai/env` must therefore export every templated secret (now includes `NEXTCLOUD_*`).
 
 ## Immediate Next Steps
-- Peter decides on the inventory credential in public history: rotate wherever it was used, and either accept the exposure or approve a history rewrite of the `.agents/` docs plus force-push (see 2026-10-30).
-- m11x: clone this repo, run `ai_workstation` (creates `mcp-shared.service`), only then `yadm pull` (117 commits behind on 2026-10-30).
-- xps13: same check; not reachable over SSH from schulpc, so state unknown.
+- Open decision (Peter): old inventory credential still quoted in public history (`ae0be12`, `1bc1ff5`): rotate it wherever used; accept exposure or approve a `git filter-repo --replace-text` rewrite plus force-push.
+- Open decision (Peter): bring schulpc up to date (see 2026-10-30 host check): `ansible-playbook main.yml -e enable_system_update=true`, then rerun `ai_workstation` for npm globals. A reboot afterwards needs Peter at the machine (manual LUKS unlock).
+- Uncommitted yadm changes on schulpc (`~/.gemini/config/config.json`, `~/.agents/session-handoff.md`), probably from another session: commit there or drop; not touched here.
+- m11x: clone this repo, run `ai_workstation`, only then `yadm pull` (117 commits behind). xps13: no SSH route from schulpc, state unknown.
 
 ## 2026-10-19: US-14.2 OpenCode on DragTokens
 - OpenCode CLI v1 now comes from `ai_desktop` (`tasks/opencode_cli.yml`, native installer into `~/.opencode/bin`, daily `opencode-cli-update.timer`); `roles/opencode` and the npm global install are gone.
@@ -151,4 +152,10 @@ No story in progress (2026-10-30). Housekeeping done: `AGENTS.md`/`CLAUDE.md` ad
   - DragTokens on the school network: done (401 from `/v1/models` via ECH proxy and directly).
   - US-1.1 (plaintext password in `hosts`): `hosts` holds no password any more. Still open: commits `ae0be12` (2026-07-27) and `1bc1ff5` quote the old `ansible_ssh_pass` value in `.agents/` docs; the 2026-10-12 scrub only rewrote `hosts`. The repo is public. Removing it needs a history rewrite plus force-push, which requires Peter's approval.
   - m11x: still open (no clone of this repo, no `mcp-shared.service`, yadm 117 commits behind). xps13: no SSH route from schulpc, unknown.
-- `laptops` (no commits beyond `master`) and the merged `chore/housekeeping-2026-10-30` branch still exist locally and on `origin`: the auto-mode classifier refused `git push origin --delete`. Peter runs `git branch -d laptops chore/housekeeping-2026-10-30 && git push origin --delete laptops chore/housekeeping-2026-10-30`. Clones that still track `laptops` then switch with `git checkout master && git branch -D laptops`.
+- `laptops` and the merged housekeeping branches were deleted by Peter (the auto-mode classifier refused `git push origin --delete` for the agent). Clones that still track `laptops` then switch with `git checkout master && git branch -D laptops`.
+
+## 2026-10-30: schulpc update check (nothing applied)
+- OS snapshot 20261012 installed, 20261028 available: `zypper dup --dry-run` = 998 upgrade, 32 new, 25 remove, 2 downgrade (`ktextaddons`, `libKF6TextAddons1`, repo version correction), 1.95 GiB. Removals include `plasma6-session-x11`/`kwin6-x11` (X11 session dropped upstream); the desktop runs Wayland, so no impact. No reboot pending before the dup.
+- Flatpak updates: Obsidian, Signal. npm globals: `pnpm` 12.11.2 to 12.16.1, `@modelcontextprotocol/server-memory` 2.0.0 to 2.0.1 (both past the 24 h cooldown). uv tools current.
+- Current: Claude Code 2.1.312, OpenCode 2.2.2, agy 1.4.10, Claude Desktop, cloudflared (update timers ran 00:09 to 00:48), docker-socket-proxy `v0.5.0` (latest). No failed units. RAM available about 1.1 GB.
+- `system_update` has no timer: OS updates on schulpc only happen when the role (or topgrade) is run by hand.
