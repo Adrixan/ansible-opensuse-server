@@ -1,7 +1,7 @@
 # Session Handoff State
 
 ## Active Intent
-No story in progress (2026-10-30). Housekeeping done: `AGENTS.md`/`CLAUDE.md` added, open items re-checked against the live system, `laptops` branch retired. Waiting on Peter's decision about the old inventory credential still visible in public git history (see 2026-10-30 entry).
+No story in progress (2026-10-30). Housekeeping done: `AGENTS.md`/`CLAUDE.md` added, open items re-checked against the live system; deleting the `laptops` branch is pending Peter (blocked by the auto-mode classifier). Waiting on Peter's decision about the old inventory credential still visible in public git history (see 2026-10-30 entry).
 
 ## Task & Story Status
 - Sprint 15 (US-15.1 `dns_setup`, US-15.2 `dragtokens-ech-proxy`) complete since 2026-10-19; everything after it was unplanned work logged as dated entries below.
@@ -151,4 +151,4 @@ No story in progress (2026-10-30). Housekeeping done: `AGENTS.md`/`CLAUDE.md` ad
   - DragTokens on the school network: done (401 from `/v1/models` via ECH proxy and directly).
   - US-1.1 (plaintext password in `hosts`): `hosts` holds no password any more. Still open: commits `ae0be12` (2026-07-27) and `1bc1ff5` quote the old `ansible_ssh_pass` value in `.agents/` docs; the 2026-10-12 scrub only rewrote `hosts`. The repo is public. Removing it needs a history rewrite plus force-push, which requires Peter's approval.
   - m11x: still open (no clone of this repo, no `mcp-shared.service`, yadm 117 commits behind). xps13: no SSH route from schulpc, unknown.
-- `laptops` branch deleted locally and on `origin` (it had no commits beyond `master`). Clones that still track it switch with `git checkout master && git branch -D laptops`.
+- `laptops` (no commits beyond `master`) and the merged `chore/housekeeping-2026-10-30` branch still exist locally and on `origin`: the auto-mode classifier refused `git push origin --delete`. Peter runs `git branch -d laptops chore/housekeeping-2026-10-30 && git push origin --delete laptops chore/housekeeping-2026-10-30`. Clones that still track `laptops` then switch with `git checkout master && git branch -D laptops`.

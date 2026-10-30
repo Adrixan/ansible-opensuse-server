@@ -99,7 +99,7 @@ None (Sprint 15 Complete)
   - Environment centralization: **`~/.config/ai/env` purged of legacy gateway tokens and Qwen variables**
   - Claude settings cleanup: **Legacy Bailian `env`, `modelOverrides`, and custom models purged from `~/.claude/settings.json` and `~/.claude.json`**
   - OpenCode configuration: **Bailian provider removed; Anthropic model set to `anthropic/claude-sonnet-4-5`; optional `anthropic-workspace-id` header support integrated**
-- Remote Push: **Done (`origin/master`; `laptops` retired 2026-10-30)**
+- Remote Push: **Done (`origin/master`; `laptops` deletion pending)**
 
 
 
