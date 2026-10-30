@@ -19,7 +19,7 @@
     dest: "{{ ai_workstation_mcp_node_dir }}/{{ item.name }}/package.json"
     content: >-
       {{ {'name': item.name + '-mcp', 'private': true,
-          'dependencies': {item.package: 'latest'}}
+          'dependencies': {item.package: item.spec | default('latest')}}
          | combine({'overrides': item.overrides} if item.overrides is defined else {})
          | combine({'allowScripts': item.allow_scripts} if item.allow_scripts is defined else {})
          | to_nice_json }}

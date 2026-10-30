@@ -268,6 +268,45 @@
         - _installed | length > 0
         - _installed is version(_source, '<')
 
+- name: Register the upstream Claude Code plugins
+  when: ai_workstation_claude_plugin_prereqs.results[0].stat.exists
+  block:
+    - name: Add the upstream plugin marketplaces
+      ansible.builtin.command:
+        argv: ["{{ ai_workstation_claude_bin }}", plugin, marketplace, add, "{{ item.source }}"]
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+      loop: "{{ ai_workstation_claude_upstream_plugins }}"
+      loop_control:
+        label: "{{ item.marketplace }}"
+      when: item.marketplace not in (ai_workstation_claude_marketplaces.stdout | from_json | map(attribute='name') | list)
+
+    - name: Install the upstream plugins
+      ansible.builtin.command:
+        argv: ["{{ ai_workstation_claude_bin }}", plugin, install, "{{ item.plugin }}@{{ item.marketplace }}", --scope, user]
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+      loop: "{{ ai_workstation_claude_upstream_plugins }}"
+      loop_control:
+        label: "{{ item.plugin }}"
+      when: (item.plugin + '@' + item.marketplace) not in (ai_workstation_claude_plugins.stdout | from_json | map(attribute='id') | list)
+
+    # Git sources have no release cooldown; this run is the only update path, nothing auto-updates them
+    - name: Update the upstream plugins to the latest marketplace version
+      ansible.builtin.shell:
+        cmd: >-
+          {{ ai_workstation_claude_bin | quote }} plugin marketplace update {{ item.marketplace | quote }} >/dev/null
+          && {{ ai_workstation_claude_bin | quote }} plugin update {{ (item.plugin + '@' + item.marketplace) | quote }} --scope user
+        executable: /bin/bash
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+      loop: "{{ ai_workstation_claude_upstream_plugins }}"
+      loop_control:
+        label: "{{ item.plugin }}"
+      register: ai_workstation_claude_upstream_update
+      changed_when: "'already' not in ai_workstation_claude_upstream_update.stdout"
+      when: not ansible_check_mode
+
 - name: Install the Node.js MCP servers (latest releases)
   ansible.builtin.import_tasks: mcp_node.yml
 
