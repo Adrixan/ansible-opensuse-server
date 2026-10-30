@@ -214,8 +214,10 @@ ai_workstation_mcp_shared_dir: "{{ ai_workstation_user_home }}/.config/mcp-share
 ai_workstation_mcp_shared_launcher: /usr/local/libexec/mcp-shared-proxy.py
 ai_workstation_mcp_shared_python: "{{ ai_workstation_user_home }}/.local/share/uv/tools/mcp-proxy/bin/python"
 # Garmin Connect: raw activity files (location history, health data) stay outside Syncthing and the
-# cloud backups. Allowlist of read-only tools plus the two local file downloads, so the server cannot
-# change or delete anything on Garmin Connect; a new upstream tool stays off until it is listed here.
+# cloud backups. Allowlist of read-only tools, the two local file downloads and one write tool:
+# upload_course (Peter, 2026-10-30) creates a private course from a .gpx on this machine, each upload
+# needs Peter's go in the session. Nothing can be changed or deleted on Garmin Connect, delete_course
+# stays off; a new upstream tool stays off until it is listed here.
 ai_workstation_garmin_data_dir: "{{ ai_workstation_user_home }}/.local/share/garmin-mcp/activities"
 ai_workstation_garmin_tools: [
   count_activities, download_activity_file, download_course_gpx, get_acclimation, get_activities,
@@ -241,7 +243,7 @@ ai_workstation_garmin_tools: [
   get_training_load_balance, get_training_load_trend, get_training_plan_workouts,
   get_training_readiness, get_training_status, get_unit_system, get_user_profile,
   get_user_summary, get_userprofile_settings, get_vo2max_trend, get_weekly_intensity_minutes,
-  get_weekly_steps, get_weekly_stress, get_weigh_ins, get_workout_by_id, get_workouts
+  get_weekly_steps, get_weekly_stress, get_weigh_ins, get_workout_by_id, get_workouts, upload_course
 ]
 ai_workstation_mcp_shared_servers:
   - name: memory
