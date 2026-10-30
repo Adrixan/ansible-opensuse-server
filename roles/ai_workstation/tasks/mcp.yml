@@ -66,7 +66,9 @@
          + (['--python', item.python] if item.python is defined else [])
          + (['--overrides', ai_workstation_mcp_uv_overrides_dir + '/' + item.name + '.txt'] if item.overrides is defined else [])
          + (['--force'] if item.name in ai_workstation_uv_overrides_changed or ai_workstation_uv_git_outdated | bool else [])
-         + (['git+https://github.com/' + item.github_release + '@' + ai_workstation_uv_git_tags[item.name]] if item.github_release is defined else [item.name]) }}
+         + ([item.source] if item.source is defined
+            else ['git+https://github.com/' + item.github_release + '@' + ai_workstation_uv_git_tags[item.name]] if item.github_release is defined
+            else [item.name]) }}
   become: true
   become_user: "{{ ai_workstation_user }}"
   loop: "{{ ai_workstation_mcp_uv_tools }}"
@@ -99,6 +101,14 @@
     owner: "{{ ai_workstation_user }}"
     group: "{{ ai_workstation_user }}"
     mode: '0755'
+
+- name: Ensure the private Garmin activity file directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_garmin_data_dir }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0700'
 
 - name: Ensure user systemd directory exists
   ansible.builtin.file:

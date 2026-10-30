@@ -64,6 +64,15 @@ ai_workstation_mcp_uv_tools:
   # PyPI stops at 0.3.5; releases continue on GitHub, so the tool follows the latest GitHub release tag
   - name: mcp-youtube-transcript
     github_release: jkawamoto/mcp-youtube-transcript
+  # Taxuspt/garmin_mcp: the only release (0.1.0) predates the tool filter and PyPI's garmin-mcp is an
+  # unrelated project, so this installs a reviewed commit. Commit pin because the server holds a token
+  # for the whole Garmin account and git sources bypass the 24 h cooldown; to bump it, review the new
+  # commit, change it here and run `uv tool install --force` with the same arguments. Upstream pins
+  # garminconnect==0.3.2 (GHSA-wjhr-76vg-2hvc, world-readable token store, fixed in 0.3.5).
+  - name: garmin-mcp
+    python: "3.13"
+    source: git+https://github.com/Taxuspt/garmin_mcp@a2ca5fcac34524b83814fe2fcf3d479f8a75983f
+    overrides: ["garminconnect>=0.3.20", "requests>=2.34.2", "python-dotenv>=1.2.4"]
 ai_workstation_mcp_uv_overrides_dir: "{{ ai_workstation_user_home }}/.config/ai/uv-overrides"
 # Node.js MCP servers, one npm prefix each under ai_workstation_mcp_node_dir, always on the latest
 # release: every run updates the whole tree (`npm update`). `overrides` force vulnerable transitive
@@ -204,6 +213,36 @@ ai_workstation_mcp_shared_port: 8790
 ai_workstation_mcp_shared_dir: "{{ ai_workstation_user_home }}/.config/mcp-shared"
 ai_workstation_mcp_shared_launcher: /usr/local/libexec/mcp-shared-proxy.py
 ai_workstation_mcp_shared_python: "{{ ai_workstation_user_home }}/.local/share/uv/tools/mcp-proxy/bin/python"
+# Garmin Connect: raw activity files (location history, health data) stay outside Syncthing and the
+# cloud backups. Allowlist of read-only tools plus the two local file downloads, so the server cannot
+# change or delete anything on Garmin Connect; a new upstream tool stays off until it is listed here.
+ai_workstation_garmin_data_dir: "{{ ai_workstation_user_home }}/.local/share/garmin-mcp/activities"
+ai_workstation_garmin_tools: [
+  count_activities, download_activity_file, download_course_gpx, get_acclimation, get_activities,
+  get_activities_by_date, get_activities_fordate, get_activity, get_activity_exercise_sets,
+  get_activity_fit_data, get_activity_fit_messages, get_activity_gear,
+  get_activity_hr_in_timezones, get_activity_power_in_timezones, get_activity_split_summaries,
+  get_activity_splits, get_activity_typed_splits, get_activity_types, get_activity_weather,
+  get_adhoc_challenges, get_all_day_events, get_all_day_stress, get_available_badge_challenges,
+  get_badge_challenges, get_blood_pressure, get_body_battery, get_body_battery_events,
+  get_body_composition, get_calendar_events, get_course_details, get_courses, get_cycling_ftp,
+  get_daily_steps, get_daily_weigh_ins, get_device_last_used, get_device_settings,
+  get_device_solar_data, get_devices, get_earned_badges, get_endurance_score, get_energy_balance,
+  get_fitnessage_data, get_floors, get_full_name, get_garmin_coach_workouts, get_gear, get_goals,
+  get_heart_rate_zones, get_heart_rates, get_heart_rates_summary, get_hill_score, get_hrv_data,
+  get_hrv_trend, get_hydration_data, get_inprogress_virtual_challenges, get_lactate_threshold,
+  get_lifestyle_logging_data, get_morning_training_readiness, get_non_completed_badge_challenges,
+  get_personal_record, get_power_duration_curve, get_primary_training_device,
+  get_progress_summary_between_dates, get_race_predictions, get_recovery_time_remaining,
+  get_respiration_data, get_respiration_summary, get_respiration_trend, get_rhr_day,
+  get_running_tolerance, get_running_tolerance_trend, get_scheduled_workouts, get_sleep_data,
+  get_sleep_summary, get_sleep_summary_range, get_spo2_data, get_stats, get_stats_and_body,
+  get_stats_range, get_steps_data, get_stress_data, get_stress_summary, get_training_effect,
+  get_training_load_balance, get_training_load_trend, get_training_plan_workouts,
+  get_training_readiness, get_training_status, get_unit_system, get_user_profile,
+  get_user_summary, get_userprofile_settings, get_vo2max_trend, get_weekly_intensity_minutes,
+  get_weekly_steps, get_weekly_stress, get_weigh_ins, get_workout_by_id, get_workouts
+]
 ai_workstation_mcp_shared_servers:
   - name: memory
     command: /usr/local/bin/mcp-server-memory
@@ -262,6 +301,13 @@ ai_workstation_mcp_shared_servers:
     command: "{{ ai_workstation_user_home }}/.local/bin/trip-planner"
     args: [mcp]
     requires_env: [TRIP_PLANNER_TOKEN]
+  # Skipped until `garmin-mcp-auth` has stored the tokens (interactive: password and MFA code)
+  - name: garmin
+    command: "{{ ai_workstation_user_home }}/.local/bin/garmin-mcp"
+    requires_path: ["{{ ai_workstation_user_home }}/.garminconnect/garmin_tokens.json"]
+    env:
+      GARMIN_ENABLED_TOOLS: "{{ ai_workstation_garmin_tools | join(',') }}"
+      GARMIN_FIT_DOWNLOAD_DIR: "{{ ai_workstation_garmin_data_dir }}"
   # Own projects, installed by hand (PTSD from ~/code/PTSD, File Accountant as uv tool); both hold
   # confidential data (minors' submissions, client books) and keep their confirm tokens server-side
   - name: ptsd
