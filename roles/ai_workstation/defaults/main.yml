@@ -78,9 +78,16 @@ ai_workstation_mcp_uv_overrides_dir: "{{ ai_workstation_user_home }}/.config/ai/
 # release: every run updates the whole tree (`npm update`). `overrides` force vulnerable transitive
 # dependencies to their latest release where the server's own ranges keep an affected one (npm audit
 # gates the role), `allow_scripts` is the npm install-script allowlist by package name (unset: no
-# install scripts run), `env` is exported by the wrapper.
+# install scripts run), `env` is exported by the wrapper, `spec` replaces `latest` in the manifest.
 ai_workstation_mcp_node_dir: /opt/mcp
 ai_workstation_mcp_node_servers:
+  # Cloudflare CLI (agent setup, 2026-10-30), only published as a beta. Below Node 26.12 `latest`
+  # resolves to beta.19 with known advisories, so the minimum keeps the first audited release; drop
+  # the spec once every machine runs Node 26.12 (zypper dup).
+  - name: cf
+    package: cf
+    bin: cf
+    spec: ">=1.0.0-beta.25"
   - name: openalex
     package: "@cyanheads/openalex-mcp-server"
     bin: openalex-mcp-server
@@ -326,6 +333,9 @@ ai_workstation_claude_marketplace_dir: "{{ ai_workstation_user_home }}/.config/a
 # Plugins of that marketplace: workstation-mcp holds the core servers, the others are switched off
 # per directory in .claude/settings.json (enabledPlugins) where they are not needed
 ai_workstation_claude_plugins_list: [workstation-mcp, workstation-dev, workstation-research, workstation-travel]
+# Upstream plugins: OpenCode and Antigravity read the skills from the marketplace clone (yadm templates)
+ai_workstation_claude_upstream_plugins:
+  - { marketplace: cloudflare, source: cloudflare/skills, plugin: cloudflare }
 # Knowledge graph of the memory MCP server, inside the Syncthing "sync" folder
 ai_workstation_mcp_memory_dir: "{{ ai_workstation_user_home }}/sync/ai"
 # User-scope servers previously written to ~/.claude.json, now provided by the workstation-mcp plugin
