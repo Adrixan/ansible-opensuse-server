@@ -1,10 +1,10 @@
 # Session Handoff State
 
 ## Active Intent
-US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR, `localhost` cloaking for `cloudflared`, and a local TLS 1.3 ECH reverse proxy (`dragtokens-ech-proxy.service` in `ai_workstation`) so OpenCode reaches `dragtokens.com` over ECH.
+No story in progress (2026-10-30). Housekeeping done: `AGENTS.md`/`CLAUDE.md` added, open items re-checked against the live system, `laptops` branch retired. Waiting on Peter's decision about the old inventory credential still visible in public git history (see 2026-10-30 entry).
 
 ## Task & Story Status
-- Current Stories: US-15.1 (`dns_setup`) and US-15.2 (`dragtokens-ech-proxy`), complete and verified live on localhost (2026-10-19), idempotent (`dns_setup`: `ok=10, changed=0`; `ai_workstation`: `ok=65, changed=0`).
+- Sprint 15 (US-15.1 `dns_setup`, US-15.2 `dragtokens-ech-proxy`) complete since 2026-10-19; everything after it was unplanned work logged as dated entries below.
 
 ## Key Decisions & Architecture
 - Server set (all harnesses): github (remote `https://api.githubcopilot.com/mcp/`, PAT header), playwright (`/usr/local/bin/playwright-mcp`, system chromium, headless, isolated), memory (`MEMORY_FILE_PATH=~/sync/ai/mcp-memory.jsonl`), fetch, git, arxiv, zotero, markitdown, serena (`--project-from-cwd --open-web-dashboard False`), nextcloud, docker (`DOCKER_HOST=tcp://127.0.0.1:2375`). context7 only in Antigravity/OpenCode (Claude uses the claude.ai connector). sqlite and puppeteer removed.
@@ -14,10 +14,9 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - yadm auto-alt re-renders templates on ordinary yadm commands with the caller's environment; `~/.config/ai/env` must therefore export every templated secret (now includes `NEXTCLOUD_*`).
 
 ## Immediate Next Steps
-- Supply Nextcloud app password and re-run: `NEXTCLOUD_HOST=… NEXTCLOUD_USERNAME=… NEXTCLOUD_PASSWORD=… ansible-playbook main.yml -e enable_ai_workstation=true`.
-- NowCoding provider and `NOWCODING_API_KEY` removed entirely (2026-10-18).
-- On Docker hosts: run `docker` + `ai_workstation` roles to get the read-only proxy.
-- Resolved 2026-10-28 (Peter): `laptops` merged into `master` (strategy `ours`: master's history kept, laptops' tree wins); see the entry of that date.
+- Peter decides on the inventory credential in public history: rotate wherever it was used, and either accept the exposure or approve a history rewrite of the `.agents/` docs plus force-push (see 2026-10-30).
+- m11x: clone this repo, run `ai_workstation` (creates `mcp-shared.service`), only then `yadm pull` (117 commits behind on 2026-10-30).
+- xps13: same check; not reachable over SSH from schulpc, so state unknown.
 
 ## 2026-10-19: US-14.2 OpenCode on DragTokens
 - OpenCode CLI v1 now comes from `ai_desktop` (`tasks/opencode_cli.yml`, native installer into `~/.opencode/bin`, daily `opencode-cli-update.timer`); `roles/opencode` and the npm global install are gone.
@@ -138,3 +137,18 @@ US-15.1 & US-15.2: System-wide RethinkDNS DoH (`dns_setup`) matching Firefox TRR
 - Peter: laptops is the only maintained setup. `master` had 15 own commits (old home-server roles: sickgear, jackett, radarr, bitwarden_rs, nginx reverse proxy, minecraft server, xbrowsersync, rclone backup folders, ssh keys, bpytop, YouCompleteMe deps); they stay in history (`git log` on master before this merge), their files are gone from the tree.
 - `master` now equals `laptops`; both were pushed as fast-forwards (no force). Default branch for new work: `master` (feature branch, `--no-ff` merge); `laptops` stays as an alias until no session uses it.
 - Also 2026-10-28: ptsd and file-accountant joined the shared MCP service (27 servers); newspaper-testground stays per session.
+
+## 2026-10-29: Teaching and Deep Research autostart
+- `ai_workstation_claude_rc_servers`: `teaching` and `research` now have `autostart: true` next to `greeter` and reattach their previous session at boot; the other roles stay on request (RAM on schulpc). Travel Planner is not offered by the Greeter, since travel runs per trip (`rc trip <destination>`).
+
+## 2026-10-30: Housekeeping and open-item audit
+- Added `AGENTS.md` (project rules, public-repo safe) and `CLAUDE.md` (`@AGENTS.md`).
+- Checked the old open items against the live system (schulpc):
+  - Nextcloud credentials: done (`NEXTCLOUD_*` in `~/.config/ai/env`; `nextcloud` configured in `mcp-shared`).
+  - Docker read-only proxy: done (`docker-compose@docker-socket-proxy` running, `127.0.0.1:2375` answers `/version`).
+  - Trust for Greeter, Travel and the Roles root: done (all trusted; greeter, teaching, research autostart).
+  - openroute: done (`OPENROUTESERVICE_API_KEY` in `env.local`, server configured; the last skip was 2026-10-28).
+  - DragTokens on the school network: done (401 from `/v1/models` via ECH proxy and directly).
+  - US-1.1 (plaintext password in `hosts`): `hosts` holds no password any more. Still open: commits `ae0be12` (2026-07-27) and `1bc1ff5` quote the old `ansible_ssh_pass` value in `.agents/` docs; the 2026-10-12 scrub only rewrote `hosts`. The repo is public. Removing it needs a history rewrite plus force-push, which requires Peter's approval.
+  - m11x: still open (no clone of this repo, no `mcp-shared.service`, yadm 117 commits behind). xps13: no SSH route from schulpc, unknown.
+- `laptops` branch deleted locally and on `origin` (it had no commits beyond `master`). Clones that still track it switch with `git checkout master && git branch -D laptops`.

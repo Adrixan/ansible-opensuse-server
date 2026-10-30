@@ -22,7 +22,7 @@ None (Sprint 15 Complete)
   - [x] yadm `opencode.json##template` in native V2 shape (`providers`, `agents`, `mcp.servers`, `disabled`, `update: auto`); DragTokens via `@opencode/ai/providers/openai/responses` with `canonical: openai`
   - [x] `/usr/local/bin/opencode-restart-stale-server`: `systemctl --user try-restart opencode-server.service` when `~/.local/state/opencode/service.json` reports an older version than the binary; runs after the daily upgrade and in the role
   - [x] No config diagnostics; `opencode mcp list` 9 connected, 3 disabled; plan `dragtokens/gpt-6-astra`, build `dragtokens/gpt-6.1-sol`; rerun `ok=101, changed=0`
-  - [ ] DragTokens API unreachable on the school network: FortiGuard DNS sinkhole plus TLS reset on SNI `dragtokens.com`
+  - [x] DragTokens API unreachable on the school network: resolved, `/v1/models` answers 401 (auth required) both through the ECH proxy and directly on 10.106.81.0/24 (checked 2026-10-30)
 - **US-14.3**: Track the newest OpenCode release (V2) (3 SP) - **Done**
   - [x] `ai_desktop` uses the V2 installer (`https://opencode.ai/v2/install`); reinstalls when the binary is missing or older than `opencode_cli_major_version` (V1 installer refuses 2.x)
   - [x] `opencode-server.service` is a oneshot `opencode service start`/`stop` (running `serve --service` under systemd raced `opencode service restart`); listen address persisted via `opencode service set hostname/port`
@@ -35,7 +35,7 @@ None (Sprint 15 Complete)
   - [x] `DRAGTOKENS_API_KEY` read from env or `~/.config/ai/env`, exported there and passed to `yadm alt`; `opencode-server.service` uses the native binary and restarts on unit or rendered-config changes
   - [x] yadm `opencode.json##template`: provider `dragtokens` (`@ai-sdk/openai`, `https://dragtokens.com/v1`), agents plan `gpt-6-astra`, build `gpt-6.1-sol`
   - [x] Live run `ok=100, changed=9`; idempotent rerun `ok=98, changed=0, failed=0`; `opencode models dragtokens` lists all three models
-  - [ ] Live API call untested: FortiGuard DNS on the current network (10.106.81.0/24) blocks dragtokens.com by category
+  - [x] Live API call: superseded by US-15.2 (ECH proxy, `opencode run` reached the API) and the 2026-10-30 reachability check
 - **US-14.1**: Overhaul MCP stack per free-MCP report review: yadm owns harness configs, `ai_workstation` installs runtimes only (8 SP) - **Done**
   - [x] Replace archived `server-github` (remote `api.githubcopilot.com/mcp/`) and `server-puppeteer` (`@playwright/mcp` + zypper `chromium`); drop unused `sqlite`
   - [x] Persist memory graph in `~/sync/ai/mcp-memory.jsonl` (Syncthing)
@@ -99,7 +99,7 @@ None (Sprint 15 Complete)
   - Environment centralization: **`~/.config/ai/env` purged of legacy gateway tokens and Qwen variables**
   - Claude settings cleanup: **Legacy Bailian `env`, `modelOverrides`, and custom models purged from `~/.claude/settings.json` and `~/.claude.json`**
   - OpenCode configuration: **Bailian provider removed; Anthropic model set to `anthropic/claude-sonnet-4-5`; optional `anthropic-workspace-id` header support integrated**
-- Remote Push: **Pending push to `origin/laptops`**
+- Remote Push: **Done (`origin/master`; `laptops` retired 2026-10-30)**
 
 
 
