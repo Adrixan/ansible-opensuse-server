@@ -1,0 +1,74 @@
+---
+# Google Cloud CLI from the upstream tarball, root-owned, updated in place. The tarball's date stands
+# in for the release date: nothing is installed or updated within the supply-chain cooldown.
+
+- name: Read the date of the latest Google Cloud CLI release
+  ansible.builtin.uri:
+    url: "{{ ai_workstation_gcloud_url }}"
+    method: HEAD
+  register: ai_workstation_gcloud_release
+  check_mode: false
+
+# date, because the to_datetime filter fails on the English weekday under a German locale
+- name: Convert the Google Cloud CLI release date
+  ansible.builtin.command:
+    argv: [date, -d, "{{ ai_workstation_gcloud_release.last_modified }}", +%s]
+  environment:
+    LC_ALL: C
+  register: ai_workstation_gcloud_release_epoch
+  changed_when: false
+  check_mode: false
+
+- name: Decide whether the latest Google Cloud CLI release passed the cooldown
+  ansible.builtin.set_fact:
+    ai_workstation_gcloud_release_ok: >-
+      {{ (now().timestamp() - (ai_workstation_gcloud_release_epoch.stdout | int))
+         >= ai_workstation_gcloud_cooldown_seconds }}
+
+- name: Check for an installed Google Cloud CLI
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_gcloud_dir }}/bin/gcloud"
+  register: ai_workstation_gcloud_bin
+
+- name: Install the Google Cloud CLI
+  when:
+    - not ai_workstation_gcloud_bin.stat.exists
+    - ai_workstation_gcloud_release_ok | bool
+  block:
+    - name: Download the Google Cloud CLI
+      ansible.builtin.get_url:
+        url: "{{ ai_workstation_gcloud_url }}"
+        dest: /var/tmp/google-cloud-sdk.tar.gz
+        mode: '0644'
+
+    - name: Unpack the Google Cloud CLI
+      ansible.builtin.unarchive:
+        src: /var/tmp/google-cloud-sdk.tar.gz
+        dest: "{{ ai_workstation_gcloud_dir | dirname }}"
+        remote_src: true
+        owner: root
+        group: root
+
+    - name: Remove the Google Cloud CLI download
+      ansible.builtin.file:
+        path: /var/tmp/google-cloud-sdk.tar.gz
+        state: absent
+
+- name: Update the Google Cloud CLI
+  ansible.builtin.command:
+    argv: ["{{ ai_workstation_gcloud_dir }}/bin/gcloud", components, update, --quiet]
+  environment:
+    CLOUDSDK_CORE_DISABLE_USAGE_REPORTING: "true"
+  register: ai_workstation_gcloud_update
+  changed_when: "'All components are up to date' not in (ai_workstation_gcloud_update.stdout + ai_workstation_gcloud_update.stderr)"
+  when:
+    - ai_workstation_gcloud_bin.stat.exists
+    - ai_workstation_gcloud_release_ok | bool
+
+- name: Link the Google Cloud CLI into the PATH
+  ansible.builtin.file:
+    src: "{{ ai_workstation_gcloud_dir }}/bin/gcloud"
+    dest: /usr/local/bin/gcloud
+    state: link
+    force: true
+  when: not ansible_check_mode
