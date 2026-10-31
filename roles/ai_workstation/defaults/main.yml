@@ -59,6 +59,12 @@ ai_workstation_mcp_uv_tools:
   # Key-less web search; installed without the [browser] extra, so no curl TLS impersonation
   - { name: duckduckgo-mcp-server }
   - { name: oebb-mcp-server }
+  # Oracle's recommended OCI server: every OCI API through the SDK, limited only by the profile's IAM.
+  # Needs Python 3.13. It locks fastmcp and oci caps cryptography at versions with known advisories, so
+  # the overrides take the fixed releases (fastmcp stays on 3.x); request signing tested with them.
+  - name: oracle.oci-cloud-mcp-server
+    python: "3.13"
+    overrides: ["fastmcp>=3.4.10,<4", "cryptography>=50"]
   # stdio-to-HTTP bridge behind the shared MCP services (tasks/mcp_shared.yml)
   - { name: mcp-proxy }
   # PyPI stops at 0.3.5; releases continue on GitHub, so the tool follows the latest GitHub release tag
@@ -88,6 +94,18 @@ ai_workstation_mcp_node_servers:
     package: cf
     bin: cf
     spec: ">=1.0.0-beta.25"
+  # Google Cloud: all of gcloud, limited only by the active account's IAM, plus logs, metrics and traces
+  # Both ship a self-contained dist/bundle.js with their own zod 3 (GHSA for zod <4.6.6, no fixed release
+  # upstream). The overrides satisfy npm audit but do not change the bundled copy: remove them once
+  # Google rebuilds. Input only comes from local agents over loopback.
+  - name: gcloud
+    package: "@google-cloud/gcloud-mcp"
+    bin: gcloud-mcp
+    overrides: { zod: latest }
+  - name: gcloud-observability
+    package: "@google-cloud/observability-mcp"
+    bin: observability-mcp
+    overrides: { zod: latest, minimatch: latest, glob: latest, rimraf: latest }
   - name: openalex
     package: "@cyanheads/openalex-mcp-server"
     bin: openalex-mcp-server
@@ -128,6 +146,7 @@ ai_workstation_mcp_node_servers:
   - name: lighthouse
     package: "@danielsogl/lighthouse-mcp"
     bin: lighthouse-mcp-server
+    overrides: { glob: latest, minimatch: latest }    # GHSA-3g3m-2fjr-6pw4, GHSA-g3hv-75wg-m249
     env:
       CHROME_PATH: "{{ ai_workstation_mcp_chromium }}"
   - name: accessibility-scanner
@@ -138,6 +157,7 @@ ai_workstation_mcp_node_servers:
   - name: docs
     package: "@arabold/docs-mcp-server"
     bin: docs-mcp-server
+    overrides: { glob: latest, minimatch: latest }    # GHSA-3g3m-2fjr-6pw4, GHSA-g3hv-75wg-m249
     env:
       DOCS_MCP_TELEMETRY: "false"
       PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH: "{{ ai_workstation_mcp_chromium }}"
@@ -189,8 +209,10 @@ ai_workstation_pho_repo: https://github.com/thaohienhomes/pho-research-tools.git
 ai_workstation_pho_version: HEAD
 ai_workstation_pho_pnpm: "pnpm@latest"
 # Its MCP SDK 1.x and its own code range onto affected zod 3 (GHSA-mrhx-c7xc-m3w5); tools verified on zod 4
+# and onto affected @hono/node-server (GHSA-rmxm-3fg6-px4f)
 ai_workstation_pho_overrides:
   zod: latest
+  "@hono/node-server": latest
 ai_workstation_pho_dir: "{{ ai_workstation_user_home }}/.local/share/pho-research-tools"
 ai_workstation_pho_port: 8787
 # Obsidian Hybrid Search HTTP servers (one per vault, loopback; about 700 MB RSS each with the
@@ -327,6 +349,21 @@ ai_workstation_mcp_shared_servers:
     command: "{{ ai_workstation_user_home }}/.local/bin/fa"
     args: [mcp]
     requires_path: ["{{ ai_workstation_user_home }}/.config/file-accountant/config.json"]
+  # The cloud servers start once the logins exist: restart mcp-shared after `oci setup config`,
+  # `gcloud auth ...` and `gcloud auth application-default login`
+  - name: oci
+    command: "{{ ai_workstation_user_home }}/.local/bin/oracle.oci-cloud-mcp-server"
+    requires_path: ["{{ ai_workstation_user_home }}/.oci/config"]
+  - name: gcloud
+    command: /usr/local/bin/gcloud-mcp
+    requires_path: ["{{ ai_workstation_user_home }}/.config/gcloud/credentials.db"]
+  - name: gcloud-observability
+    command: /usr/local/bin/observability-mcp
+    requires_path: ["{{ ai_workstation_user_home }}/.config/gcloud/application_default_credentials.json"]
+# Google Cloud CLI for the gcloud MCP server: upstream tarball (no openSUSE package)
+ai_workstation_gcloud_dir: /opt/google-cloud-sdk
+ai_workstation_gcloud_url: https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
+ai_workstation_gcloud_cooldown_seconds: 86400
 ai_workstation_mcp_tools_update_on_calendar: daily
 ai_workstation_claude_bin: "{{ ai_workstation_user_home }}/.local/bin/claude"
 ai_workstation_claude_marketplace_dir: "{{ ai_workstation_user_home }}/.config/ai/claude-plugins"

@@ -307,6 +307,9 @@
       changed_when: "'already' not in ai_workstation_claude_upstream_update.stdout"
       when: not ansible_check_mode
 
+- name: Install the Google Cloud CLI
+  ansible.builtin.import_tasks: gcloud_cli.yml
+
 - name: Install the Node.js MCP servers (latest releases)
   ansible.builtin.import_tasks: mcp_node.yml
 
