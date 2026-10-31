@@ -353,9 +353,10 @@ ai_workstation_mcp_shared_servers:
     command: "{{ ai_workstation_user_home }}/.local/bin/fa"
     args: [mcp]
     requires_path: ["{{ ai_workstation_user_home }}/.config/file-accountant/config.json"]
-  # The cloud servers start only once the read-only keys exist and use their own credentials, so an
-  # admin login on this machine (Peter keeps his) never reaches them: `oci` reads the DEFAULT profile,
-  # the gcloud servers a separate CLOUDSDK_CONFIG. Restart mcp-shared after creating the keys.
+  # The cloud servers start only once their dedicated keys exist and use their own credentials, not an
+  # admin login on this machine: `oci` reads the DEFAULT profile, the gcloud servers a separate
+  # CLOUDSDK_CONFIG. Peter gave these identities full read/write on 2026-10-31, despite the
+  # `claude-readonly` name. Restart mcp-shared after changing the keys.
   - name: oci
     command: "{{ ai_workstation_user_home }}/.local/bin/oracle.oci-cloud-mcp-server"
     requires_path: ["{{ ai_workstation_user_home }}/.oci/claude-readonly.pem"]
