@@ -353,18 +353,21 @@ ai_workstation_mcp_shared_servers:
     command: "{{ ai_workstation_user_home }}/.local/bin/fa"
     args: [mcp]
     requires_path: ["{{ ai_workstation_user_home }}/.config/file-accountant/config.json"]
-  # The cloud servers start only once the read-only keys exist: an admin login on this machine must
-  # never reach them. Restart mcp-shared after creating the keys.
+  # The cloud servers start only once the read-only keys exist and use their own credentials, so an
+  # admin login on this machine (Peter keeps his) never reaches them: `oci` reads the DEFAULT profile,
+  # the gcloud servers a separate CLOUDSDK_CONFIG. Restart mcp-shared after creating the keys.
   - name: oci
     command: "{{ ai_workstation_user_home }}/.local/bin/oracle.oci-cloud-mcp-server"
     requires_path: ["{{ ai_workstation_user_home }}/.oci/claude-readonly.pem"]
+    env: { OCI_CONFIG_PROFILE: DEFAULT }
   - name: gcloud
     command: /usr/local/bin/gcloud-mcp
-    requires_path: ["{{ ai_workstation_user_home }}/.config/gcloud/claude-readonly.json"]
+    requires_path: ["{{ ai_workstation_user_home }}/.config/gcloud-readonly/claude-readonly.json"]
+    env: { CLOUDSDK_CONFIG: "{{ ai_workstation_user_home }}/.config/gcloud-readonly" }
   - name: gcloud-observability
     command: /usr/local/bin/observability-mcp
-    requires_path: ["{{ ai_workstation_user_home }}/.config/gcloud/claude-readonly.json"]
-    env: { GOOGLE_APPLICATION_CREDENTIALS: "{{ ai_workstation_user_home }}/.config/gcloud/claude-readonly.json" }
+    requires_path: ["{{ ai_workstation_user_home }}/.config/gcloud-readonly/claude-readonly.json"]
+    env: { GOOGLE_APPLICATION_CREDENTIALS: "{{ ai_workstation_user_home }}/.config/gcloud-readonly/claude-readonly.json" }
 # Google Cloud CLI for the gcloud MCP server: upstream tarball (no openSUSE package)
 ai_workstation_gcloud_dir: /opt/google-cloud-sdk
 ai_workstation_gcloud_url: https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
