@@ -97,7 +97,7 @@ ai_workstation_mcp_node_servers:
   # Google Cloud: all of gcloud, limited only by the active account's IAM, plus logs, metrics and traces
   # Both ship a self-contained dist/bundle.js with their own zod 3 (GHSA for zod <4.6.6, no fixed release
   # upstream). The overrides satisfy npm audit but do not change the bundled copy: remove them once
-  # Google rebuilds. Input only comes from local agents over loopback.
+  # Google rebuilds. Input only comes from local agents over loopback; Peter accepted this on 2026-10-31.
   - name: gcloud
     package: "@google-cloud/gcloud-mcp"
     bin: gcloud-mcp
