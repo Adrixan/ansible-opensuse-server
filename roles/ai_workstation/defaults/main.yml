@@ -65,6 +65,10 @@ ai_workstation_mcp_uv_tools:
   - name: oracle.oci-cloud-mcp-server
     python: "3.13"
     overrides: ["fastmcp>=3.4.10,<4", "cryptography>=50"]
+  # OCI CLI for `oci session authenticate` (openSUSE ships an older release); its pins carry advisories
+  - name: oci-cli
+    python: "3.13"
+    overrides: ["certifi>=2026.10.18", "setuptools>=84.1.0"]
   # stdio-to-HTTP bridge behind the shared MCP services (tasks/mcp_shared.yml)
   - { name: mcp-proxy }
   # PyPI stops at 0.3.5; releases continue on GitHub, so the tool follows the latest GitHub release tag
