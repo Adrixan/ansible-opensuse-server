@@ -14,7 +14,7 @@
 
 - name: Include Claude Desktop installation and auto-update tasks
   ansible.builtin.include_tasks: claude_desktop.yml
-  when: enable_claude_desktop | default(true) | bool
+  when: enable_claude_desktop | default(false) | bool
 
 - name: Include Claude Code installation and auto-update tasks
   ansible.builtin.include_tasks: claude_code.yml

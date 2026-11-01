@@ -6,7 +6,8 @@ ai_desktop_user_home: "{{ target_user_home | default('/home/' + ai_desktop_user)
 ai_desktop_user_uid: "{{ target_user_uid | default(1000) }}"
 
 # Application feature flags
-enable_claude_desktop: true
+# Off on all machines by decision; set true to install it again
+enable_claude_desktop: false
 enable_claude_code: true
 enable_antigravity_desktop: true
 enable_antigravity_cli: true
