@@ -1,0 +1,17 @@
+#!/bin/sh
+# XPS 13 9310: after hibernate the kernel still counts these GPEs as enabled, but their
+# hardware enable bit is off. gpe6D wakes the xHCIs (USB-C hotplug), gpe6E is the EC.
+# mask/unmask makes ACPICA rewrite the bit without touching its reference count.
+[ "$1" = post ] || exit 0
+case "$2" in hibernate|hybrid-sleep|suspend-then-hibernate) ;; *) exit 0 ;; esac
+for gpe in gpe6D gpe6E; do
+    node=/sys/firmware/acpi/interrupts/$gpe
+    state=$(cat "$node") || continue
+    case "$state" in
+        *" EN "*) ;;
+        *" enabled "*)
+            echo mask > "$node" && echo unmask > "$node"
+            echo "rearm-wake-gpes: $gpe was [$state], now [$(cat "$node")]"
+            ;;
+    esac
+done

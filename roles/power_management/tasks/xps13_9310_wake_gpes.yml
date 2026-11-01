@@ -1,0 +1,28 @@
+---
+# After hibernate this model loses the hardware enable bit of gpe6D (xHCI hotplug)
+# and gpe6E (EC) about 0.4 s after resume, so USB-C devices no longer wake the
+# runtime-suspended controllers. HibernateMode=platform does not help.
+- name: Install the wake GPE re-arm script
+  ansible.builtin.copy:
+    src: rearm-wake-gpes
+    dest: /usr/local/sbin/rearm-wake-gpes
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the wake GPE re-arm unit
+  ansible.builtin.copy:
+    src: rearm-wake-gpes.service
+    dest: /etc/systemd/system/rearm-wake-gpes.service
+    owner: root
+    group: root
+    mode: "0644"
+
+# Oneshot tied to hibernate.target: it only has work to do after a resume
+- name: Enable the wake GPE re-arm unit
+  ansible.builtin.systemd_service:
+    name: rearm-wake-gpes.service
+    enabled: true
+    daemon_reload: true
+  # Units deployed in the same run do not exist yet during check mode
+  ignore_errors: "{{ ansible_check_mode }}"
