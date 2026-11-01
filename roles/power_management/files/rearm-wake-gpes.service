@@ -1,0 +1,12 @@
+[Unit]
+Description=Resume: re-arm USB-C and EC wake GPEs
+After=hibernate.target dell-resume.service ath11k-resume.service
+
+[Service]
+Type=oneshot
+# The enable bits drop once, about 0.4 s after resume; re-arm well after that.
+ExecStartPre=/usr/bin/sleep 10
+ExecStart=/usr/local/sbin/rearm-wake-gpes post hibernate
+
+[Install]
+WantedBy=hibernate.target
