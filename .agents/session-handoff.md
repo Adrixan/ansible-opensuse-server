@@ -166,3 +166,8 @@ No story in progress (2026-10-30). This session: Garmin `upload_course` allowlis
 - Flatpak updates: Obsidian, Signal. npm globals: `pnpm` 12.11.2 to 12.16.1, `@modelcontextprotocol/server-memory` 2.0.0 to 2.0.1 (both past the 24 h cooldown). uv tools current.
 - Current: Claude Code 2.1.312, OpenCode 2.2.2, agy 1.4.10, Claude Desktop, cloudflared (update timers ran 00:09 to 00:48), docker-socket-proxy `v0.5.0` (latest). No failed units. RAM available about 1.1 GB.
 - `system_update` has no timer: OS updates on schulpc only happen when the role (or topgrade) is run by hand.
+
+## 2026-11-02: role ssh_hardening (branch `feat/ssh-hardening-role`, NOT merged)
+- One sshd drop-in (`10-hardening.conf`) for every machine; replaces `10-key-only.conf` and `99-hardened.conf`. Per machine: `ssh_hardening_allow_users`, `ssh_hardening_tcp_forwarding` (`yes` only where ssh -R must be accepted) in the local `hosts`.
+- Rollout paused: one laptop lost its sshd listener during the reload (connection refused afterwards); cause unknown. Do not merge or run the role until that is understood. Details in the private notes.
+- Verification still owed: `--check`, live run, second run `changed=0`.
