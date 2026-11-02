@@ -228,8 +228,9 @@ ai_workstation_ohs_vaults:
   - name: adrixan
     path: "{{ ai_workstation_user_home }}/Obsidian/Adrixan"
     port: 3940
-    # schulpc (7.5 GB RAM, many concurrent agent sessions) ran out of memory with this index
-    skip_hosts: [schulpc]
+    # Optional per vault: skip_hosts: [<hostname>] stops and disables the server on those hosts.
+    # schulpc was skipped until 2026-11-02 (out of memory); it runs there again by Peter's choice,
+    # capped by MemoryHigh/MemoryMax in the unit.
 ai_workstation_ohs_syncthing_root: "{{ ai_workstation_user_home }}/Obsidian"
 # Shared MCP services: the stdio servers without per-session state run once behind one loopback
 # mcp-proxy, and every harness session connects over HTTP instead of starting its own copy (about
