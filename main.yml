@@ -9,6 +9,12 @@
       when: enable_system_update | default(false) | bool
       tags: [system_update]
 
+    - name: Include ssh_hardening role
+      ansible.builtin.include_role:
+        name: ssh_hardening
+      when: enable_ssh_hardening | default(false) | bool
+      tags: [ssh_hardening]
+
     - name: Include dns_setup role
       ansible.builtin.include_role:
         name: dns_setup

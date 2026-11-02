@@ -1,0 +1,33 @@
+# SSH baseline shared by all machines of this setup. Source: role
+# ssh_hardening in ansible-opensuse-server; machines outside Ansible keep a
+# rendered copy in their own repository. Tunnel logins arrive from loopback, so
+# IP based limits see nothing useful; this policy has to hold by itself.
+# First match wins, so this file sorts before the distribution drop-ins.
+
+# Authentication: public key only, named users, no root.
+AuthenticationMethods publickey
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitEmptyPasswords no
+PermitRootLogin no
+AllowUsers {{ ssh_hardening_allow_users | join(' ') }}
+
+# Limit unauthenticated connections.
+MaxAuthTries 3
+LoginGraceTime 30
+MaxSessions 4
+
+# Reduce what a stolen session can reach.
+X11Forwarding no
+AllowAgentForwarding no
+AllowTcpForwarding {{ ssh_hardening_tcp_forwarding }}
+GatewayPorts no
+PermitTunnel no
+
+# Drop dead sessions.
+ClientAliveInterval 300
+ClientAliveCountMax 2
+
+# Log the key fingerprint of every login: tunnel logins come from loopback.
+LogLevel VERBOSE

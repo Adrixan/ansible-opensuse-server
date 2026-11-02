@@ -1,0 +1,30 @@
+---
+# tasks file for ssh_hardening
+- name: Check the role variables
+  ansible.builtin.assert:
+    that:
+      - ssh_hardening_allow_users | length > 0
+      - ssh_hardening_tcp_forwarding in ['yes', 'no', 'local', 'remote', 'all']
+    fail_msg: "ssh_hardening_allow_users must not be empty; ssh_hardening_tcp_forwarding must be yes, no, local, remote or all"
+
+- name: Install the SSH baseline drop-in
+  ansible.builtin.template:
+    src: 10-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/10-hardening.conf
+    owner: root
+    group: root
+    mode: '0644'
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload sshd
+
+- name: Remove drop-ins replaced by the baseline
+  ansible.builtin.file:
+    path: "/etc/ssh/sshd_config.d/{{ item }}"
+    state: absent
+  loop: "{{ ssh_hardening_obsolete_dropins }}"
+  notify: Reload sshd
+
+- name: Check the complete sshd configuration
+  ansible.builtin.command: /usr/sbin/sshd -t
+  changed_when: false
+  check_mode: false
