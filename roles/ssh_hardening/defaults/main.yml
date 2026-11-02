@@ -1,0 +1,13 @@
+---
+# Users allowed to log in over SSH.
+ssh_hardening_allow_users:
+  - "{{ target_user | default('Adrixan') }}"
+
+# AllowTcpForwarding: "local" keeps ssh -L and ProxyJump. A machine that
+# receives ssh -R needs "yes", set in its local hosts file.
+ssh_hardening_tcp_forwarding: local
+
+# Older drop-ins this role replaces.
+ssh_hardening_obsolete_dropins:
+  - 10-key-only.conf
+  - 99-hardened.conf
