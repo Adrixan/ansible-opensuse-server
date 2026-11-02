@@ -27,3 +27,4 @@
 - name: Check the complete sshd configuration
   ansible.builtin.command: /usr/sbin/sshd -t
   changed_when: false
+  check_mode: false
