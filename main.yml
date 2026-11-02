@@ -9,6 +9,12 @@
       when: enable_system_update | default(false) | bool
       tags: [system_update]
 
+    - name: Include desktop_defaults role
+      ansible.builtin.include_role:
+        name: desktop_defaults
+      when: enable_desktop_defaults | default(false) | bool
+      tags: [desktop_defaults]
+
     - name: Include ssh_hardening role
       ansible.builtin.include_role:
         name: ssh_hardening

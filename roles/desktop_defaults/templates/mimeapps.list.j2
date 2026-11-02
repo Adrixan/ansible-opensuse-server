@@ -1,0 +1,7 @@
+# Managed by the Ansible role desktop_defaults.
+# System-wide defaults: they override the distribution lists in
+# /usr/share/applications, while a user's ~/.config/mimeapps.list still wins.
+[Default Applications]
+{% for mime_type in desktop_defaults_browser_mime_types %}
+{{ mime_type }}={{ desktop_defaults_browser }}
+{% endfor %}

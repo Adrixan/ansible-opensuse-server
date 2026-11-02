@@ -1,0 +1,11 @@
+---
+# Desktop file of the browser that opens web links for every application.
+# Roles install Chromium only as a headless renderer and for MCP/Playwright;
+# without an explicit default it wins the handler lookup on KDE.
+desktop_defaults_browser: firefox.desktop
+
+desktop_defaults_browser_mime_types:
+  - x-scheme-handler/http
+  - x-scheme-handler/https
+  - text/html
+  - application/xhtml+xml

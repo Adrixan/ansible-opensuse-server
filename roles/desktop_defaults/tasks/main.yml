@@ -1,0 +1,21 @@
+---
+# tasks file for desktop_defaults
+- name: Check that the default browser is installed
+  ansible.builtin.stat:
+    path: "/usr/share/applications/{{ desktop_defaults_browser }}"
+  register: desktop_defaults_browser_file
+
+- name: Stop when the default browser is missing
+  ansible.builtin.assert:
+    that:
+      - desktop_defaults_browser_file.stat.exists
+      - desktop_defaults_browser_mime_types | length > 0
+    fail_msg: "/usr/share/applications/{{ desktop_defaults_browser }} does not exist"
+
+- name: Set the system-wide default browser
+  ansible.builtin.template:
+    src: mimeapps.list.j2
+    dest: /etc/xdg/mimeapps.list
+    owner: root
+    group: root
+    mode: '0644'
