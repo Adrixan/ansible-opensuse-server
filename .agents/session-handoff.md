@@ -172,3 +172,8 @@ No story in progress (2026-10-30). This session: Garmin `upload_course` allowlis
 - The pause was a false alarm: fail2ban on one laptop banned this machine's address after the deliberate failed logins of the verification; sshd never stopped.
 - Verified here: syntax check, `--check`, live run (changed=3), second run changed=0, fresh logins through the tunnel.
 - Machines outside Ansible keep a rendered copy in their own repository.
+
+## 2026-11-02: role desktop_defaults
+- Writes `/etc/xdg/mimeapps.list` with `desktop_defaults_browser` (default `firefox.desktop`) for http, https, HTML and XHTML. Reason: `ai_workstation` and `office_suite` install Chromium; on KDE, whose distribution list names an uninstalled Falkon, Chromium then won the handler lookup (GIO, xdg-mime), so Thunderbird opened links in Chromium.
+- User choices in `~/.config/mimeapps.list` still take precedence. Verified on the desktop: syntax check, `--check`, live run, second run changed=0; GIO and xdg-mime return Firefox.
+- Machines that get Chromium through these roles should run this role too.
