@@ -13,6 +13,7 @@
 - Found: the old `luks_boot_setup` role is stale for this machine (GRUB, `nvme0n1p5`, a placeholder passphrase in an expect response, a missing `99-root-key.conf`); do not run it; replacing or deleting it is Peter's call.
 - The FreeDOS stick (with `TPM20.EXE`, `TPM12.EXE`) and downloads stay in the project `.scratch/` until Peter decides.
 - Done the same day: teaching and research no longer autostart (only the greeter; applied, changed=0, docs and yadm updated); Kavita Android release feed added to Nextcloud News "App Releases" (feed 408).
+- 2026-11-03 late: cross-machine mirror investigation (desktop and laptop, Peter's request via the Greeter): read-only inventory of both machines, nothing installed, enabled or changed. Report with ranked options (manual handover, internet-hosted lease, ownership split) and open decisions lives in the private vault research reports (`2026-11-03-schulpc-xps-mirror`); inventory scripts and outputs in `.scratch/mirror-inventory/` (gitignored). Waiting for Peter's decisions before any role work.
 
 ## Task & Story Status
 - Sprint 15 (US-15.1 `dns_setup`, US-15.2 `dragtokens-ech-proxy`) complete since 2026-10-19; everything after it was unplanned work logged as dated entries below.
