@@ -1,12 +1,16 @@
 # Session Handoff State
 
 ## Active Intent
-2026-11-03: TPM unlock for the desktop root LUKS (Peter's task, relayed by the Greeter). Peter chose the TPM 1.2 to 2.0 firmware conversion. Prepared and verified: the FreeDOS 1.4 Lite USB stick (removable `sdd` at preparation time) holds Dell's `TPM20.EXE` (RF87D 1.3.2.8 V1, SHA-256 matches Dell). The machine is shutting down for a reboot (Greeter); the flash has NOT run yet unless Peter says so.
-- Next, at the console (Peter): BIOS Secure Boot off, Boot List Legacy, TPM on and Clear; F12 to the stick, FreeDOS installer "No, return to DOS", `C:`, `TPM20.EXE`; reboot (TPM upgrade message, no power loss); BIOS back to UEFI and Secure Boot on (do not touch Expert Key Management); if the UEFI entry is gone, add `\EFI\systemd\shim.efi` on the NVMe ESP. Errors such as "TPM Query Failed" or "blocked by fw policy" mean abort; nothing flashed.
-- Then (agent): check `cat /sys/class/tpm/tpm0/tpm_version_major` = 2 and `systemd-cryptenroll --tpm2-device=list`. If 2.0: show Peter the enrollment plan and wait for his go: LUKS header backup off-disk, recovery key for Bitwarden, TPM+PIN (recommended) or TPM-only via `sdbootutil enroll`, password slot kept, keyfiles or tokens for `cr_home` and `cr_backup`, secret-free parts in Ansible, real reboot test, then update the knowledge map line about manual unlock at boot.
-- Open decision (Peter): TPM+PIN vs TPM-only, after the conversion.
-- Greeter request done the same day: teaching and research lost `autostart` (only the greeter starts at boot); remote_control tasks applied, second run changed=0, units disabled, no `wanted/` entries for them.
-- Side task done the same day: Kavita Android release feed added to Nextcloud News "App Releases" (feed 408) via the News REST API (the MCP has no add-feed tool).
+2026-11-03: TPM unlock for the desktop root LUKS (Peter's task). Peter chose the TPM 1.2 to 2.0 firmware conversion. First flash attempt from FreeDOS failed with "The System TPM Query Failed, Aborting"; nothing flashed, the TPM is still 1.2 fw 5.81 and the machine boots normally. The FreeDOS 1.4 Lite stick now holds `TPM20.EXE` (2.0 tool 1.3.2.8 V1, SHA-256 `29cf9f45...dd33c53`) and `TPM12.EXE` (1.2 update 5.81.2.1 V5, SHA-256 `822d5bcd...317f82`), both verified on the stick, stick unmounted. Reboot by the Greeter pending; no playbook or task is half-applied.
+- Next, at the console (Peter), in this order, stop after the first success:
+  1. BIOS: Secure Boot off, Boot List Legacy, TPM On plus Activate, Clear NOT ticked (a TPM 1.2 Clear leaves the chip disabled and deactivated for the next boot, the main suspect); F12 to the stick, FreeDOS "No, return to DOS", `C:`, `TPM20.EXE`.
+  2. If it fails again: `TPM12.EXE` (update to 5.81.2.1, Dell rates it critical; FreeDOS support of V5 unknown), reboot through BIOS (TPM On plus Activate), then `TPM20.EXE`.
+  3. If still failing: BIOS Load Defaults, then restore SATA Operation AHCI (defaults are RAID On, which hides the NVMe from Linux), Boot List, TPM; retry. Photograph BIOS pages first.
+  4. Otherwise stop (two-failures rule) and propose FIDO2 instead.
+  After any attempt: BIOS back to UEFI, Secure Boot on (leave Expert Key Management alone); the only UEFI entry is `\EFI\systemd\shim.efi` on the NVMe ESP.
+- Then (agent): check `tpm_version_major` = 2 and `systemd-cryptenroll --tpm2-device=list`; if 2.0, show Peter the enrollment plan (header backup, recovery key for Bitwarden, TPM+PIN recommended or TPM-only via `sdbootutil enroll`, password slot kept, keyfiles or tokens for `cr_home` and `cr_backup`, secret-free parts in Ansible, reboot test, knowledge map line) and wait for his go.
+- Open decision (Peter): TPM+PIN vs TPM-only, after a successful conversion.
+- Done the same day: teaching and research no longer autostart (only the greeter; applied, changed=0, docs and yadm updated); Kavita Android release feed added to Nextcloud News "App Releases" (feed 408).
 
 ## Task & Story Status
 - Sprint 15 (US-15.1 `dns_setup`, US-15.2 `dragtokens-ech-proxy`) complete since 2026-10-19; everything after it was unplanned work logged as dated entries below.
