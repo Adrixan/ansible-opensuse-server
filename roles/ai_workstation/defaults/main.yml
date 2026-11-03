@@ -424,7 +424,8 @@ ai_workstation_claude_rc_servers:
     description: "Teacher: lessons, Typst material, grading"
   - name: educator
     label: "Educator"
-    dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Educator"
+    # Since 2026-11-03 the Prof. Aufner project in the claude.ai archive (moved from Obsidian/Adrixan/Educator)
+    dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/AI/Claude.ai/Projects/Prof. Aufner"
     description: "Educator brand Prof. Aufner: content pipeline"
   # General deep-research jobs; reports land in this vault folder (rules in its AGENTS.md).
   # On request only since 2026-11-03 (Peter): started from the Greeter like teaching
