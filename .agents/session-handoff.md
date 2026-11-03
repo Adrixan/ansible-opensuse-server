@@ -24,7 +24,7 @@ No story in progress (2026-10-30). This session: Garmin `upload_course` allowlis
 - Do not bring up the state of m11x or xps13; Peter says when to update them.
 - Old inventory credential: closed by Peter 2026-10-30, do not bring it up again. Reachable history only holds the `***REMOVED***` placeholder, so no rewrite was needed.
 - Open decision (Peter): bring schulpc up to date (see 2026-10-30 host check): `ansible-playbook main.yml -e enable_system_update=true`, then rerun `ai_workstation` for npm globals. A reboot afterwards needs Peter at the machine (manual LUKS unlock).
-- Open decision (Peter, 2026-11-03): TPM unlock of the desktop root LUKS. Blocked: the dTPM is TPM 1.2 (Nuvoton, fw 5.81); systemd-cryptenroll/sdbootutil need 2.0. Dell lists the OptiPlex 7040 as eligible for the 1.2 to 2.0 firmware conversion (Windows utility; runs from FreeDOS or WinPE per community reports). Waiting for Peter: convert, FIDO2 instead, or keep the password. Details in the 2026-11-03 entry.
+- Open decision (Peter, 2026-11-03): TPM unlock of the desktop root LUKS. Blocked: the dTPM is TPM 1.2 (Nuvoton, fw 5.81); systemd-cryptenroll/sdbootutil need 2.0. Dell lists the OptiPlex 7040 as eligible for the 1.2 to 2.0 firmware conversion (Windows utility; runs from FreeDOS or WinPE per community reports). Peter chose the TPM 2.0 conversion (2026-11-03); preparation done, the flash at the console is his. Details in the 2026-11-03 entries.
 - Uncommitted yadm changes on schulpc (`~/.gemini/config/config.json`, `~/.agents/session-handoff.md`), probably from another session: commit there or drop; not touched here.
 
 ## 2026-10-19: US-14.2 OpenCode on DragTokens
@@ -184,3 +184,9 @@ No story in progress (2026-10-30). This session: Garmin `upload_course` allowlis
 - Conversion: Dell KB 000132583 lists the OptiPlex 7040 as eligible for TPM 1.2 to 2.0; no BIOS prerequisite for non-starred models. The utility is a Windows exe; community reports run early builds from FreeDOS 1.3 (legacy boot) or a WinPE USB. fwupd shows the TPM as `updatable-hidden` with "No vendor ID set": no LVFS route. Downgrade not confirmed for this model, so treat it as one-way.
 - Caveats: Dell DSA-2024-324 (Nuvoton TPM CVEs, utility 7.2.4.1) does not list the 7040, so the converted chip may stay on an unpatched 2.0 firmware. `cr_home` and `cr_backup` have no keyfile in crypttab; with any non-password root unlock they need keyfiles on root or their own tokens.
 - Alternatives: FIDO2 token via systemd-cryptenroll (systemd has +FIDO2), or keep the password.
+
+## 2026-11-03: TPM 2.0 conversion prepared (Peter's go)
+- Route: Dell's documented DOS procedure with driver RF87D `DellTpm2.0_Fw1.3.2.8_V1_64.exe` (1.3.2.8 A02, lists OptiPlex 7040; SHA-256 `29cf9f45fed94d03d2aa8a6a0920fc547613a2ab93de1c8e2c597a3b9dd33c53`). The agent could not fetch it (dl.dell.com refuses non-browser clients); Peter downloads it in Firefox.
+- FreeDOS 1.4 LiteUSB (`FD14LITE.img`, zip SHA-256 matches the upstream `verify.txt`) unpacked in the project `.scratch/tpm-img/` (gitignored).
+- Console steps: BIOS Secure Boot off and Boot List Legacy, stick via F12, run the tool, reboot (TPM upgrade message), BIOS back to UEFI and Secure Boot on. The only UEFI entry is `Boot0000` to `\EFI\systemd\shim.efi` on the ESP; re-add it in the BIOS if the switch drops it.
+- Check afterwards: `tpm_version_major` = 2, `systemd-cryptenroll --tpm2-device=list` shows a device. Then the enrollment plan (header backup, recovery key, TPM+PIN or TPM, password slot kept, keyfiles for home and backup).
