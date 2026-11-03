@@ -24,6 +24,7 @@ No story in progress (2026-10-30). This session: Garmin `upload_course` allowlis
 - Do not bring up the state of m11x or xps13; Peter says when to update them.
 - Old inventory credential: closed by Peter 2026-10-30, do not bring it up again. Reachable history only holds the `***REMOVED***` placeholder, so no rewrite was needed.
 - Open decision (Peter): bring schulpc up to date (see 2026-10-30 host check): `ansible-playbook main.yml -e enable_system_update=true`, then rerun `ai_workstation` for npm globals. A reboot afterwards needs Peter at the machine (manual LUKS unlock).
+- Open decision (Peter, 2026-11-03): TPM unlock of the desktop root LUKS. Blocked: the dTPM is TPM 1.2 (Nuvoton, fw 5.81); systemd-cryptenroll/sdbootutil need 2.0. Dell lists the OptiPlex 7040 as eligible for the 1.2 to 2.0 firmware conversion (Windows utility; runs from FreeDOS or WinPE per community reports). Waiting for Peter: convert, FIDO2 instead, or keep the password. Details in the 2026-11-03 entry.
 - Uncommitted yadm changes on schulpc (`~/.gemini/config/config.json`, `~/.agents/session-handoff.md`), probably from another session: commit there or drop; not touched here.
 
 ## 2026-10-19: US-14.2 OpenCode on DragTokens
@@ -177,3 +178,9 @@ No story in progress (2026-10-30). This session: Garmin `upload_course` allowlis
 - Writes `/etc/xdg/mimeapps.list` with `desktop_defaults_browser` (default `firefox.desktop`) for http, https, HTML and XHTML. Reason: `ai_workstation` and `office_suite` install Chromium; on KDE, whose distribution list names an uninstalled Falkon, Chromium then won the handler lookup (GIO, xdg-mime), so Thunderbird opened links in Chromium.
 - User choices in `~/.config/mimeapps.list` still take precedence. Verified on the desktop: syntax check, `--check`, live run, second run changed=0; GIO and xdg-mime return Firefox.
 - Machines that get Chromium through these roles should run this role too.
+
+## 2026-11-03: TPM LUKS unlock feasibility (desktop, read-only, nothing changed)
+- Boot chain fits the openSUSE FDE path: UEFI, Secure Boot on (user mode), systemd-boot 261.3 with sdbootutil, dracut, root LUKS2 with one passphrase keyslot. Missing piece: the TPM is 1.2 (`tpm_version_major=1`, Nuvoton, fw 5.81, enabled, active, not owned), so no TPM2 device exists.
+- Conversion: Dell KB 000132583 lists the OptiPlex 7040 as eligible for TPM 1.2 to 2.0; no BIOS prerequisite for non-starred models. The utility is a Windows exe; community reports run early builds from FreeDOS 1.3 (legacy boot) or a WinPE USB. fwupd shows the TPM as `updatable-hidden` with "No vendor ID set": no LVFS route. Downgrade not confirmed for this model, so treat it as one-way.
+- Caveats: Dell DSA-2024-324 (Nuvoton TPM CVEs, utility 7.2.4.1) does not list the 7040, so the converted chip may stay on an unpatched 2.0 firmware. `cr_home` and `cr_backup` have no keyfile in crypttab; with any non-password root unlock they need keyfiles on root or their own tokens.
+- Alternatives: FIDO2 token via systemd-cryptenroll (systemd has +FIDO2), or keep the password.
