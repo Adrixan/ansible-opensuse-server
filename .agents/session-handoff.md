@@ -1,15 +1,17 @@
 # Session Handoff State
 
 ## Active Intent
-2026-11-03: TPM unlock for the desktop root LUKS (Peter's task). Peter chose the TPM 1.2 to 2.0 firmware conversion. First flash attempt from FreeDOS failed with "The System TPM Query Failed, Aborting"; nothing flashed, the TPM is still 1.2 fw 5.81 and the machine boots normally. The FreeDOS 1.4 Lite stick now holds `TPM20.EXE` (2.0 tool 1.3.2.8 V1, SHA-256 `29cf9f45...dd33c53`) and `TPM12.EXE` (1.2 update 5.81.2.1 V5, SHA-256 `822d5bcd...317f82`), both verified on the stick, stick unmounted. Reboot by the Greeter pending; no playbook or task is half-applied.
-- Next, at the console (Peter), in this order, stop after the first success:
-  1. BIOS: Secure Boot off, Boot List Legacy, TPM On plus Activate, Clear NOT ticked (a TPM 1.2 Clear leaves the chip disabled and deactivated for the next boot, the main suspect); F12 to the stick, FreeDOS "No, return to DOS", `C:`, `TPM20.EXE`.
-  2. If it fails again: `TPM12.EXE` (update to 5.81.2.1, Dell rates it critical; FreeDOS support of V5 unknown), reboot through BIOS (TPM On plus Activate), then `TPM20.EXE`.
-  3. If still failing: BIOS Load Defaults, then restore SATA Operation AHCI (defaults are RAID On, which hides the NVMe from Linux), Boot List, TPM; retry. Photograph BIOS pages first.
-  4. Otherwise stop (two-failures rule) and propose FIDO2 instead.
-  After any attempt: BIOS back to UEFI, Secure Boot on (leave Expert Key Management alone); the only UEFI entry is `\EFI\systemd\shim.efi` on the NVMe ESP.
-- Then (agent): check `tpm_version_major` = 2 and `systemd-cryptenroll --tpm2-device=list`; if 2.0, show Peter the enrollment plan (header backup, recovery key for Bitwarden, TPM+PIN recommended or TPM-only via `sdbootutil enroll`, password slot kept, keyfiles or tokens for `cr_home` and `cr_backup`, secret-free parts in Ansible, reboot test, knowledge map line) and wait for his go.
-- Open decision (Peter): TPM+PIN vs TPM-only, after a successful conversion.
+2026-11-03: passwordless unlock of the desktop root LUKS (Peter's task). TPM path abandoned after two failed flash attempts: Dell `TPM20.EXE` (1.3.2.8 V1) gives "The System TPM Query Failed" from FreeDOS with and without Clear, `TPM12.EXE` (5.81.2.1 V5) refuses DOS. TPM still 1.2 fw 5.81, nothing changed on the machine, Secure Boot on. Remaining TPM options (Windows PE via Microsoft install stick plus Shift+F10, BIOS Load Defaults with SATA back to AHCI) were offered; Peter asked instead for a USB-stick keyfile and accepts the security trade-off.
+- Proposed plan (waiting for Peter's go and his choice of stick: a dedicated small stick or the FreeDOS stick):
+  1. LUKS header backup of `nvme0n1p3` off that disk.
+  2. Stick: vfat with a fixed label, 4 KiB random keyfile; `cryptsetup luksAddKey` (Peter types the current passphrase); password slot kept.
+  3. `/etc/crypttab` root line: `cr_root UUID=... /cr_root.key:UUID=<stick fs uuid> x-initrd.attach,keyfile-timeout=10s` (fallback to the password prompt).
+  4. `cr_home` and `cr_backup`: own root-only keyfiles in `/etc/cryptsetup-keys.d/` (today they probably reuse the typed root passphrase from the keyring, which a keyfile unlock no longer provides).
+  5. dracut drop-in for usb_storage, uas, vfat and codepages; rebuild initrds through sdbootutil.
+  6. Reboot tests by Peter: with stick (no prompt) and without (prompt after 10 s).
+  7. New secret-free Ansible role for crypttab, dracut drop-in and the home/backup keyfile handling; key creation and enrollment stay manual. Then update the knowledge map line about manual unlock at boot.
+- Found: the old `luks_boot_setup` role is stale for this machine (GRUB, `nvme0n1p5`, a placeholder passphrase in an expect response, a missing `99-root-key.conf`); do not run it; replacing or deleting it is Peter's call.
+- The FreeDOS stick (with `TPM20.EXE`, `TPM12.EXE`) and downloads stay in the project `.scratch/` until Peter decides.
 - Done the same day: teaching and research no longer autostart (only the greeter; applied, changed=0, docs and yadm updated); Kavita Android release feed added to Nextcloud News "App Releases" (feed 408).
 
 ## Task & Story Status
