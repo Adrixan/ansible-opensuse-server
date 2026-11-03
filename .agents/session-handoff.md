@@ -1,7 +1,11 @@
 # Session Handoff State
 
 ## Active Intent
-No story in progress (2026-10-30). This session: Garmin `upload_course` allowlist, Cockpit login fix behind Cloudflare Access (Worker confirmed working), Cloudflare plugin and `cf` CLI, Garmin and Cloudflare in all harnesses, Node 26.12 on schulpc, knowledge map trimmed, inventory credential item closed. Stopped by the Greeter with nothing in progress and no open decision from this session; the schulpc `zypper dup` stays Peter's call.
+2026-11-03: TPM unlock for the desktop root LUKS (Peter's task, relayed by the Greeter). Peter chose the TPM 1.2 to 2.0 firmware conversion. Prepared and verified: the FreeDOS 1.4 Lite USB stick (removable `sdd` at preparation time) holds Dell's `TPM20.EXE` (RF87D 1.3.2.8 V1, SHA-256 matches Dell). The machine is shutting down for a reboot (Greeter); the flash has NOT run yet unless Peter says so.
+- Next, at the console (Peter): BIOS Secure Boot off, Boot List Legacy, TPM on and Clear; F12 to the stick, FreeDOS installer "No, return to DOS", `C:`, `TPM20.EXE`; reboot (TPM upgrade message, no power loss); BIOS back to UEFI and Secure Boot on (do not touch Expert Key Management); if the UEFI entry is gone, add `\EFI\systemd\shim.efi` on the NVMe ESP. Errors such as "TPM Query Failed" or "blocked by fw policy" mean abort; nothing flashed.
+- Then (agent): check `cat /sys/class/tpm/tpm0/tpm_version_major` = 2 and `systemd-cryptenroll --tpm2-device=list`. If 2.0: show Peter the enrollment plan and wait for his go: LUKS header backup off-disk, recovery key for Bitwarden, TPM+PIN (recommended) or TPM-only via `sdbootutil enroll`, password slot kept, keyfiles or tokens for `cr_home` and `cr_backup`, secret-free parts in Ansible, real reboot test, then update the knowledge map line about manual unlock at boot.
+- Open decision (Peter): TPM+PIN vs TPM-only, after the conversion.
+- Side task done the same day: Kavita Android release feed added to Nextcloud News "App Releases" (feed 408) via the News REST API (the MCP has no add-feed tool).
 
 ## Task & Story Status
 - Sprint 15 (US-15.1 `dns_setup`, US-15.2 `dragtokens-ech-proxy`) complete since 2026-10-19; everything after it was unplanned work logged as dated entries below.
