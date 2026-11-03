@@ -5,6 +5,7 @@
 - Next, at the console (Peter): BIOS Secure Boot off, Boot List Legacy, TPM on and Clear; F12 to the stick, FreeDOS installer "No, return to DOS", `C:`, `TPM20.EXE`; reboot (TPM upgrade message, no power loss); BIOS back to UEFI and Secure Boot on (do not touch Expert Key Management); if the UEFI entry is gone, add `\EFI\systemd\shim.efi` on the NVMe ESP. Errors such as "TPM Query Failed" or "blocked by fw policy" mean abort; nothing flashed.
 - Then (agent): check `cat /sys/class/tpm/tpm0/tpm_version_major` = 2 and `systemd-cryptenroll --tpm2-device=list`. If 2.0: show Peter the enrollment plan and wait for his go: LUKS header backup off-disk, recovery key for Bitwarden, TPM+PIN (recommended) or TPM-only via `sdbootutil enroll`, password slot kept, keyfiles or tokens for `cr_home` and `cr_backup`, secret-free parts in Ansible, real reboot test, then update the knowledge map line about manual unlock at boot.
 - Open decision (Peter): TPM+PIN vs TPM-only, after the conversion.
+- Greeter request done the same day: teaching and research lost `autostart` (only the greeter starts at boot); remote_control tasks applied, second run changed=0, units disabled, no `wanted/` entries for them.
 - Side task done the same day: Kavita Android release feed added to Nextcloud News "App Releases" (feed 408) via the News REST API (the MCP has no add-feed tool).
 
 ## Task & Story Status

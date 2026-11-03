@@ -422,18 +422,16 @@ ai_workstation_claude_rc_servers:
     label: "Teaching"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Teaching"
     description: "Teacher: lessons, Typst material, grading"
-    autostart: true
   - name: educator
     label: "Educator"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Educator"
     description: "Educator brand Prof. Aufner: content pipeline"
   # General deep-research jobs; reports land in this vault folder (rules in its AGENTS.md).
-  # Starts at boot like teaching (Peter, 2026-10-29); the server reattaches its previous session
+  # On request only since 2026-11-03 (Peter): started from the Greeter like teaching
   - name: research
     label: "Deep Research"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Research"
     description: "Deep-research reports"
-    autostart: true
   # Coding across all projects; sessions cd into ~/code/<project> and follow its AGENTS.md
   - name: code
     label: "Code"
