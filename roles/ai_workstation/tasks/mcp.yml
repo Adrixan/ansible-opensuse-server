@@ -77,11 +77,13 @@
   vars:
     ai_workstation_uv_installed: "{{ dict(ai_workstation_uv_tool_list.stdout | regex_findall('(?m)^(\\S+) v(\\S+)')) }}"
     ai_workstation_uv_overrides_changed: "{{ ai_workstation_uv_overrides.results | selectattr('changed') | map(attribute='item.name') | list }}"
+    # uv lists tools under their normalized name (PEP 503: oracle.oci-cloud-mcp-server -> oracle-oci-cloud-mcp-server)
+    ai_workstation_uv_name: "{{ item.name | lower | regex_replace('[-_.]+', '-') }}"
     ai_workstation_uv_git_outdated: >-
       {{ item.github_release is defined
-         and (ai_workstation_uv_git_tags[item.name] | regex_replace('^v', '')) != ai_workstation_uv_installed.get(item.name, '') }}
+         and (ai_workstation_uv_git_tags[item.name] | regex_replace('^v', '')) != ai_workstation_uv_installed.get(ai_workstation_uv_name, '') }}
   when: >-
-    item.name not in ai_workstation_uv_installed
+    ai_workstation_uv_name not in ai_workstation_uv_installed
     or item.name in ai_workstation_uv_overrides_changed
     or ai_workstation_uv_git_outdated | bool
 
@@ -93,14 +95,6 @@
   register: ai_workstation_uv_upgrade
   changed_when: "'Updated' in (ai_workstation_uv_upgrade.stdout + ai_workstation_uv_upgrade.stderr)"
   when: not ansible_check_mode
-
-- name: Ensure the openroute MCP route directory exists
-  ansible.builtin.file:
-    path: "{{ ai_workstation_openroute_routes_dir }}"
-    state: directory
-    owner: "{{ ai_workstation_user }}"
-    group: "{{ ai_workstation_user }}"
-    mode: '0755'
 
 - name: Ensure the private Garmin activity file directory exists
   ansible.builtin.file:
@@ -191,7 +185,6 @@
     NEXTCLOUD_PASSWORD: "{{ ai_workstation_nextcloud_password }}"
     DRAGTOKENS_API_KEY: "{{ ai_workstation_dragtokens_api_key }}"
     NASA_API_KEY: "{{ ai_workstation_nasa_api_key }}"
-    OPENROUTESERVICE_API_KEY: "{{ ai_workstation_openroute_api_key }}"
   register: ai_workstation_yadm_alt
   changed_when: "'CHANGED' in ai_workstation_yadm_alt.stdout"
   no_log: true
@@ -327,6 +320,9 @@
 
 - name: Remove the retired SearXNG
   ansible.builtin.import_tasks: searxng.yml
+
+- name: Remove the retired workstation travel stack
+  ansible.builtin.import_tasks: travel_retired.yml
 
 - name: Install the Thunderbird MCP bridge
   ansible.builtin.import_tasks: thunderbird_mcp.yml

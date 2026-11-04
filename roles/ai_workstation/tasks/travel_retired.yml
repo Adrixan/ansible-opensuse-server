@@ -1,0 +1,79 @@
+---
+# Trip planning moved off the workstations (2026-11-04, Peter). Removes what this role installed for it:
+# the travel MCP servers (uv tools and Node prefixes), the workstation-travel Claude plugin and the
+# predefined rc role "travel". trip-scout and trip-planner-client are left alone (installed by hand for
+# development). GPX files in ~/Documents/Routes are user data and stay.
+
+- name: Uninstall the retired uv MCP tools
+  ansible.builtin.command:
+    argv: [uv, tool, uninstall, "{{ item }}"]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  loop: "{{ ai_workstation_retired_uv_tools }}"
+  when: item in (ai_workstation_uv_tool_list.stdout | regex_findall('(?m)^(\\S+) v'))
+
+- name: Remove the override files of the retired uv MCP tools
+  ansible.builtin.file:
+    path: "{{ ai_workstation_mcp_uv_overrides_dir }}/{{ item }}.txt"
+    state: absent
+  loop: "{{ ai_workstation_retired_uv_tools }}"
+
+- name: Remove the retired Node MCP servers (prefix and wrapper)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ ai_workstation_retired_node_servers | map(attribute='name') | map('regex_replace', '^', ai_workstation_mcp_node_dir + '/') | list
+            + ai_workstation_retired_node_servers | map(attribute='bin') | map('regex_replace', '^', '/usr/local/bin/') | list }}"
+
+- name: List the installed Claude Code plugins for the retirement check
+  ansible.builtin.command:
+    argv: ["{{ ai_workstation_claude_bin }}", plugin, list, --json]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  register: ai_workstation_claude_plugins_now
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Uninstall the retired workstation Claude plugins
+  ansible.builtin.command:
+    argv: ["{{ ai_workstation_claude_bin }}", plugin, uninstall, "{{ item }}@workstation", --scope, user]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  loop: "{{ ai_workstation_retired_claude_plugins }}"
+  when:
+    - ai_workstation_claude_plugins_now.rc == 0
+    # Project-scope entries come from folders' own settings (e.g. synced trip folders) and stay theirs
+    - (item + '@workstation') in (ai_workstation_claude_plugins_now.stdout | from_json | selectattr('scope', 'equalto', 'user') | map(attribute='id') | list)
+
+- name: Check whether retired Claude remote-control roles are running
+  ansible.builtin.command:
+    cmd: "systemctl --user is-active claude-remote-control@{{ item }}.service"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ target_user_uid | default('1000') }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ target_user_uid | default('1000') }}/bus"
+  loop: "{{ ai_workstation_claude_rc_retired_servers }}"
+  register: ai_workstation_rc_retired_active
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+# Never stops a running role (it may hold Peter's session); that one is reported for `rc down`
+- name: Remove the settings of retired Claude remote-control roles that are not running
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/claude-rc/{{ item.item }}.conf"
+    state: absent
+  loop: "{{ ai_workstation_rc_retired_active.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stdout != 'active'
+
+- name: Report retired Claude remote-control roles that are still running
+  ansible.builtin.debug:
+    msg: "Retired role still running, stop it with `rc down {{ item.item }}` and rerun: {{ item.item }}"
+  loop: "{{ ai_workstation_rc_retired_active.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stdout == 'active'

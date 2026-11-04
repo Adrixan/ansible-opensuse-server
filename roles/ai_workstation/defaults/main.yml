@@ -54,11 +54,8 @@ ai_workstation_mcp_uv_tools:
   # 2.x renamed FastMCP and breaks it)
   - { name: semgrep, overrides: ["mcp<2"] }
   - { name: wikipedia-mcp }
-  # openroute-mcp leaves mcp unpinned and breaks on mcp 2.x (FastMCP renamed)
-  - { name: openroute-mcp, overrides: ["mcp<2"] }
   # Key-less web search; installed without the [browser] extra, so no curl TLS impersonation
   - { name: duckduckgo-mcp-server }
-  - { name: oebb-mcp-server }
   # Oracle's recommended OCI server: every OCI API through the SDK, limited only by the profile's IAM.
   # Needs Python 3.13. It locks fastmcp and oci caps cryptography at versions with known advisories, so
   # the overrides take the fixed releases (fastmcp stays on 3.x); request signing tested with them.
@@ -177,9 +174,6 @@ ai_workstation_mcp_node_servers:
   - name: nasa
     package: "@programcomputer/nasa-mcp-server"
     bin: nasa-mcp-server
-  - name: open-meteo
-    package: open-meteo-mcp-server
-    bin: open-meteo-mcp-server
   - name: ris-austria
     package: "@cyanheads/ris-austria-mcp-server"
     bin: ris-austria-mcp-server
@@ -200,11 +194,8 @@ ai_workstation_mcp_chromium: /usr/local/libexec/mcp-chromium-sandboxed
 ai_workstation_docs_mcp: true
 ai_workstation_docs_mcp_port: 6280
 ai_workstation_docs_mcp_store: "{{ ai_workstation_user_home }}/.local/share/docs-mcp-server"
-# GPX routes from the openroute MCP server (Documents is a Syncthing folder, so they reach the phone)
-ai_workstation_openroute_routes_dir: "{{ ai_workstation_user_home }}/Documents/Routes"
-# Free API keys (api.nasa.gov, openrouteservice.org); NASA falls back to the public DEMO_KEY
+# Free API key (api.nasa.gov); NASA falls back to the public DEMO_KEY
 ai_workstation_nasa_api_key: "{{ lookup('env', 'NASA_API_KEY') | default('', true) }}"
-ai_workstation_openroute_api_key: "{{ lookup('env', 'OPENROUTESERVICE_API_KEY') | default('', true) }}"
 # Phở Research Tools (reference verification, retractions, PRISMA 2020) served on loopback only.
 # Upstream ships no package or releases; the role follows the default branch, updates the dependency
 # tree to the latest versions its ranges allow and audits it.
@@ -313,11 +304,6 @@ ai_workstation_mcp_shared_servers:
   - name: nasa
     command: /usr/local/bin/nasa-mcp-server
     default_env: { NASA_API_KEY: DEMO_KEY }
-  - { name: open-meteo, command: /usr/local/bin/open-meteo-mcp-server }
-  - name: openroute
-    command: "{{ ai_workstation_user_home }}/.local/bin/openroute-mcp"
-    args: ["--data-folder", "{{ ai_workstation_openroute_routes_dir }}"]
-    requires_env: [OPENROUTESERVICE_API_KEY]
   - name: wikipedia
     command: "{{ ai_workstation_user_home }}/.local/bin/wikipedia-mcp"
     args: ["--language", "en"]
@@ -327,16 +313,7 @@ ai_workstation_mcp_shared_servers:
   - { name: ris-austria, command: /usr/local/bin/ris-austria-mcp-server }
   - { name: eur-lex, command: /usr/local/bin/eur-lex-mcp-server }
   - { name: youtube-transcript, command: "{{ ai_workstation_user_home }}/.local/bin/mcp-youtube-transcript" }
-  - { name: oebb, command: "{{ ai_workstation_user_home }}/.local/bin/oebb-mcp-server" }
   - { name: thunderbird, command: /usr/local/bin/thunderbird-mcp }
-  # trip-scout and trip-planner are installed by hand (uv tool install from ~/code); skipped where absent
-  - name: trip-scout
-    command: "{{ ai_workstation_user_home }}/.local/bin/trip-scout"
-    args: [mcp]
-  - name: trip-planner
-    command: "{{ ai_workstation_user_home }}/.local/bin/trip-planner"
-    args: [mcp]
-    requires_env: [TRIP_PLANNER_TOKEN]
   # Skipped until `garmin-mcp-auth` has stored the tokens (interactive: password and MFA code)
   - name: garmin
     command: "{{ ai_workstation_user_home }}/.local/bin/garmin-mcp"
@@ -379,7 +356,7 @@ ai_workstation_claude_bin: "{{ ai_workstation_user_home }}/.local/bin/claude"
 ai_workstation_claude_marketplace_dir: "{{ ai_workstation_user_home }}/.config/ai/claude-plugins"
 # Plugins of that marketplace: workstation-mcp holds the core servers, the others are switched off
 # per directory in .claude/settings.json (enabledPlugins) where they are not needed
-ai_workstation_claude_plugins_list: [workstation-mcp, workstation-dev, workstation-research, workstation-travel]
+ai_workstation_claude_plugins_list: [workstation-mcp, workstation-dev, workstation-research]
 # Upstream plugins: OpenCode and Antigravity read the skills from the marketplace clone (yadm templates)
 ai_workstation_claude_upstream_plugins:
   - { marketplace: cloudflare, source: cloudflare/skills, plugin: cloudflare }
@@ -438,12 +415,18 @@ ai_workstation_claude_rc_servers:
     label: "Code"
     dir: "{{ ai_workstation_user_home }}/code"
     description: "Coding across ~/code projects"
-  - name: travel
-    label: "Travel Planner"
-    # Not offered by the Greeter: trips run as their own roles (`rc trip <destination>`)
-    dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Travel"
-    description: "Trip plans with trip-scout and trip-planner"
 ai_workstation_claude_rc_permission_mode: auto
+
+# Trip planning left the workstations on 2026-11-04 (Peter): trip roles, their MCP servers and the Travel
+# Greeter run on a separate cloud box (private vps-maintenance repo). tasks/travel_retired.yml removes what
+# this role used to install for it. trip-scout and trip-planner-client stay installed by hand in ~/code
+# for development (code roles), not as services.
+ai_workstation_retired_uv_tools: [oebb-mcp-server, openroute-mcp]
+ai_workstation_retired_node_servers:
+  - { name: open-meteo, bin: open-meteo-mcp-server }
+ai_workstation_retired_claude_plugins: [workstation-travel]
+# Role confs removed from ~/.config/claude-rc while their server is not running (a running one is reported)
+ai_workstation_claude_rc_retired_servers: [travel]
 ai_workstation_opencode_server_port: 4096
 ai_workstation_opencode_server_host: "127.0.0.1"
 # Persisted with `opencode service set` (~/.config/opencode/service.json, which also holds the generated server password)
