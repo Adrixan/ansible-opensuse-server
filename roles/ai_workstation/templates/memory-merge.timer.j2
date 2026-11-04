@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# Fallback to the path watch, and the clock for a standby's waiting time
+[Unit]
+Description=Periodic memory graph conflict merge
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Unit=memory-merge.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# Any change in the folder (Syncthing creates conflict copies there) starts a merge run
+[Unit]
+Description=Watch the memory graph folder for Syncthing conflict copies
+
+[Path]
+PathChanged={{ ai_workstation_mcp_memory_dir }}
+Unit=memory-merge.service
+
+[Install]
+WantedBy=default.target

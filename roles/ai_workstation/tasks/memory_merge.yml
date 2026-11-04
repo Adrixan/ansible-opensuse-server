@@ -1,0 +1,38 @@
+---
+# The memory graph lives in a Syncthing folder and every machine writes it, also while cut off from the
+# others. Syncthing turns concurrent writes into conflict copies; memory-merge unites them with the live
+# file (files/memory-merge.py). The primary merges at once, a standby only copies left unmerged for
+# ai_workstation_memory_merge_min_age_min minutes, so two machines do not merge the same copy.
+
+- name: Install the memory graph conflict merger
+  ansible.builtin.copy:
+    src: memory-merge.py
+    dest: /usr/local/libexec/memory-merge
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy the memory merge user units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: [memory-merge.service, memory-merge.path, memory-merge.timer]
+  register: ai_workstation_memory_merge_units
+
+- name: Enable the memory merge path watch and timer
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    scope: user
+    enabled: true
+    state: "{{ 'restarted' if ai_workstation_memory_merge_units.changed else 'started' }}"
+    daemon_reload: "{{ ai_workstation_memory_merge_units.changed }}"
+  loop: [memory-merge.path, memory-merge.timer]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when: not ansible_check_mode

@@ -362,6 +362,10 @@ ai_workstation_claude_upstream_plugins:
   - { marketplace: cloudflare, source: cloudflare/skills, plugin: cloudflare }
 # Knowledge graph of the memory MCP server, inside the Syncthing "sync" folder
 ai_workstation_mcp_memory_dir: "{{ ai_workstation_user_home }}/sync/ai"
+# Conflict copies of the memory graph are merged back on every machine (tasks/memory_merge.yml). The primary
+# merges at once; a standby (its local hosts file sets 15) only takes copies the primary left for that long.
+ai_workstation_memory_merge: true
+ai_workstation_memory_merge_min_age_min: 0
 # User-scope servers previously written to ~/.claude.json, now provided by the workstation-mcp plugin
 ai_workstation_legacy_claude_mcp_servers: [github, puppeteer, sqlite, memory, fetch, git, arxiv, zotero]
 

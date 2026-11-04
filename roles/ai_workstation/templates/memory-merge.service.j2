@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# Unites Syncthing conflict copies of the MCP memory graph with the live file (ai_workstation memory_merge.yml)
+[Unit]
+Description=Merge Syncthing conflict copies of the MCP memory graph
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/local/libexec/memory-merge --dir {{ ai_workstation_mcp_memory_dir }} --file mcp-memory.jsonl --min-age-min {{ ai_workstation_memory_merge_min_age_min }}
+Nice=10
