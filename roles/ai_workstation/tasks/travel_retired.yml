@@ -43,7 +43,8 @@
   loop: "{{ ai_workstation_retired_claude_plugins }}"
   when:
     - ai_workstation_claude_plugins_now.rc == 0
-    - (item + '@workstation') in (ai_workstation_claude_plugins_now.stdout | from_json | map(attribute='id') | list)
+    # Project-scope entries come from folders' own settings (e.g. synced trip folders) and stay theirs
+    - (item + '@workstation') in (ai_workstation_claude_plugins_now.stdout | from_json | selectattr('scope', 'equalto', 'user') | map(attribute='id') | list)
 
 - name: Check whether retired Claude remote-control roles are running
   ansible.builtin.command:
