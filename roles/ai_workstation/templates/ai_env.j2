@@ -23,6 +23,10 @@ export DRAGTOKENS_API_KEY="{{ ai_workstation_dragtokens_api_key }}"
 export NASA_API_KEY="{{ ai_workstation_nasa_api_key }}"
 {% endif %}
 
+# Read-only git commands (status, diff) must not rewrite .git/index: repositories inside Syncthing folders
+# (the Ph.D. vault) would otherwise get index conflict copies from a mere status on two machines
+export GIT_OPTIONAL_LOCKS=0
+
 # Secrets owned by yadm (encrypted archive), never rendered by this role, e.g. TRIP_PLANNER_TOKEN
 [ -r "$HOME/.config/ai/env.local" ] && . "$HOME/.config/ai/env.local"
 
