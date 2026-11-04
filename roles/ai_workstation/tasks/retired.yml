@@ -1,8 +1,9 @@
 ---
-# Trip planning moved off the workstations (2026-11-04, Peter). Removes what this role installed for it:
-# the travel MCP servers (uv tools and Node prefixes), the workstation-travel Claude plugin and the
-# predefined rc role "travel". trip-scout and trip-planner-client are left alone (installed by hand for
-# development). GPX files in ~/Documents/Routes are user data and stay.
+# Trip planning and the educator role moved off the workstations (2026-11-04, Peter). Removes what this role
+# installed for them: the travel MCP servers (uv tools and Node prefixes), the workstation-travel Claude plugin
+# and the predefined rc roles "travel" and "educator". trip-scout and trip-planner-client are left alone
+# (installed by hand for development); the edupub CLI stays (role edu_publisher, timer off). GPX files in
+# ~/Documents/Routes are user data and stay.
 
 - name: Uninstall the retired uv MCP tools
   ansible.builtin.command:

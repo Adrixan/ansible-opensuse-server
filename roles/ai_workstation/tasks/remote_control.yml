@@ -192,7 +192,7 @@
       RC_DIR="{{ item.dir }}"
       RC_NAME="{{ item.label }}"
       RC_ARGS="{{ item.args | default('') }}"
-      RC_AUTOSTART="{{ 'yes' if item.autostart | default(false) else 'no' }}"
+      RC_AUTOSTART="{{ 'yes' if (item.autostart | default(false) and ai_workstation_claude_rc_autostart | bool) else 'no' }}"
       RC_DESCRIPTION="{{ item.description | default('') }}"
     owner: "{{ ai_workstation_user }}"
     group: "{{ ai_workstation_user }}"
@@ -244,6 +244,7 @@
     label: "{{ item.name }}"
   when:
     - ai_workstation_claude_remote_control | default(true) | bool
+    - ai_workstation_claude_rc_autostart | bool
     - item.autostart | default(false)
     - item.name not in (claude_rc_ready | default([]))
 
@@ -277,6 +278,7 @@
     label: "{{ item.item.name }}"
   when:
     - ai_workstation_claude_remote_control | default(true) | bool
+    - ai_workstation_claude_rc_autostart | bool
     - item.item.autostart | default(false)
     - item.item.name in (claude_rc_ready | default([]))
     - item.rc != 0
@@ -295,7 +297,7 @@
     label: "{{ item.item.name }}"
   when:
     - ai_workstation_claude_remote_control | default(true) | bool
-    - not (item.item.autostart | default(false))
+    - not (item.item.autostart | default(false) and ai_workstation_claude_rc_autostart | bool)
     - item.rc == 0
 
 - name: Check which Claude remote-control servers are running
