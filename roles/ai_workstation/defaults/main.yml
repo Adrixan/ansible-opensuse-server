@@ -399,11 +399,6 @@ ai_workstation_claude_rc_servers:
     label: "Teaching"
     dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/Teaching"
     description: "Teacher: lessons, Typst material, grading"
-  - name: educator
-    label: "Educator"
-    # Since 2026-11-03 the Prof. Aufner project in the claude.ai archive (moved from Obsidian/Adrixan/Educator)
-    dir: "{{ ai_workstation_user_home }}/Obsidian/Adrixan/AI/Claude.ai/Projects/Prof. Aufner"
-    description: "Educator brand Prof. Aufner: content pipeline"
   # General deep-research jobs; reports land in this vault folder (rules in its AGENTS.md).
   # On request only since 2026-11-03 (Peter): started from the Greeter like teaching
   - name: research
@@ -416,17 +411,20 @@ ai_workstation_claude_rc_servers:
     dir: "{{ ai_workstation_user_home }}/code"
     description: "Coding across ~/code projects"
 ai_workstation_claude_rc_permission_mode: auto
+# false on a standby machine (set in its local hosts file): no role starts at boot there, so the Greeter
+# runs on one machine only; roles start on request or through a handover
+ai_workstation_claude_rc_autostart: true
 
-# Trip planning left the workstations on 2026-11-04 (Peter): trip roles, their MCP servers and the Travel
-# Greeter run on a separate cloud box (private vps-maintenance repo). tasks/travel_retired.yml removes what
-# this role used to install for it. trip-scout and trip-planner-client stay installed by hand in ~/code
+# Trip planning (trip roles, their MCP servers, the Travel Greeter) and the educator role (Prof. Aufner, with
+# publishing) left the workstations on 2026-11-04 (Peter) for separate cloud VMs (private vps-maintenance repo).
+# tasks/retired.yml removes what this role used to install for them. trip-scout and trip-planner-client stay installed by hand in ~/code
 # for development (code roles), not as services.
 ai_workstation_retired_uv_tools: [oebb-mcp-server, openroute-mcp]
 ai_workstation_retired_node_servers:
   - { name: open-meteo, bin: open-meteo-mcp-server }
 ai_workstation_retired_claude_plugins: [workstation-travel]
 # Role confs removed from ~/.config/claude-rc while their server is not running (a running one is reported)
-ai_workstation_claude_rc_retired_servers: [travel]
+ai_workstation_claude_rc_retired_servers: [travel, educator]
 ai_workstation_opencode_server_port: 4096
 ai_workstation_opencode_server_host: "127.0.0.1"
 # Persisted with `opencode service set` (~/.config/opencode/service.json, which also holds the generated server password)

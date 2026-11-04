@@ -321,8 +321,8 @@
 - name: Remove the retired SearXNG
   ansible.builtin.import_tasks: searxng.yml
 
-- name: Remove the retired workstation travel stack
-  ansible.builtin.import_tasks: travel_retired.yml
+- name: Remove what retired workstation roles installed (travel stack, educator role)
+  ansible.builtin.import_tasks: retired.yml
 
 - name: Install the Thunderbird MCP bridge
   ansible.builtin.import_tasks: thunderbird_mcp.yml
