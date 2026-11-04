@@ -327,6 +327,10 @@
 - name: Install the Thunderbird MCP bridge
   ansible.builtin.import_tasks: thunderbird_mcp.yml
 
+- name: Keep ~/code in step with the other workstations
+  ansible.builtin.import_tasks: code_sync.yml
+  when: ai_workstation_code_sync
+
 - name: Merge Syncthing conflict copies of the memory graph
   ansible.builtin.import_tasks: memory_merge.yml
   when: ai_workstation_memory_merge

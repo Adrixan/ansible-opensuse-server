@@ -327,3 +327,22 @@
   when:
     - ai_workstation_claude_remote_control | default(true) | bool
     - _stale | length > 0
+
+# User-scope MCP servers (claude mcp --scope user) are declared in ai_workstation_claude_user_mcp_servers,
+# so every workstation gets the same ones; a server whose requires_path is missing here is skipped
+- name: Declare the Claude Code user-scope MCP servers
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ role_path }}/files/claude_user_mcp.py"
+      - "{{ ai_workstation_claude_user_mcp_servers | to_json }}"
+      - "{{ ai_workstation_claude_bin }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    HOME: "{{ ai_workstation_user_home }}"
+  register: ai_workstation_claude_user_mcp
+  changed_when: "'CHANGED' in ai_workstation_claude_user_mcp.stdout"
+  when:
+    - ai_workstation_claude_remote_control | default(true) | bool
+    - not ansible_check_mode

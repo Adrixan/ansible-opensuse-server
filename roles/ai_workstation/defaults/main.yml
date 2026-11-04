@@ -366,6 +366,32 @@ ai_workstation_mcp_memory_dir: "{{ ai_workstation_user_home }}/sync/ai"
 # merges at once; a standby (its local hosts file sets 15) only takes copies the primary left for that long.
 ai_workstation_memory_merge: true
 ai_workstation_memory_merge_min_age_min: 0
+# ~/code alike on every workstation through the git remotes (tasks/code_sync.yml); repositories named here
+# stay off this machine (set per machine in its hosts file)
+ai_workstation_code_sync: true
+ai_workstation_code_sync_exclude: []
+# Claude Code user-scope MCP servers, the same on every workstation (claude_user_mcp.py adds or fixes these
+# and never touches others). requires_path: skipped where the server cannot run.
+ai_workstation_claude_user_mcp_servers:
+  - name: file-accountant
+    config: { type: http, url: "http://127.0.0.1:8790/servers/file-accountant/mcp" }
+    requires_path: ["{{ ai_workstation_user_home }}/.config/file-accountant/config.json"]
+  - name: garmin
+    config: { type: http, url: "http://127.0.0.1:8790/servers/garmin/mcp" }
+    requires_path: ["{{ ai_workstation_user_home }}/.garminconnect/garmin_tokens.json"]
+  - name: ptsd
+    config: { type: http, url: "http://127.0.0.1:8790/servers/ptsd/mcp" }
+    requires_path: ["{{ ai_workstation_user_home }}/code/PTSD/mcp/dist/server.mjs"]
+  - name: petersgasse-wordpress
+    config: { type: stdio, command: "{{ ai_workstation_user_home }}/code/website-wordpress/tools/mcp-wp.sh", args: [], env: {} }
+    requires_path: ["{{ ai_workstation_user_home }}/code/website-wordpress/tools/mcp-wp.sh"]
+  - name: newspaper-testground
+    config:
+      type: stdio
+      command: ssh
+      args: ["-T", "-o", "BatchMode=yes", "ubuntu@testground.code-alongsi.de",
+             "cd ~/nexcloud-offline-newspaper && exec ~/.local/bin/uv run --quiet offline-newspaper-mcp --vault-path /home/ubuntu/news_vault --allow-write"]
+      env: {}
 # User-scope servers previously written to ~/.claude.json, now provided by the workstation-mcp plugin
 ai_workstation_legacy_claude_mcp_servers: [github, puppeteer, sqlite, memory, fetch, git, arxiv, zotero]
 

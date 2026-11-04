@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# Clone, fetch and fast-forward ~/code from the git remotes; report unpushed work (ai_workstation code_sync.yml)
+[Unit]
+Description=Keep ~/code in step with the other workstations through the git remotes
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/local/bin/code-sync
+Nice=10
+TimeoutStartSec=30min
