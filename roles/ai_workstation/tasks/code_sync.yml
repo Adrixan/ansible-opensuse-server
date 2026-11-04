@@ -1,0 +1,51 @@
+---
+# Same ~/code on every workstation through the git remotes only (files/code-sync.py): a shared repo list
+# in the Syncthing folder, hourly clone, fetch and fast-forward, report of unpushed or uncommitted work.
+
+- name: Install code-sync
+  ansible.builtin.copy:
+    src: code-sync.py
+    dest: /usr/local/bin/code-sync
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure the code-sync config directory exists
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/code-sync"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+
+- name: Write the repositories this machine leaves out
+  ansible.builtin.copy:
+    dest: "{{ ai_workstation_user_home }}/.config/code-sync/exclude"
+    content: "{{ (ai_workstation_code_sync_exclude | join('\n') + '\n') if ai_workstation_code_sync_exclude else '' }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+
+- name: Deploy the code-sync user units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: [code-sync.service, code-sync.timer]
+  register: ai_workstation_code_sync_units
+
+- name: Enable the code-sync timer
+  ansible.builtin.systemd_service:
+    name: code-sync.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: "{{ ai_workstation_code_sync_units.changed }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when: not ansible_check_mode
