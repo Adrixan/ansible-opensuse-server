@@ -49,12 +49,12 @@
     - edu-publisher.service
     - edu-publisher.timer
 
-- name: Enable the edu-publisher timer
+- name: Enable or disable the edu-publisher timer (off by default, the educator VM publishes)
   ansible.builtin.systemd_service:
     name: edu-publisher.timer
     scope: user
-    enabled: true
-    state: started
+    enabled: "{{ edu_publisher_timer_enabled | bool }}"
+    state: "{{ 'started' if edu_publisher_timer_enabled | bool else 'stopped' }}"
     daemon_reload: true
   # Units deployed in the same run do not exist yet during check mode
   ignore_errors: "{{ ansible_check_mode }}"

@@ -8,5 +8,8 @@ edu_publisher_repo_dir: "{{ edu_publisher_user_home }}/code/edu-publisher"
 edu_publisher_repo_url: "git@github.com:Adrixan/edu-publisher.git"
 edu_publisher_bin: "{{ edu_publisher_user_home }}/.local/bin/edupub"
 edu_publisher_on_calendar: "*:0/5"
+# Publishing runs on the educator VM edu-micro since 2026-11-04 (vps-maintenance role educator_host). Workstations keep
+# the edupub CLI (status, auth, deploy) but must not publish too: two publishers could push older versions over newer.
+edu_publisher_timer_enabled: false
 # Pushing large videos to the hosting account can take long on slow uplinks
 edu_publisher_timeout: "2h"
