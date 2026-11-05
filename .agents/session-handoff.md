@@ -1,6 +1,12 @@
 # Session Handoff State
 
 ## Active Intent
+2026-11-05 (session stopped by the Greeter): two-workstation setup done. schulpc primary, xps13 standby with parity (Ansible full runs, repos via code-sync, shared rc confs, memory-merge, transcripts via Syncthing `claude-projects`, m11x receive-only backup complete). Overview of which state travels how: knowledge-map details, section "Two workstations".
+- Open for Peter: accept "Claude transcripts" on the phone (receive-only, app-private storage, bridge-pointer ignores); the phone has not connected since its `.stglobalignore` change, so check its Obsidian folder once it is online; `yadm decrypt` on xps13 and m11x when convenient (passphrase); PTSD repos and `code-ptsd` on xps13 still undecided (do not touch PTSD without asking); fix of vps-maintenance `educator_host` yadm pull unit (skip-worktree host files) awaits his go; lease for automatic takeover (mirror report section 4) not started.
+- Rule until a lease exists: run a role on one machine at a time (`rc ls` on the other first).
+- Older intent below (USB keyfile unlock of the desktop root LUKS) is still pending Peter's go.
+
+### Earlier intent (2026-11-03)
 2026-11-03: passwordless unlock of the desktop root LUKS (Peter's task). TPM path abandoned after two failed flash attempts: Dell `TPM20.EXE` (1.3.2.8 V1) gives "The System TPM Query Failed" from FreeDOS with and without Clear, `TPM12.EXE` (5.81.2.1 V5) refuses DOS. TPM still 1.2 fw 5.81, nothing changed on the machine, Secure Boot on. Remaining TPM options (Windows PE via Microsoft install stick plus Shift+F10, BIOS Load Defaults with SATA back to AHCI) were offered; Peter asked instead for a USB-stick keyfile and accepts the security trade-off.
 - Proposed plan (waiting for Peter's go and his choice of stick: a dedicated small stick or the FreeDOS stick):
   1. LUKS header backup of `nvme0n1p3` off that disk.
