@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# grub-usbkey-core: GRUB i386-pc core image that unlocks the LUKS /boot with a keyfile
+# on a USB stick and falls back to the passphrase prompt when the stick or key is missing.
+#
+# openSUSE rewrites the stock core on every grub2 update (update-bootloader --reinit),
+# which silently brings back the passphrase prompt. This script rebuilds the custom core
+# from the same arguments grub2-install uses (read from a dry run), plus a few modules and
+# a keyfile line in the early config, and embeds it with grub2-bios-setup.
+#
+# Safety: nothing is written unless the stock core reproduces byte for byte from the parsed
+# arguments, the prefix and load.cfg match the configured LUKS UUID, and the custom core
+# fits the BIOS boot partition. Any failure leaves the stock core (passphrase prompt).
+#
+# Usage: grub-usbkey-core [check|install]   (default: install)
+set -euo pipefail
+umask 077
+
+readonly CONF=/etc/default/grub-usbkey
+readonly STATE=/var/lib/grub-usbkey
+readonly GRUBDIR=/boot/grub2/i386-pc
+readonly MODDIR=/usr/share/grub2/i386-pc
+readonly BIOS_BOOT_TYPE=21686148-6449-6e6f-744e-656564454649
+readonly EXTRA_MODULES=(fat part_msdos search search_fs_uuid)
+readonly CMP_OFFSET=1025   # bytes 501-531 are patched by grub2-bios-setup on install
+
+log() { echo "grub-usbkey-core: $*"; }
+die() { echo "grub-usbkey-core: ERROR: $*" >&2; exit 1; }
+
+mode=${1:-install}
+[[ $mode == check || $mode == install ]] || die "usage: $0 [check|install]"
+[[ $EUID -eq 0 ]] || die "must run as root"
+[[ ! -d /sys/firmware/efi ]] || die "EFI system: this tool is for legacy BIOS GRUB only"
+
+[[ -r $CONF ]] || die "missing $CONF"
+# shellcheck source=/dev/null
+. "$CONF"
+: "${LUKS_UUID:?LUKS_UUID not set in $CONF}" "${KEY_FS_UUID:?KEY_FS_UUID not set in $CONF}" "${KEY_PATH:?KEY_PATH not set in $CONF}"
+[[ $LUKS_UUID =~ ^[0-9a-fA-F-]{36}$ ]] || die "LUKS_UUID malformed"
+[[ $KEY_FS_UUID =~ ^[0-9A-Za-z-]{4,36}$ ]] || die "KEY_FS_UUID malformed"
+[[ $KEY_PATH =~ ^/[A-Za-z0-9._/-]+$ ]] || die "KEY_PATH must be an absolute path of [A-Za-z0-9._/-]"
+
+# Let a running bootloader update finish first (it rewrites the stock core and boot sector).
+for _ in $(seq 120); do
+  pgrep -x grub2-install >/dev/null || pgrep -f '/update-bootloader' >/dev/null || break
+  sleep 5
+done
+
+dev=$(awk '/^\/dev\//{print; exit}' /etc/default/grub_installdevice)
+[[ -b $dev ]] || die "install device '$dev' from /etc/default/grub_installdevice is not a block device"
+biosboot=$(lsblk -nrpo PATH,PARTTYPE "$dev" | awk -v t="$BIOS_BOOT_TYPE" 'tolower($2)==t{print $1; exit}')
+[[ -n $biosboot ]] || die "no BIOS boot partition on $dev"
+biosboot_size=$(blockdev --getsize64 "$biosboot")
+
+install -d -m 700 "$STATE"
+work=$(mktemp -d "$STATE/run.XXXXXX")
+trap 'rm -rf "$work"' EXIT
+
+# 1. Dry run of grub2-install into a scratch boot directory; it prints the mkimage call.
+out=$(grub2-install --target=i386-pc --boot-directory="$work/boot" --no-bootsector --no-nvram -v "$dev" 2>&1) \
+  || die "dry grub2-install failed: $(tail -n 3 <<<"$out")"
+call=$(grep -m1 -o "info: grub-mkimage .*" <<<"$out") || die "no grub-mkimage call in grub2-install output"
+mapfile -t tok < <(xargs -n1 printf '%s\n' <<<"${call#info: grub-mkimage }")
+
+prefix='' config='' compression='' modules=()
+for ((i = 0; i < ${#tok[@]}; i++)); do
+  case ${tok[i]} in
+    --prefix) prefix=${tok[++i]} ;;
+    --config) config=${tok[++i]} ;;
+    --compression) compression=${tok[++i]} ;;
+    --format) [[ ${tok[++i]} == i386-pc ]] || die "unexpected format ${tok[i]}" ;;
+    --directory) [[ ${tok[++i]} == "$MODDIR" ]] || die "unexpected module directory ${tok[i]}" ;;
+    --output|--dtb|--sbat|--appended-signature-size) ((++i)) ;;
+    --*) die "unknown grub-mkimage option ${tok[i]}" ;;
+    *) modules+=("${tok[i]}") ;;
+  esac
+done
+cryptouuid="cryptouuid/${LUKS_UUID//-/}"
+expected_prefix="(${cryptouuid,,})$work/boot/grub2"
+[[ ${prefix,,} == "${expected_prefix,,}" ]] || die "prefix '$prefix' does not point at LUKS $LUKS_UUID"
+prefix="(${cryptouuid,,})/boot/grub2"
+[[ $(<"$config") == "cryptomount -u $LUKS_UUID" ]] || die "stock load.cfg is not a single cryptomount of $LUKS_UUID"
+((${#modules[@]} > 0)) || die "no modules parsed"
+
+mkimage() { grub2-mkimage --directory "$MODDIR" --prefix "$prefix" --format i386-pc --compression "${compression:-auto}" "$@"; }
+
+# 2. The parsed arguments must reproduce the installed stock core exactly.
+mkimage --output "$work/stock.img" --config "$config" "${modules[@]}"
+cmp -s "$work/stock.img" "$GRUBDIR/core.img" \
+  || die "stock core does not reproduce from the parsed arguments (grub2 update pending?); not touching the boot sector"
+
+# 3. Custom core: keyfile first, passphrase prompt as fallback. GRUB's embedded-config
+# parser prints and clears the error of a failed line and continues with the next one;
+# cryptomount -u on an already opened device returns silently.
+cat >"$work/load.cfg" <<EOF
+search --no-floppy --fs-uuid --set=usbkey $KEY_FS_UUID
+cryptomount -u $LUKS_UUID -k (\$usbkey)$KEY_PATH
+cryptomount -u $LUKS_UUID
+EOF
+install -d -m 700 "$work/img"
+mkimage --output "$work/img/core.img" --config "$work/load.cfg" "${modules[@]}" "${EXTRA_MODULES[@]}"
+cp "$GRUBDIR/boot.img" "$work/img/boot.img"
+size=$(stat -c %s "$work/img/core.img")
+((size < biosboot_size)) || die "custom core ($size bytes) does not fit $biosboot ($biosboot_size bytes)"
+
+embedded_matches() { cmp -s <(tail -c +"$CMP_OFFSET" "$1") <(head -c "$size" "$biosboot" | tail -c +"$CMP_OFFSET"); }
+
+if embedded_matches "$work/img/core.img"; then
+  log "custom core already installed on $biosboot ($size bytes)"
+  exit 0
+fi
+if [[ $mode == check ]]; then
+  log "check: custom core ($size bytes, modules: ${modules[*]} ${EXTRA_MODULES[*]}) would be installed on $dev"
+  cat "$work/load.cfg"
+  exit 0
+fi
+
+# 4. Embed and verify.
+log "installing custom core on $dev ($size bytes)"
+grub2-bios-setup --directory "$work/img" "$dev"
+sync
+embedded_matches "$work/img/core.img" || die "verification failed after grub2-bios-setup; run 'update-bootloader --reinit' to restore the stock core"
+install -m 600 "$work/img/core.img" "$STATE/core-custom.img"
+log "installed and verified"

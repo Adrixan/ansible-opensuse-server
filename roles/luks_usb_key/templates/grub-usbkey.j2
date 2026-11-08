@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# Read by /usr/local/sbin/grub-usbkey-core. No secrets: the keyfile lives only on the stick.
+LUKS_UUID={{ luks_usb_key_luks_uuid }}
+KEY_FS_UUID={{ luks_usb_key_fs_uuid }}
+KEY_PATH={{ luks_usb_key_path }}

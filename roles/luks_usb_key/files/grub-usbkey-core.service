@@ -1,0 +1,17 @@
+[Unit]
+Description=Install the GRUB core image with USB keyfile unlock
+Documentation=file:///usr/local/sbin/grub-usbkey-core
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/grub-usbkey-core install
+# Needs raw write access to the BIOS boot partition; everything else stays read-only.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+ReadWritePaths=/var/lib/grub-usbkey
+
+[Install]
+WantedBy=multi-user.target
