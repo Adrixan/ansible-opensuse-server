@@ -102,7 +102,8 @@ cp "$GRUBDIR/boot.img" "$work/img/boot.img"
 size=$(stat -c %s "$work/img/core.img")
 ((size < biosboot_size)) || die "custom core ($size bytes) does not fit $biosboot ($biosboot_size bytes)"
 
-embedded_matches() { cmp -s <(tail -c +"$CMP_OFFSET" "$1") <(head -c "$size" "$biosboot" | tail -c +"$CMP_OFFSET"); }
+# cmp -s stops at the first difference; silence the SIGPIPE complaints of the feeding tools.
+embedded_matches() { cmp -s <(tail -c +"$CMP_OFFSET" "$1" 2>/dev/null) <(head -c "$size" "$biosboot" 2>/dev/null | tail -c +"$CMP_OFFSET" 2>/dev/null); }
 
 if embedded_matches "$work/img/core.img"; then
   log "custom core already installed on $biosboot ($size bytes)"
