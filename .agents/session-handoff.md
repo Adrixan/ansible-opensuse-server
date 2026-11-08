@@ -1,7 +1,7 @@
 # Session Handoff State
 
 ## Active Intent
-2026-11-08: m11x USB-key LUKS unlock (Peter via the Greeter, go given, option 2: agent runs everything). Keyslots reworked, custom core installed via role `luks_usb_key` (branch `feat/luks-usb-key`), reboot test with the stick run by the agent; see entry "2026-11-08: m11x USB keyfile unlock" at the end.
+2026-11-08: m11x USB-key LUKS unlock done and merged (`luks_usb_key`); live reboot with the stick passed (89 s, no prompt). Open for Peter: no-stick test at the console, passphrase move to slot 2, go and timing for swap encryption (needs him reachable near m11x). Knowledge map and details (Machines) updated.
 
 2026-11-05 (session stopped by the Greeter): two-workstation setup done. schulpc primary, xps13 standby with parity (Ansible full runs, repos via code-sync, shared rc confs, memory-merge, transcripts via Syncthing `claude-projects`, m11x receive-only backup complete). Overview of which state travels how: knowledge-map details, section "Two workstations".
 - Open for Peter: accept "Claude transcripts" on the phone (receive-only, app-private storage, bridge-pointer ignores); the phone has not connected since its `.stglobalignore` change, so check its Obsidian folder once it is online; `yadm decrypt` on xps13 and m11x when convenient (passphrase); PTSD repos and `code-ptsd` on xps13 still undecided (do not touch PTSD without asking); fix of vps-maintenance `educator_host` yadm pull unit (skip-worktree host files) awaits his go; lease for automatic takeover (mirror report section 4) not started.
@@ -238,3 +238,4 @@
   - Slot audit found `/.root.key` in slots 1 AND 2 (two runs of the old role), slot 3 unknown. Enroll script fixed accordingly and run with `--usb-only`: now slot 0 passphrase (436k iterations), slot 1 USB keyfile (1000), slot 3 root key (1000), slot 2 free. Initrds carry the same root key (hash checked). New header backup copied to schulpc.
   - Role live run changed=6, second run changed=0; protective MBR and primary GPT unchanged; path unit active.
   - Open: passphrase move to slot 2 (`sudo /root/luks-usb-work/enroll-m11x.sh`, Peter types it; resumes at step 5), test without the stick (Peter at the machine), swap encryption, merge, knowledge map.
+- 10:16: reboot with the stick: back over SSH after 89 s with nobody at the console; initrd opened `cr_root`, boot-time unit reports the custom core in place, path unit active. Only failed unit `transmission-daemon@Adrixan` (pre-existing, same error in the previous boot: another process holds its config directory). Merged `feat/luks-usb-key` into master. Knowledge map line plus details (Machines) written.
