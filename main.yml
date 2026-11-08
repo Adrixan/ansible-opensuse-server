@@ -207,3 +207,9 @@
         name: transmission_daemon
       when: enable_transmission_daemon | default(false) | bool
       tags: [transmission_daemon]
+
+    - name: Include luks_usb_key role
+      ansible.builtin.include_role:
+        name: luks_usb_key
+      when: enable_luks_usb_key | default(false) | bool
+      tags: [luks_usb_key]

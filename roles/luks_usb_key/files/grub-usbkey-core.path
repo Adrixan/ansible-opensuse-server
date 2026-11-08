@@ -1,0 +1,9 @@
+[Unit]
+Description=Reinstall the USB keyfile GRUB core after bootloader updates
+
+[Path]
+PathChanged=/boot/grub2/i386-pc/core.img
+Unit=grub-usbkey-core.service
+
+[Install]
+WantedBy=paths.target

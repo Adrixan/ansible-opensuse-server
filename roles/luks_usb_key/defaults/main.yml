@@ -1,0 +1,7 @@
+---
+# luks_usb_key: legacy-BIOS GRUB with /boot inside LUKS1 unlocks the root from a keyfile
+# on a USB stick and falls back to the passphrase prompt without it.
+# Keyfile creation and LUKS enrollment are manual (never in git or yadm); set these per host:
+luks_usb_key_luks_uuid: ""   # UUID of the LUKS partition (cryptsetup luksUUID)
+luks_usb_key_fs_uuid: ""     # filesystem UUID of the stick partition holding the keyfile
+luks_usb_key_path: /luks.key # keyfile path on that filesystem

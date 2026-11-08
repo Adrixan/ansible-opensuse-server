@@ -1,0 +1,80 @@
+---
+# tasks file for luks_usb_key
+- name: Check the role variables
+  ansible.builtin.assert:
+    that:
+      - luks_usb_key_luks_uuid is match('^[0-9a-fA-F-]{36}$')
+      - luks_usb_key_fs_uuid is match('^[0-9A-Za-z-]{4,36}$')
+      - luks_usb_key_path is match('^/[A-Za-z0-9._/-]+$')
+    fail_msg: "Set luks_usb_key_luks_uuid, luks_usb_key_fs_uuid and luks_usb_key_path for this host"
+
+- name: Check for a legacy BIOS system
+  ansible.builtin.stat:
+    path: /sys/firmware/efi
+  register: luks_usb_key_efi
+
+- name: Check the bootloader type
+  ansible.builtin.command: grep -qx 'LOADER_TYPE="grub2"' /etc/sysconfig/bootloader
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  register: luks_usb_key_loader
+
+- name: Refuse unsupported systems
+  ansible.builtin.assert:
+    that:
+      - not luks_usb_key_efi.stat.exists
+      - luks_usb_key_loader.rc == 0
+    fail_msg: "luks_usb_key supports only legacy BIOS with LOADER_TYPE=grub2"
+
+- name: Install the configuration
+  ansible.builtin.template:
+    src: grub-usbkey.j2
+    dest: /etc/default/grub-usbkey
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install the core image tool
+  ansible.builtin.copy:
+    src: grub-usbkey-core
+    dest: /usr/local/sbin/grub-usbkey-core
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install the systemd units
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - grub-usbkey-core.service
+    - grub-usbkey-core.path
+  register: luks_usb_key_units
+
+- name: Reload systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: luks_usb_key_units is changed
+
+- name: Enable the boot-time check
+  ansible.builtin.systemd_service:
+    name: grub-usbkey-core.service
+    enabled: true
+  when: not (ansible_check_mode and luks_usb_key_units is changed)
+
+- name: Watch the stock core image
+  ansible.builtin.systemd_service:
+    name: grub-usbkey-core.path
+    enabled: true
+    state: started
+  when: not (ansible_check_mode and luks_usb_key_units is changed)
+
+- name: Install the custom core image when it differs
+  ansible.builtin.command: /usr/local/sbin/grub-usbkey-core install
+  register: luks_usb_key_install
+  changed_when: "'installed and verified' in luks_usb_key_install.stdout"
+  when: not ansible_check_mode
