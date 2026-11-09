@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# update-system: run the topgrade_nightly update workflow now, in the foreground, as a transient
+# systemd unit (same environment as the nightly run, output here and in the journal). Run as the
+# desktop user; it asks sudo once. Reboots only where nightly.conf allows it (REBOOT=true).
+set -euo pipefail
+[[ $EUID -ne 0 ]] || { echo "run as your user, not as root" >&2; exit 1; }
+io=--pipe
+[[ -t 0 && -t 1 ]] && io=--pty   # interactive terminal; --pipe also works over plain SSH
+exec sudo systemd-run --quiet "$io" --wait --collect --unit "update-system-$(date +%Y%m%d%H%M%S)" \
+  -p Environment=HOME=/root -p Environment=TERM=dumb \
+  /usr/local/sbin/topgrade-nightly "$@"
