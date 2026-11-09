@@ -10,6 +10,8 @@ ConditionPathExists=!/var/lib/swap-wipe-once/done
 
 [Service]
 Type=oneshot
+# Never on a partition in use (active swap, mapped or mounted): skipped, not failed
+ExecCondition=/usr/local/sbin/swap-partition-free {{ luks_usb_key_sdboot_swap_partuuid }}
 ExecStart=/usr/sbin/blkdiscard --zeroout --force /dev/disk/by-partuuid/{{ luks_usb_key_sdboot_swap_partuuid }}
 ExecStartPost=/usr/bin/mkdir -p /var/lib/swap-wipe-once
 ExecStartPost=/usr/bin/touch /var/lib/swap-wipe-once/done

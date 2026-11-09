@@ -1,0 +1,13 @@
+#!/bin/sh
+# swap-partition-free <PARTUUID>: exit 0 only when the partition is not active swap, has no
+# device-mapper holder and is not mounted. ExecCondition of swap-wipe-once.service and of
+# systemd-cryptsetup@cr_swap.service: on 2026-11-09 a runtime `systemctl isolate` started both while
+# the old plaintext swap was in use; zeroing it corrupted the memory of running processes.
+set -u
+dev=$(readlink -f "/dev/disk/by-partuuid/${1:?PARTUUID missing}") || exit 1
+[ -b "$dev" ] || exit 1
+name=$(basename "$dev")
+if awk 'NR > 1 {print $1}' /proc/swaps | grep -qx "$dev"; then echo "$dev is active swap"; exit 1; fi
+if [ -n "$(ls -A "/sys/class/block/$name/holders" 2>/dev/null)" ]; then echo "$dev has a holder"; exit 1; fi
+if grep -q "^$dev " /proc/mounts; then echo "$dev is mounted"; exit 1; fi
+exit 0
