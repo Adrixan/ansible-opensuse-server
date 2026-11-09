@@ -10,6 +10,6 @@ ConditionACPower=true
 Type=oneshot
 ExecStart=/usr/local/sbin/topgrade-nightly
 Environment=HOME=/root
-TimeoutStartSec=4h
+TimeoutStartSec=6h
 Nice=10
 IOSchedulingClass=idle

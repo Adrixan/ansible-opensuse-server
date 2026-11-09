@@ -14,3 +14,14 @@ topgrade_nightly_reboot_until: 6
 topgrade_nightly_min_free_mb: 4096
 topgrade_nightly_npm_prefix: ""       # root's global npm prefix, e.g. /usr/local; empty keeps npm's default
 topgrade_nightly_hc_url: ""             # Healthchecks ping URL (from the controller env, never in git)
+topgrade_nightly_wait_units: []         # "user:unit" user units that finish first (before the run and a reboot)
+topgrade_nightly_wait_max_min: 90
+topgrade_nightly_snapshot_dir: ""       # /etc tarball and package lists before the run, 7 kept (no fs snapshots on ext4)
+topgrade_nightly_ansible_user: ""       # Ansible roles run as this user from its clone ...
+topgrade_nightly_ansible_repo: ""       # ... only when the clone is clean on master ...
+topgrade_nightly_ansible_roles: []      # ... with enable_<role>=true for each
+topgrade_nightly_firmware_report: false # fwupd refresh plus report, never an install
+topgrade_nightly_reboot_require_fs_uuid: ""  # reboot only while this filesystem (unlock stick) is present
+topgrade_nightly_pre_reboot_check: ""   # command that must succeed before a reboot
+topgrade_nightly_rc_user: ""            # rc roles of this user gate the reboot and get reboot notes
+topgrade_nightly_rc_quiet_wait_min: 60

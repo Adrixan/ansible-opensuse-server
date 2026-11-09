@@ -1,0 +1,41 @@
+#jinja2: comment_start_string:'[#', comment_end_string:'#]'
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Every boot entry's initrd must open the root volume from the USB stick: USB and FAT drivers, the
+# keyfile line in its crypttab, and no keys of /etc/cryptsetup-keys.d (the ESP is not encrypted).
+# Used by the role after a rebuild and by topgrade-nightly before an unattended reboot.
+# --key also proves that the stick's keyfile opens the root volume (needs the stick plugged in).
+set -euo pipefail
+shopt -s nullglob
+entries=(/boot/efi/loader/entries/*.conf)
+((${#entries[@]})) || { echo "no boot entries"; exit 1; }
+checked=0
+for entry in "${entries[@]}"; do
+  initrd=/boot/efi$(awk '/^initrd/ {print $2; exit}' "$entry")
+  # sdbootutil names its initrds initrd-<hash>; hand-made fallback entries are not checked
+  [[ $(basename "$initrd") == initrd-* ]] || continue
+  checked=$((checked + 1))
+  [[ -f $initrd ]] || { echo "$(basename "$entry"): initrd missing"; exit 1; }
+  content=$(lsinitrd "$initrd")
+  grep -qE 'usb[-_]storage\.ko' <<<"$content" || { echo "$(basename "$entry"): usb_storage missing"; exit 1; }
+  grep -q '/vfat\.ko' <<<"$content" || { echo "$(basename "$entry"): vfat missing"; exit 1; }
+  if grep -q 'cryptsetup-keys\.d' <<<"$content"; then echo "$(basename "$entry"): keyfiles leaked into the initrd"; exit 1; fi
+  lsinitrd -f etc/crypttab "$initrd" | grep -q '{{ luks_usb_key_sdboot_key_path }}:UUID={{ luks_usb_key_sdboot_key_fs_uuid }}' \
+    || { echo "$(basename "$entry"): crypttab lacks the keyfile line"; exit 1; }
+done
+((checked)) || { echo "no sdbootutil initrd found"; exit 1; }
+echo "all $checked sdbootutil initrds open the root volume from the stick"
+
+if [[ ${1:-} == --key ]]; then
+  dev=/dev/disk/by-uuid/{{ luks_usb_key_sdboot_key_fs_uuid }}
+  [[ -e $dev ]] || { echo "the stick is not plugged in"; exit 1; }
+  mnt=$(findmnt -rno TARGET "$dev" | head -n 1)
+  if [[ -z $mnt ]]; then
+    mnt=$(mktemp -d)
+    mount -o ro,nodev,nosuid,noexec "$dev" "$mnt"
+    trap 'umount "$mnt"; rmdir "$mnt"' EXIT
+  fi
+  /usr/sbin/cryptsetup open --test-passphrase --key-file "$mnt{{ luks_usb_key_sdboot_key_path }}" \
+    /dev/disk/by-uuid/{{ luks_usb_key_sdboot_root_uuid }} || { echo "the stick's keyfile does not open the root volume"; exit 1; }
+  echo "the stick's keyfile opens the root volume"
+fi

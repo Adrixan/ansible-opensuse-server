@@ -63,6 +63,14 @@
         mode: '0644'
       notify: Reload systemd
 
+    - name: Create the cryptsetup drop-in directory for swap
+      ansible.builtin.file:
+        path: /etc/systemd/system/systemd-cryptsetup@cr_swap.service.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Run the wipe before encrypted swap opens
       ansible.builtin.copy:
         dest: /etc/systemd/system/systemd-cryptsetup@cr_swap.service.d/10-wipe-once.conf
@@ -88,20 +96,16 @@
 - name: Apply the boot changes now
   ansible.builtin.meta: flush_handlers
 
-- name: Check the initrd of the running kernel
-  ansible.builtin.shell: |
-    set -o pipefail
-    entry=$(grep -l "/{{ ansible_kernel }}/" /boot/efi/loader/entries/*.conf | head -n 1)
-    initrd=/boot/efi$(awk '/^initrd/ {print $2}' "$entry")
-    content=$(lsinitrd "$initrd")
-    grep -q 'usb-storage.ko\|usb_storage.ko' <<<"$content" || { echo "usb_storage missing"; exit 1; }
-    grep -q '/vfat.ko' <<<"$content" || { echo "vfat missing"; exit 1; }
-    ! grep -q 'cryptsetup-keys.d' <<<"$content" || { echo "keyfiles leaked into the initrd"; exit 1; }
-    lsinitrd -f etc/crypttab "$initrd" | grep -q "{{ luks_usb_key_sdboot_key_path }}:UUID={{ luks_usb_key_sdboot_key_fs_uuid }}" \
-      || { echo "initrd crypttab lacks the keyfile line"; exit 1; }
-    echo "initrd ok: $initrd"
-  args:
-    executable: /bin/bash
+- name: Install the initrd check
+  ansible.builtin.template:
+    src: luks-usb-key-check.j2
+    dest: /usr/local/sbin/luks-usb-key-check
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Check every boot entry's initrd
+  ansible.builtin.command: /usr/local/sbin/luks-usb-key-check
   register: luks_usb_key_sdboot_check
   changed_when: false
   check_mode: false
