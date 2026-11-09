@@ -26,4 +26,5 @@ topgrade_nightly_reboot_require_fs_uuid: ""  # reboot only while this filesystem
 topgrade_nightly_pre_reboot_check: ""   # command that must succeed before a reboot
 topgrade_nightly_rc_user: ""            # rc roles of this user gate the reboot and get reboot notes
 topgrade_nightly_rc_quiet_wait_min: 60
+topgrade_nightly_post_boot_urls: []   # local URLs that must answer after an unattended reboot
 topgrade_nightly_post_boot_check: ""  # command after an unattended reboot; output goes into the report

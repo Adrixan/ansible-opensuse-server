@@ -8,6 +8,7 @@ ai_desktop_user_uid: "{{ target_user_uid | default(1000) }}"
 # Application feature flags
 # Off on all machines by decision; set true to install it again
 enable_claude_desktop: false
+claude_desktop_remove: false   # true: uninstall an existing Claude Desktop (app data in ~/.config/Claude stays)
 enable_claude_code: true
 enable_antigravity_desktop: true
 enable_antigravity_cli: true

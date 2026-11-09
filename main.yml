@@ -225,3 +225,9 @@
         name: luks_usb_key_sdboot
       when: enable_luks_usb_key_sdboot | default(false) | bool
       tags: [luks_usb_key_sdboot]
+
+    - name: Include text_mode role
+      ansible.builtin.include_role:
+        name: text_mode
+      when: enable_text_mode | default(false) | bool
+      tags: [text_mode]

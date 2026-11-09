@@ -1,0 +1,38 @@
+---
+# Uninstall Claude Desktop (enable_claude_desktop is false everywhere, Peter 2026-11-01; removed on
+# hosts with claude_desktop_remove, Peter 2026-11-09). The user's data in ~/.config/Claude stays.
+- name: Stop and disable the Claude Desktop update timer
+  ansible.builtin.systemd_service:
+    name: claude-desktop-update.timer
+    enabled: false
+    state: stopped
+  failed_when: false
+
+- name: Quit a running Claude Desktop
+  ansible.builtin.command: pkill -f '^{{ claude_desktop_install_root }}/claude-desktop'
+  register: claude_desktop_pkill
+  changed_when: claude_desktop_pkill.rc == 0
+  failed_when: false
+
+- name: Find the installed Claude Desktop versions
+  ansible.builtin.find:
+    paths: "{{ claude_desktop_install_root }}"
+    patterns: "claude-desktop*"
+    file_type: any
+  register: claude_desktop_installs
+
+- name: Remove Claude Desktop files and units
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ (claude_desktop_installs.files | map(attribute='path') | list) + [
+      '/usr/local/bin/claude-desktop', '/usr/local/sbin/claude-desktop-update', claude_desktop_signing_key,
+      '/usr/share/applications/com.anthropic.Claude.desktop',
+      '/etc/systemd/system/claude-desktop-update.service', '/etc/systemd/system/claude-desktop-update.timer',
+      '/home/' + (target_user | default('Adrixan')) + '/.config/autostart/claude-desktop.desktop'] }}"
+  register: claude_desktop_removed
+
+- name: Reload systemd after removing the Claude Desktop units
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: claude_desktop_removed is changed
