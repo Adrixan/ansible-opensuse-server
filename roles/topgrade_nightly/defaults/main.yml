@@ -12,4 +12,5 @@ topgrade_nightly_reboot: false          # true only where an unattended boot wor
 topgrade_nightly_reboot_from: 1         # reboot window, local hours [from, until)
 topgrade_nightly_reboot_until: 6
 topgrade_nightly_min_free_mb: 4096
+topgrade_nightly_npm_prefix: ""       # root's global npm prefix, e.g. /usr/local; empty keeps npm's default
 topgrade_nightly_hc_url: ""             # Healthchecks ping URL (from the controller env, never in git)

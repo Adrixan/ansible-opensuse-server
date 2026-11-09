@@ -16,12 +16,41 @@
     name: topgrade
     state: present
 
-- name: Check the npm supply-chain cooldown for root
+# The run has HOME=/root: root needs its own npm settings (a sudo shell may show the caller's ~/.npmrc).
+- name: Set the npm supply-chain cooldown for root
+  ansible.builtin.lineinfile:
+    path: /root/.npmrc
+    regexp: '^min-release-age='
+    line: min-release-age=1
+    create: true
+    owner: root
+    group: root
+    mode: '0600'
+  when: "'node' in topgrade_nightly_steps"
+
+- name: Set root's global npm prefix (where the global packages live)
+  ansible.builtin.lineinfile:
+    path: /root/.npmrc
+    regexp: '^prefix='
+    line: "prefix={{ topgrade_nightly_npm_prefix }}"
+    create: true
+    owner: root
+    group: root
+    mode: '0600'
+  when:
+    - "'node' in topgrade_nightly_steps"
+    - topgrade_nightly_npm_prefix | length > 0
+
+- name: Check the npm cooldown as the service sees it
   ansible.builtin.command: npm config get min-release-age
+  environment:
+    HOME: /root
   register: topgrade_nightly_npm_age
   changed_when: false
   check_mode: false
-  when: "'node' in topgrade_nightly_steps"
+  when:
+    - "'node' in topgrade_nightly_steps"
+    - not ansible_check_mode
   failed_when: >-
     topgrade_nightly_npm_age.rc != 0 or
     not (topgrade_nightly_npm_age.stdout | trim is match('^[0-9]+$')) or
@@ -84,6 +113,7 @@
 - name: Validate the allow-list with a dry run
   ansible.builtin.command: topgrade --dry-run --config /etc/topgrade/nightly.toml
   environment:
+    HOME: /root
     TERM: dumb
   changed_when: false
   check_mode: false
