@@ -3,8 +3,13 @@
 Description=Update Antigravity CLI (native install)
 Wants=network-online.target
 After=network-online.target
+# A laptop's catch-up run right after a wake may come before the network: retry a few times
+StartLimitIntervalSec=1h
+StartLimitBurst=4
 
 [Service]
 Type=oneshot
+Restart=on-failure
+RestartSec=5min
 ExecStart={{ antigravity_cli_bin }} update
 Nice=10
