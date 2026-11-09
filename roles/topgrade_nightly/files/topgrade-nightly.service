@@ -1,0 +1,15 @@
+[Unit]
+Description=Nightly topgrade run (zypper dup and allow-listed package managers)
+Documentation=file:///usr/local/sbin/topgrade-nightly
+Wants=network-online.target
+After=network-online.target
+# Laptops: never on battery.
+ConditionACPower=true
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/topgrade-nightly
+Environment=HOME=/root
+TimeoutStartSec=4h
+Nice=10
+IOSchedulingClass=idle

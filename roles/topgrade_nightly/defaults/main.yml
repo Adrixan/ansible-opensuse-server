@@ -1,0 +1,15 @@
+---
+# topgrade_nightly: unattended nightly `topgrade` run (openSUSE Tumbleweed: zypper dup plus the
+# allow-listed steps below), Healthchecks pings, optional reboot inside a night window.
+# Only allow-listed steps run, so new topgrade steps never start unattended by surprise.
+# Kept off on purpose: firmware (no unattended flashing), self_update (package-managed),
+# ruby_gems (would `gem update` RPM-owned gems), git_repos and yadm (pulls need a human),
+# pipx and pip (no supply-chain cooldown), AI CLIs with own self-updaters.
+topgrade_nightly_steps: [system, flatpak, node, tldr]   # add containers where Docker runs
+topgrade_nightly_time: "03:30"
+topgrade_nightly_random_delay: 20min
+topgrade_nightly_reboot: false          # true only where an unattended boot works
+topgrade_nightly_reboot_from: 1         # reboot window, local hours [from, until)
+topgrade_nightly_reboot_until: 6
+topgrade_nightly_min_free_mb: 4096
+topgrade_nightly_hc_url: ""             # Healthchecks ping URL (from the controller env, never in git)

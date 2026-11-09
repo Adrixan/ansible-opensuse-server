@@ -1,0 +1,97 @@
+---
+# tasks file for topgrade_nightly
+- name: Check the role variables
+  ansible.builtin.assert:
+    that:
+      - topgrade_nightly_steps | length > 0
+      - "'firmware' not in topgrade_nightly_steps"
+      - "'self_update' not in topgrade_nightly_steps"
+      - "'ruby_gems' not in topgrade_nightly_steps"
+      - topgrade_nightly_time is match('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+      - topgrade_nightly_reboot_from | int < topgrade_nightly_reboot_until | int
+    fail_msg: "Check topgrade_nightly_steps (no firmware, self_update, ruby_gems), _time (HH:MM) and the reboot window"
+
+- name: Install topgrade
+  community.general.zypper:
+    name: topgrade
+    state: present
+
+- name: Check the npm supply-chain cooldown for root
+  ansible.builtin.command: npm config get min-release-age
+  register: topgrade_nightly_npm_age
+  changed_when: false
+  check_mode: false
+  when: "'node' in topgrade_nightly_steps"
+  failed_when: >-
+    topgrade_nightly_npm_age.rc != 0 or
+    not (topgrade_nightly_npm_age.stdout | trim is match('^[0-9]+$')) or
+    (topgrade_nightly_npm_age.stdout | trim | int) < 1
+
+- name: Create the configuration directory
+  ansible.builtin.file:
+    path: /etc/topgrade
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install the topgrade allow-list
+  ansible.builtin.template:
+    src: nightly.toml.j2
+    dest: /etc/topgrade/nightly.toml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install the run settings (holds the ping URL)
+  ansible.builtin.template:
+    src: nightly.conf.j2
+    dest: /etc/topgrade/nightly.conf
+    owner: root
+    group: root
+    mode: '0600'
+  no_log: true
+
+- name: Install the wrapper
+  ansible.builtin.copy:
+    src: topgrade-nightly
+    dest: /usr/local/sbin/topgrade-nightly
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install the service
+  ansible.builtin.copy:
+    src: topgrade-nightly.service
+    dest: /etc/systemd/system/topgrade-nightly.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd
+
+- name: Install the timer
+  ansible.builtin.template:
+    src: topgrade-nightly.timer.j2
+    dest: /etc/systemd/system/topgrade-nightly.timer
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd
+
+- name: Reload systemd before enabling the timer
+  ansible.builtin.meta: flush_handlers
+
+- name: Validate the allow-list with a dry run
+  ansible.builtin.command: topgrade --dry-run --config /etc/topgrade/nightly.toml
+  environment:
+    TERM: dumb
+  changed_when: false
+  check_mode: false
+  when: not ansible_check_mode
+
+- name: Enable the timer
+  ansible.builtin.systemd_service:
+    name: topgrade-nightly.timer
+    enabled: true
+    state: started
+  when: not ansible_check_mode

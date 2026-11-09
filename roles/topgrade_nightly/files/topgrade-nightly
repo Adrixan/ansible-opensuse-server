@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# topgrade-nightly: unattended nightly topgrade run with an allow-list of steps
+# (/etc/topgrade/nightly.toml), Healthchecks pings and an optional reboot inside a night window.
+# Runs as root from topgrade-nightly.service; interactive runs keep using ~/.config/topgrade.toml.
+set -uo pipefail
+umask 022
+
+readonly CONF=/etc/topgrade/nightly.conf
+readonly TOML=/etc/topgrade/nightly.toml
+
+HC_URL=""          # Healthchecks ping URL; empty disables pings
+REBOOT=false       # reboot when zypper reports it is needed and the run succeeded
+REBOOT_FROM=1      # reboot window start hour (inclusive)
+REBOOT_UNTIL=6     # reboot window end hour (exclusive)
+MIN_FREE_MB=4096   # free space needed on /
+# shellcheck source=/dev/null
+[[ -r $CONF ]] && . "$CONF"
+
+log() { echo "topgrade-nightly: $*"; }
+ping_hc() { # ping_hc [start|fail|""] [body]
+  [[ -n $HC_URL ]] || return 0
+  curl -fsS -m 15 --retry 3 -o /dev/null --data-binary "${2:-}" "${HC_URL}${1:+/$1}" || log "healthcheck ping failed"
+}
+
+ping_hc start
+
+free_mb=$(df --output=avail -m / | tail -n 1 | tr -d ' ')
+if ((free_mb < MIN_FREE_MB)); then
+  log "only ${free_mb} MB free on /, need ${MIN_FREE_MB} MB; skipping"
+  ping_hc fail "low disk: ${free_mb} MB free on /"
+  exit 1
+fi
+
+out=$(mktemp)
+trap 'rm -f "$out"' EXIT
+TERM=dumb topgrade --config "$TOML" </dev/null 2>&1 | tee "$out"
+rc=${PIPESTATUS[0]}
+
+# A grub2 update rewrites the stock core; luks_usb_key's path unit puts the USB key core back.
+# Make sure that finished (and succeeded) before anything reboots.
+if command -v grub-usbkey-core >/dev/null; then
+  for _ in $(seq 60); do
+    [[ $(systemctl show -p ActiveState --value grub-usbkey-core.service) == activating ]] || break
+    sleep 5
+  done
+  if ! grub-usbkey-core install; then
+    log "grub-usbkey-core failed: the next boot asks for the passphrase"
+    rc=1
+  fi
+fi
+
+summary=$(sed -n '/Summary/,$p' "$out" | tail -n 40)
+needs_reboot=false
+zypper needs-rebooting >/dev/null 2>&1
+[[ $? -eq 102 ]] && needs_reboot=true
+hour=$(date +%-H)
+
+if ((rc != 0)); then
+  log "finished with failures (topgrade exit $rc)"
+  ping_hc fail "$summary"
+  exit "$rc"
+fi
+
+if $needs_reboot; then
+  if [[ $REBOOT == true ]] && ((hour >= REBOOT_FROM && hour < REBOOT_UNTIL)); then
+    log "reboot needed: rebooting"
+    ping_hc "" "$summary
+reboot: rebooting"
+    systemctl reboot
+    exit 0
+  fi
+  summary+=$'\n'"reboot: needed, not done (REBOOT=$REBOOT, hour $hour, window $REBOOT_FROM-$REBOOT_UNTIL)"
+  log "reboot needed, not done"
+fi
+ping_hc "" "$summary"
+log "finished"

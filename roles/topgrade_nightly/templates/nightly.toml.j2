@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# Unattended nightly run (topgrade_nightly). Interactive runs use ~/.config/topgrade.toml.
+[misc]
+allow_root = true
+assume_yes = true
+no_retry = true
+cleanup = true
+notify_end = "never"
+no_self_update = true
+set_title = false
+only = [{% for s in topgrade_nightly_steps %}"{{ s }}"{{ ", " if not loop.last else "" }}{% endfor %}]

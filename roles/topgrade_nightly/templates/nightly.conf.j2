@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+HC_URL={{ topgrade_nightly_hc_url | quote }}
+REBOOT={{ topgrade_nightly_reboot | bool | lower }}
+REBOOT_FROM={{ topgrade_nightly_reboot_from | int }}
+REBOOT_UNTIL={{ topgrade_nightly_reboot_until | int }}
+MIN_FREE_MB={{ topgrade_nightly_min_free_mb | int }}

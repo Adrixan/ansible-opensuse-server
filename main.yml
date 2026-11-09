@@ -213,3 +213,9 @@
         name: luks_usb_key
       when: enable_luks_usb_key | default(false) | bool
       tags: [luks_usb_key]
+
+    - name: Include topgrade_nightly role
+      ansible.builtin.include_role:
+        name: topgrade_nightly
+      when: enable_topgrade_nightly | default(false) | bool
+      tags: [topgrade_nightly]
