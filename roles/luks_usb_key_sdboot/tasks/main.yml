@@ -54,6 +54,14 @@
         backup: true
       when: luks_usb_key_sdboot_swap_old_fstab | length > 0
 
+    - name: Install the guard that keeps both away from a partition in use
+      ansible.builtin.copy:
+        src: swap-partition-free
+        dest: /usr/local/sbin/swap-partition-free
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Install the one-time wipe of the old plaintext swap
       ansible.builtin.template:
         src: swap-wipe-once.service.j2
@@ -82,6 +90,10 @@
           [Unit]
           Wants=swap-wipe-once.service
           After=swap-wipe-once.service
+
+          [Service]
+          # Mapping and mkswap would overwrite a partition that is still active swap (runtime isolate)
+          ExecCondition=/usr/local/sbin/swap-partition-free {{ luks_usb_key_sdboot_swap_partuuid }}
       notify: Reload systemd
 
     # Random-key swap cannot hold a hibernation image; a resume= to a vanished device delays boot.
