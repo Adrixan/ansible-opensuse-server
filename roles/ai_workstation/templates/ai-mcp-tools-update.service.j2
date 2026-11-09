@@ -3,9 +3,14 @@
 Description=Upgrade uv-managed MCP server tools
 Wants=network-online.target
 After=network-online.target
+# A laptop's catch-up run right after a wake may come before the network: retry a few times
+StartLimitIntervalSec=1h
+StartLimitBurst=4
 
 [Service]
 Type=oneshot
+Restart=on-failure
+RestartSec=5min
 ExecStart=/usr/bin/uv tool upgrade --all
 # Load the upgraded servers (a no-op where the shared MCP service is not running)
 ExecStartPost=-/usr/bin/systemctl --user try-restart mcp-shared.service
