@@ -1,0 +1,59 @@
+---
+# Command-line tools into sdk/cmdline-tools/latest; SHA-256 from developer.android.com, SHA-1 from the
+# repository XML, swapped under both kit locks.
+- name: Download the command-line tools {{ android_build_plan.cmdline_tools.archive }} (SHA-256 from developer.android.com)
+  ansible.builtin.get_url:
+    url: "{{ android_build_plan.cmdline_tools.url }}"
+    dest: "{{ android_build_downloads_dir }}/{{ android_build_plan.cmdline_tools.archive }}"
+    checksum: "sha256:{{ android_build_plan.cmdline_tools.sha256 }}"
+    mode: '0644'
+
+- name: Cross-check the archive with the SHA-1 of the repository XML
+  ansible.builtin.stat:
+    path: "{{ android_build_downloads_dir }}/{{ android_build_plan.cmdline_tools.archive }}"
+    checksum_algorithm: sha1
+  register: android_build_cmdline_zip
+  failed_when: android_build_cmdline_zip.stat.checksum != android_build_plan.cmdline_tools.sha1
+
+- name: Clear a staging directory left by an interrupted run
+  ansible.builtin.file:
+    path: "{{ android_build_sdk_dir }}/cmdline-tools/.staging"
+    state: absent
+
+- name: Create the staging directory
+  ansible.builtin.file:
+    path: "{{ android_build_sdk_dir }}/cmdline-tools/.staging"
+    state: directory
+    mode: '0755'
+
+- name: Unpack the command-line tools
+  ansible.builtin.unarchive:
+    src: "{{ android_build_downloads_dir }}/{{ android_build_plan.cmdline_tools.archive }}"
+    dest: "{{ android_build_sdk_dir }}/cmdline-tools/.staging"
+    remote_src: true
+
+- name: Swap the command-line tools in once no build or emulator runs
+  ansible.builtin.command:
+    argv:
+      - flock
+      - -w
+      - "{{ android_build_lock_wait_s }}"
+      - "{{ android_build_lock_files[0] }}"
+      - flock
+      - -w
+      - "{{ android_build_lock_wait_s }}"
+      - "{{ android_build_lock_files[1] }}"
+      - sh
+      - -ec
+      - >-
+        test -x "$1/.staging/cmdline-tools/bin/sdkmanager";
+        rm -rf "$1/latest.old"; if [ -e "$1/latest" ]; then mv "$1/latest" "$1/latest.old"; fi;
+        mv "$1/.staging/cmdline-tools" "$1/latest"; rm -rf "$1/latest.old" "$1/.staging"
+      - swap
+      - "{{ android_build_sdk_dir }}/cmdline-tools"
+  changed_when: true
+
+- name: Remove the command-line tools archive
+  ansible.builtin.file:
+    path: "{{ android_build_downloads_dir }}/{{ android_build_plan.cmdline_tools.archive }}"
+    state: absent

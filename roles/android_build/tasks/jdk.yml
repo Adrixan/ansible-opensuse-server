@@ -1,0 +1,54 @@
+---
+# Temurin JDK into android_build_jdk_dir; SHA-256 from the Adoptium API, swapped under the Gradle lock.
+- name: Download Temurin {{ android_build_plan.jdk.release_name }} (SHA-256 from the Adoptium API)
+  ansible.builtin.get_url:
+    url: "{{ android_build_plan.jdk.url }}"
+    dest: "{{ android_build_downloads_dir }}/{{ android_build_plan.jdk.archive }}"
+    checksum: "sha256:{{ android_build_plan.jdk.sha256 }}"
+    mode: '0644'
+
+- name: Clear a staging directory left by an interrupted run
+  ansible.builtin.file:
+    path: "{{ android_build_jdk_dir }}.new"
+    state: absent
+
+- name: Create the JDK staging directory
+  ansible.builtin.file:
+    path: "{{ android_build_jdk_dir }}.new"
+    state: directory
+    mode: '0755'
+
+- name: Unpack the JDK into the staging directory
+  ansible.builtin.unarchive:
+    src: "{{ android_build_downloads_dir }}/{{ android_build_plan.jdk.archive }}"
+    dest: "{{ android_build_jdk_dir }}.new"
+    remote_src: true
+    extra_opts: [--strip-components=1]
+
+- name: Check the staged JDK
+  ansible.builtin.command:
+    argv: ["{{ android_build_jdk_dir }}.new/bin/java", -version]
+  register: android_build_jdk_check
+  changed_when: false
+  failed_when: >-
+    android_build_jdk_check.rc != 0
+    or (android_build_plan.jdk.version | regex_replace('-LTS$', '')) not in android_build_jdk_check.stderr
+
+- name: Swap the JDK in once no Gradle build runs
+  ansible.builtin.command:
+    argv:
+      - flock
+      - -w
+      - "{{ android_build_lock_wait_s }}"
+      - "{{ android_build_lock_files[0] }}"
+      - sh
+      - -ec
+      - 'rm -rf "$1.old"; if [ -e "$1" ]; then mv "$1" "$1.old"; fi; mv "$1.new" "$1"; rm -rf "$1.old"'
+      - swap
+      - "{{ android_build_jdk_dir }}"
+  changed_when: true
+
+- name: Remove the JDK archive
+  ansible.builtin.file:
+    path: "{{ android_build_downloads_dir }}/{{ android_build_plan.jdk.archive }}"
+    state: absent

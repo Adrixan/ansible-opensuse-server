@@ -1,0 +1,31 @@
+---
+# One AVD (loop var android_build_avd); created once, never overwritten (snapshots and data stay).
+- name: Check AVD {{ android_build_avd.name }}
+  ansible.builtin.stat:
+    path: "{{ android_build_avd_home }}/{{ android_build_avd.name }}.ini"
+  register: android_build_avd_ini
+
+- name: Check the system image of AVD {{ android_build_avd.name }}
+  ansible.builtin.stat:
+    path: "{{ android_build_sdk_dir }}/{{ android_build_avd.package | replace(';', '/') }}/package.xml"
+  register: android_build_avd_image
+
+- name: Create AVD {{ android_build_avd.name }}
+  ansible.builtin.shell:
+    cmd: >-
+      set -o pipefail; echo no | avdmanager create avd
+      --name {{ android_build_avd.name | quote }}
+      --package {{ android_build_avd.package | quote }}
+      --device {{ android_build_avd.device | quote }}
+    executable: /bin/bash
+  environment: "{{ android_build_env | combine({'ANDROID_AVD_HOME': android_build_avd_home}) }}"
+  when:
+    - not android_build_avd_ini.stat.exists
+    - android_build_avd_image.stat.exists
+    - not ansible_check_mode
+  changed_when: true
+
+- name: Report AVD {{ android_build_avd.name }} as pending (system image not installed yet)
+  ansible.builtin.debug:
+    msg: "AVD {{ android_build_avd.name }} waits for {{ android_build_avd.package }} (deferred or check mode)."
+  when: not android_build_avd_ini.stat.exists and (not android_build_avd_image.stat.exists or ansible_check_mode)

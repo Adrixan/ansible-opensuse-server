@@ -231,3 +231,9 @@
         name: text_mode
       when: enable_text_mode | default(false) | bool
       tags: [text_mode]
+
+    - name: Include android_build role
+      ansible.builtin.include_role:
+        name: android_build
+      when: enable_android_build | default(false) | bool
+      tags: [android_build]

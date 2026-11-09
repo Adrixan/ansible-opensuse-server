@@ -1,0 +1,157 @@
+---
+# tasks file for android_build: Temurin JDK, Android SDK (command-line tools, sdkmanager packages),
+# AVDs and the kit lock files in user space; KVM access for the emulator.
+# Never touches ~/.local/share/play-upload-keys (upload keys stay manual, outside git, sync and backups).
+- name: Require an x86_64 host (Temurin x64, emulator and x86_64 system images)
+  ansible.builtin.assert:
+    that: ansible_facts['architecture'] == 'x86_64'
+    fail_msg: "android_build supports x86_64 only (found {{ ansible_facts['architecture'] }})"
+    quiet: true
+
+- name: Install the archive tools the role needs
+  community.general.zypper:
+    name: [unzip, tar, util-linux]
+    state: present
+  become: true
+
+- name: User-space toolchain (runs as the build user)
+  become: true
+  become_user: "{{ android_build_user }}"
+  block:
+    - name: Create the toolchain directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ android_build_user }}"
+        group: "{{ android_build_user }}"
+        mode: '0755'
+      loop:
+        - "{{ android_build_root }}"
+        - "{{ android_build_sdk_dir }}"
+        - "{{ android_build_downloads_dir }}"
+        - "{{ android_build_avd_home }}"
+
+    - name: Create the kit lock files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: touch
+        owner: "{{ android_build_user }}"
+        group: "{{ android_build_user }}"
+        mode: '0644'
+        access_time: preserve
+        modification_time: preserve
+      loop: "{{ android_build_lock_files }}"
+
+    - name: Check the adb private key
+      ansible.builtin.stat:
+        path: "{{ android_build_home }}/.android/adbkey"
+      register: android_build_adbkey
+
+    - name: Keep the adb private key private
+      ansible.builtin.file:
+        path: "{{ android_build_home }}/.android/adbkey"
+        mode: '0600'
+      when: android_build_adbkey.stat.exists
+
+    - name: Plan the toolchain from the vendors' latest stable releases (read-only)
+      ansible.builtin.script:
+        cmd: >-
+          android_toolchain_plan.py
+          --jdk-dir {{ android_build_jdk_dir | quote }}
+          --jdk-feature {{ android_build_jdk_feature | int }}
+          --sdk {{ android_build_sdk_dir | quote }}
+          --packages {{ android_build_sdk_packages | to_json | quote }}
+          --cooldown-hours {{ android_build_cooldown_hours | float }}
+          --repo-base {{ android_build_repo_base | quote }}
+          --repo-schema {{ android_build_repo_schema | quote }}
+      register: android_build_plan_raw
+      changed_when: false
+      check_mode: false
+
+    - name: Parse the plan
+      ansible.builtin.set_fact:
+        android_build_plan: "{{ android_build_plan_raw.stdout | from_json }}"
+        android_build_env:
+          JAVA_HOME: "{{ android_build_jdk_dir }}"
+          ANDROID_HOME: "{{ android_build_sdk_dir }}"
+          ANDROID_SDK_ROOT: "{{ android_build_sdk_dir }}"
+          PATH: "{{ android_build_jdk_dir }}/bin:{{ android_build_sdk_dir }}/cmdline-tools/latest/bin:/usr/bin:/bin"
+
+    - name: Report what the plan would change (check mode)
+      ansible.builtin.debug:
+        msg: >-
+          JDK {{ android_build_plan.jdk.installed }} -> {{ android_build_plan.jdk.release_name }}
+          (upgrade {{ android_build_plan.jdk.upgrade }}); command-line tools {{ android_build_plan.cmdline_tools.installed }}
+          -> {{ android_build_plan.cmdline_tools.revision }} (upgrade {{ android_build_plan.cmdline_tools.upgrade }});
+          sdkmanager installs {{ android_build_plan.sdk.install | map(attribute='path') | list }}
+      when: ansible_check_mode
+      changed_when: >-
+        android_build_plan.jdk.upgrade or android_build_plan.cmdline_tools.upgrade
+        or (android_build_plan.sdk.install | length > 0)
+
+    - name: Install or update the JDK
+      ansible.builtin.import_tasks: jdk.yml
+      when: android_build_plan.jdk.upgrade and not ansible_check_mode
+
+    - name: Install or update the command-line tools
+      ansible.builtin.import_tasks: cmdline_tools.yml
+      when: android_build_plan.cmdline_tools.upgrade and not ansible_check_mode
+
+    - name: Check that sdkmanager is available
+      ansible.builtin.stat:
+        path: "{{ android_build_sdk_dir }}/cmdline-tools/latest/bin/sdkmanager"
+      register: android_build_sdkmanager
+
+    - name: Stop when no command-line tools could be installed yet (release inside the cooldown)
+      ansible.builtin.fail:
+        msg: >-
+          The command-line tools {{ android_build_plan.cmdline_tools.archive }} are younger than
+          {{ android_build_cooldown_hours }} h and none are installed; run the role again later.
+      when: not android_build_sdkmanager.stat.exists and not ansible_check_mode
+
+    - name: Accept the Android SDK licences (Peter, 2026-11-07)
+      ansible.builtin.shell:
+        cmd: set -o pipefail; yes | sdkmanager --sdk_root={{ android_build_sdk_dir | quote }} --licenses
+        executable: /bin/bash
+      environment: "{{ android_build_env }}"
+      register: android_build_licenses
+      changed_when: "'(y/N)' in android_build_licenses.stdout"
+      # yes(1) dies of SIGPIPE when sdkmanager exits; judge the result by sdkmanager's own message
+      failed_when: "'All SDK package licenses accepted' not in android_build_licenses.stdout"
+      when: android_build_accept_licenses | bool and android_build_sdkmanager.stat.exists and not ansible_check_mode
+
+    - name: Install or update SDK packages (waits for running builds and emulators)
+      ansible.builtin.command:
+        argv: >-
+          {{ ['flock', '-w', android_build_lock_wait_s | string, android_build_lock_files[0],
+              'flock', '-w', android_build_lock_wait_s | string, android_build_lock_files[1],
+              'sdkmanager', '--sdk_root=' + android_build_sdk_dir, '--install']
+             + (android_build_plan.sdk.install | map(attribute='path') | list) }}
+      environment: "{{ android_build_env }}"
+      when: android_build_plan.sdk.install | length > 0 and not ansible_check_mode
+      changed_when: true
+
+    - name: Create the AVDs
+      ansible.builtin.include_tasks:
+        file: avd.yml
+        apply:
+          become: true
+          become_user: "{{ android_build_user }}"
+      loop: "{{ android_build_avds }}"
+      loop_control:
+        loop_var: android_build_avd
+        label: "{{ android_build_avd.name }}"
+
+- name: Give the emulator access to KVM
+  ansible.builtin.import_tasks: kvm.yml
+
+- name: Report releases deferred by the cooldown
+  ansible.builtin.debug:
+    msg: >-
+      Deferred (younger than {{ android_build_cooldown_hours }} h, next run picks them up):
+      JDK {{ android_build_plan.jdk.deferred }}, command-line tools
+      {{ android_build_plan.cmdline_tools.archive if android_build_plan.cmdline_tools.deferred else 'none' }},
+      SDK {{ android_build_plan.sdk.deferred | map(attribute='path') | list }}
+  when: >-
+    android_build_plan.jdk.deferred | length > 0 or android_build_plan.cmdline_tools.deferred
+    or android_build_plan.sdk.deferred | length > 0

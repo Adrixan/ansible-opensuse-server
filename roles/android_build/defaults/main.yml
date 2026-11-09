@@ -1,0 +1,48 @@
+---
+# defaults file for android_build: user-space Android build toolchain (JDK + SDK + AVD) for the paid apps.
+android_build_user: "{{ target_user | default('Adrixan') }}"
+android_build_home: "{{ target_user_home | default('/home/' + android_build_user) }}"
+
+# Paths are fixed by the app repos (AGENTS.md env snippets) and lernspiele-android-kit scripts/env.sh;
+# JAVA_HOME and ANDROID_HOME are set per repo, never globally.
+android_build_root: "{{ android_build_home }}/.local/share/android"
+android_build_jdk_dir: "{{ android_build_root }}/jdk-21"
+android_build_sdk_dir: "{{ android_build_root }}/sdk"
+android_build_downloads_dir: "{{ android_build_root }}/downloads"
+# Default ANDROID_AVD_HOME of the emulator and avdmanager (the kit does not override it)
+android_build_avd_home: "{{ android_build_home }}/.android/avd"
+# flock files of the kit scripts: one Gradle build and one emulator at a time on a shared machine
+android_build_lock_files:
+  - "{{ android_build_root }}/gradle.lock"
+  - "{{ android_build_root }}/emulator.lock"
+
+# Eclipse Temurin feature release (Adoptium API; newest GA build past the cooldown)
+android_build_jdk_feature: 21
+
+# sdkmanager packages; each one follows its newest stable revision past the cooldown.
+android_build_sdk_packages:
+  - platform-tools
+  - platforms;android-36
+  - build-tools;36.0.0
+  - build-tools;36.1.0
+  - emulator
+  - system-images;android-36;google_apis;x86_64
+
+# Peter accepted the Android SDK licences for these builds on 2026-11-07; false stops before any
+# sdkmanager install that would need a new acceptance.
+android_build_accept_licenses: true
+
+# Headless test devices of the kit scripts (with-emulator.sh defaults to sg-phone)
+android_build_avds:
+  - name: sg-phone
+    package: system-images;android-36;google_apis;x86_64
+    device: pixel_7
+
+# Supply-chain cooldown (global rule): releases younger than this are deferred to a later run
+android_build_cooldown_hours: 24
+# Google repository XML schema read by the planner (sdkmanager 22 reads the same revisions)
+android_build_repo_base: "https://dl.google.com/android/repository/"
+android_build_repo_schema: "3"
+
+# Wait at most this long for running Gradle builds (gradle.lock) before swapping the JDK
+android_build_lock_wait_s: 1800

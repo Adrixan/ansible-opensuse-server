@@ -1,0 +1,37 @@
+---
+# The emulator needs read/write on /dev/kvm. Tumbleweed's udev rule makes it 0666 root:kvm; where a host
+# restricts it to the kvm group, the user joins that group (takes effect at the next login).
+- name: Check /dev/kvm
+  ansible.builtin.stat:
+    path: /dev/kvm
+  register: android_build_kvm
+
+- name: Warn that the emulator has no hardware acceleration
+  ansible.builtin.debug:
+    msg: "/dev/kvm is missing (virtualisation off in the firmware or kvm module not loaded): builds work, the emulator does not."
+  when: not android_build_kvm.stat.exists
+
+- name: Check KVM access for {{ android_build_user }}
+  ansible.builtin.command:
+    argv: [test, -r, /dev/kvm, -a, -w, /dev/kvm]
+  become: true
+  become_user: "{{ android_build_user }}"
+  register: android_build_kvm_access
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: android_build_kvm.stat.exists
+
+- name: Add {{ android_build_user }} to the kvm group
+  ansible.builtin.user:
+    name: "{{ android_build_user }}"
+    groups: kvm
+    append: true
+  become: true
+  register: android_build_kvm_group
+  when: android_build_kvm.stat.exists and android_build_kvm_access.rc != 0
+
+- name: Remind to log in again for the kvm group
+  ansible.builtin.debug:
+    msg: "{{ android_build_user }} joined the kvm group: log in again (or reboot) before starting the emulator."
+  when: android_build_kvm_group is changed
