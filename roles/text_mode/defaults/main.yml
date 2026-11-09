@@ -1,0 +1,7 @@
+---
+# text_mode: boot into the text target (no display manager, no desktop session) to save memory;
+# the desktop starts on demand with `sudo systemctl isolate graphical.target`. Zotero keeps
+# serving agents (local API on 23119, Better BibTeX auto-export) on a virtual X display.
+text_mode_user: "{{ target_user | default('Adrixan') }}"
+text_mode_zotero: true
+text_mode_zotero_flatpak: org.zotero.Zotero

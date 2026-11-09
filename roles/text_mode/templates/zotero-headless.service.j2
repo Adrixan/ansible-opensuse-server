@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+# Zotero without a desktop: a virtual X display (Xvfb) keeps the local API (127.0.0.1:23119) and
+# Better BibTeX auto-export running for agents. Stop it before opening Zotero in the desktop
+# (one instance per profile): systemctl --user stop zotero-headless
+[Unit]
+Description=Zotero on a virtual display (local API, Better BibTeX) for agents
+After=network-online.target
+
+[Service]
+# A desktop session may have exported WAYLAND_DISPLAY into the user manager; Zotero must use Xvfb.
+UnsetEnvironment=WAYLAND_DISPLAY DISPLAY
+ExecStart=/usr/bin/xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24 -nolisten tcp" /usr/bin/flatpak run --socket=x11 --nosocket=wayland {{ text_mode_zotero_flatpak }}
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,49 @@
+---
+# tasks file for text_mode
+- name: Read the default boot target
+  ansible.builtin.command: systemctl get-default
+  register: text_mode_target
+  changed_when: false
+  check_mode: false
+
+- name: Boot into the text target
+  ansible.builtin.command: systemctl set-default multi-user.target
+  when: text_mode_target.stdout != 'multi-user.target'
+  changed_when: true
+
+- name: Zotero on a virtual display
+  when: text_mode_zotero | bool
+  block:
+    - name: Install xvfb-run
+      community.general.zypper:
+        name: [xvfb-run, xorg-x11-server-Xvfb]
+        state: present
+
+    - name: Create the user unit directory
+      ansible.builtin.file:
+        path: "/home/{{ text_mode_user }}/.config/systemd/user"
+        state: directory
+        owner: "{{ text_mode_user }}"
+        group: "{{ text_mode_user }}"
+        mode: '0755'
+
+    - name: Install the Zotero user unit
+      ansible.builtin.template:
+        src: zotero-headless.service.j2
+        dest: "/home/{{ text_mode_user }}/.config/systemd/user/zotero-headless.service"
+        owner: "{{ text_mode_user }}"
+        group: "{{ text_mode_user }}"
+        mode: '0644'
+      register: text_mode_zotero_unit
+
+    - name: Enable Zotero for the next boot (not started now, a desktop Zotero may hold the profile)
+      ansible.builtin.systemd_service:
+        name: zotero-headless.service
+        scope: user
+        enabled: true
+        daemon_reload: "{{ text_mode_zotero_unit is changed }}"
+      become: true
+      become_user: "{{ text_mode_user }}"
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/{{ lookup('pipe', 'id -u ' + text_mode_user) }}"
+      when: not ansible_check_mode

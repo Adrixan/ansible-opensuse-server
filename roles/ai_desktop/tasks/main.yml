@@ -16,6 +16,12 @@
   ansible.builtin.include_tasks: claude_desktop.yml
   when: enable_claude_desktop | default(false) | bool
 
+- name: Include Claude Desktop removal
+  ansible.builtin.include_tasks: claude_desktop_absent.yml
+  when:
+    - not (enable_claude_desktop | default(false) | bool)
+    - claude_desktop_remove | default(false) | bool
+
 - name: Include Claude Code installation and auto-update tasks
   ansible.builtin.include_tasks: claude_code.yml
   when: enable_claude_code | default(true) | bool
