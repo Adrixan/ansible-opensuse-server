@@ -11,6 +11,9 @@ umask 022
 
 readonly CONF=/etc/topgrade/nightly.conf
 readonly TOML=/etc/topgrade/nightly.toml
+readonly STATE=/var/lib/topgrade-nightly
+readonly REBOOT_ONCE=$STATE/reboot-once   # touch it to force one reboot (gates still apply)
+readonly REBOOT_FLAG=$STATE/rebooted      # summary of the run that rebooted, for the post-boot report
 
 HC_URL=""                 # Healthchecks ping URL; empty disables pings
 REBOOT=false              # reboot when zypper reports it is needed and the run succeeded
@@ -28,6 +31,7 @@ REBOOT_REQUIRE_FS_UUID="" # reboot only while this filesystem (the unlock stick)
 PRE_REBOOT_CHECK=""       # command that must succeed before a reboot (e.g. the initrd check)
 RC_USER=""                # user whose rc roles gate the reboot (rc quiet) and get reboot notes
 RC_QUIET_WAIT_MIN=60      # longest wait for agent sessions to finish their turn
+POST_BOOT_CHECK=""        # command run after an unattended reboot; its output goes into the report
 # shellcheck source=/dev/null
 [[ -r $CONF ]] && . "$CONF"
 
@@ -66,6 +70,27 @@ wait_for_units() { # wait_for_units <phase>: true once none of WAIT_UNITS runs
   done
   return 0
 }
+
+# After an unattended reboot (topgrade-nightly-postboot.service): report the run and the new boot.
+if [[ ${1:-} == --post-boot ]]; then
+  [[ -f $REBOOT_FLAG ]] || exit 0
+  sleep 120   # let the user services and restored agent roles come up
+  report="$(cat "$REBOOT_FLAG")"
+  ok=true
+  report+=$'\n'"post-boot: up on kernel $(uname -r); $(systemd-analyze 2>/dev/null | head -n 1 | sed 's/^Startup finished in //')"
+  failed=$(systemctl --failed --no-legend --plain | awk '{print $1}' | paste -sd' ' -)
+  [[ -z $failed ]] || { ok=false; report+=$'\n'"post-boot: failed units: $failed"; }
+  if [[ -n $POST_BOOT_CHECK ]]; then
+    if check=$($POST_BOOT_CHECK 2>&1); then report+=$'\n'"post-boot: $check"; else ok=false; report+=$'\n'"post-boot check FAILED: $check"; fi
+  fi
+  if [[ -n $RC_USER ]]; then
+    roles=$(as_user "$RC_USER" systemctl --user list-units 'claude-remote-control@*' --state=active --no-legend --plain 2>/dev/null | awk '{print $1}' | sed 's/^claude-remote-control@//; s/\.service$//' | paste -sd' ' -)
+    report+=$'\n'"post-boot: agent roles running: ${roles:-none}"
+  fi
+  rm -f "$REBOOT_FLAG"
+  if $ok; then ping_hc "" "$report"; log "post-boot report sent"; else ping_hc fail "$report"; log "post-boot problems reported"; exit 1; fi
+  exit 0
+fi
 
 ping_hc start
 
@@ -149,6 +174,11 @@ summary=$(sed -n '/Summary/,$p' "$out" | tail -n 40)
 needs_reboot=false
 zypper needs-rebooting >/dev/null 2>&1
 [[ $? -eq 102 ]] && needs_reboot=true
+if [[ -f $REBOOT_ONCE ]]; then
+  needs_reboot=true
+  note "reboot: requested once ($(head -n 1 "$REBOOT_ONCE" 2>/dev/null))"
+  summary+=$'\n'"${NOTES[-1]}"
+fi
 
 if ((rc != 0)); then
   log "finished with failures (exit $rc)"
@@ -179,8 +209,13 @@ if $needs_reboot; then
   if [[ -z $blocker ]]; then
     [[ -n $RC_USER ]] && as_user "$RC_USER" rc prepare-reboot
     log "reboot needed: rebooting"
-    ping_hc "" "$summary
-reboot: rebooting"
+    # Success is reported after the boot; a box stuck at the passphrase prompt never sends it,
+    # so the started run runs into the check's grace time and alerts.
+    install -d -m 700 "$STATE"
+    printf '%s\nreboot: rebooting at %s\n' "$summary" "$(date '+%F %H:%M')" >"$REBOOT_FLAG"
+    rm -f "$REBOOT_ONCE"
+    ping_hc log "$summary
+reboot: rebooting, report follows after the boot"
     systemctl reboot
     exit 0
   fi
