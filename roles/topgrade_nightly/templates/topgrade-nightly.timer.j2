@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Nightly topgrade run
+
+[Timer]
+OnCalendar=*-*-* {{ topgrade_nightly_time }}:00
+RandomizedDelaySec={{ topgrade_nightly_random_delay }}
+# Catches up after a night the machine was off; the reboot window keeps daytime runs from rebooting.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
