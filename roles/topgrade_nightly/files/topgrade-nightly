@@ -14,6 +14,7 @@ readonly TOML=/etc/topgrade/nightly.toml
 readonly STATE=/var/lib/topgrade-nightly
 readonly REBOOT_ONCE=$STATE/reboot-once   # touch it to force one reboot (gates still apply)
 readonly REBOOT_FLAG=$STATE/rebooted      # summary of the run that rebooted, for the post-boot report
+readonly STATUS=/var/lib/topgrade-status  # "<epoch> <ok|failed> <reboot-pending yes|no>", world-readable for the shell reminder
 
 HC_URL=""                 # Healthchecks ping URL; empty disables pings
 REBOOT=false              # reboot when zypper reports it is needed and the run succeeded
@@ -38,6 +39,9 @@ POST_BOOT_CHECK=""        # command run after an unattended reboot; its output g
 NOTES=()
 log() { echo "topgrade-nightly: $*"; }
 note() { NOTES+=("$*"); log "$*"; }
+write_status() { # write_status <ok|failed> <reboot pending: yes|no>
+  printf '%s %s %s\n' "$(date +%s)" "$1" "$2" >"$STATUS.tmp" && chmod 644 "$STATUS.tmp" && mv -f "$STATUS.tmp" "$STATUS"
+}
 ping_hc() { # ping_hc [start|fail|""] [body]
   [[ -n $HC_URL ]] || return 0
   curl -fsS -m 15 --retry 3 -o /dev/null --data-binary "${2:-}" "${HC_URL}${1:+/$1}" || log "healthcheck ping failed"
@@ -88,7 +92,7 @@ if [[ ${1:-} == --post-boot ]]; then
     report+=$'\n'"post-boot: agent roles running: ${roles:-none}"
   fi
   rm -f "$REBOOT_FLAG"
-  if $ok; then ping_hc "" "$report"; log "post-boot report sent"; else ping_hc fail "$report"; log "post-boot problems reported"; exit 1; fi
+  if $ok; then write_status ok no; ping_hc "" "$report"; log "post-boot report sent"; else write_status failed no; ping_hc fail "$report"; log "post-boot problems reported"; exit 1; fi
   exit 0
 fi
 
@@ -97,11 +101,12 @@ ping_hc start
 free_mb=$(df --output=avail -m / | tail -n 1 | tr -d ' ')
 if ((free_mb < MIN_FREE_MB)); then
   log "only ${free_mb} MB free on /, need ${MIN_FREE_MB} MB; skipping"
+  write_status failed no
   ping_hc fail "low disk: ${free_mb} MB free on /"
   exit 1
 fi
 
-wait_for_units "start" || { ping_hc fail "$(printf '%s\n' "${NOTES[@]}")"; exit 1; }
+wait_for_units "start" || { write_status failed no; ping_hc fail "$(printf '%s\n' "${NOTES[@]}")"; exit 1; }
 
 # No filesystem snapshots on ext4: keep /etc and the package lists of the last seven nights instead.
 if [[ -n $SNAPSHOT_DIR ]]; then
@@ -182,6 +187,7 @@ fi
 
 if ((rc != 0)); then
   log "finished with failures (exit $rc)"
+  write_status failed "$($needs_reboot && echo yes || echo no)"
   ping_hc fail "$summary"
   exit "$rc"
 fi
@@ -222,5 +228,6 @@ reboot: rebooting, report follows after the boot"
   summary+=$'\n'"reboot: needed, pending ($blocker)"
   log "reboot needed, pending: $blocker"
 fi
+write_status ok "$($needs_reboot && echo yes || echo no)"
 ping_hc "" "$summary"
 log "finished"
