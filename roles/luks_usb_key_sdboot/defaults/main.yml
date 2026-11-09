@@ -1,0 +1,12 @@
+---
+# luks_usb_key_sdboot: systemd-boot/sdbootutil hosts (systemd initrd). The root LUKS volume opens with
+# a keyfile on a USB stick and falls back to the passphrase prompt after a timeout when the stick is
+# missing. Optionally swap gets a fresh random key on every boot (needs no hibernation; Secure Boot
+# lockdown disables it anyway). Keys are created and enrolled by hand, never by this role.
+luks_usb_key_sdboot_root_name: cr_root
+luks_usb_key_sdboot_root_uuid: ""        # LUKS UUID of the root volume
+luks_usb_key_sdboot_key_fs_uuid: ""      # filesystem UUID of the stick partition
+luks_usb_key_sdboot_key_path: /luks.key  # keyfile path on that filesystem
+luks_usb_key_sdboot_timeout: 10s         # then the passphrase prompt
+luks_usb_key_sdboot_swap_partuuid: ""    # PARTUUID of the swap partition; empty leaves swap alone
+luks_usb_key_sdboot_swap_old_fstab: ""   # fstab source of the old plaintext swap line (e.g. UUID=...)

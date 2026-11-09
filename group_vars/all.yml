@@ -41,6 +41,7 @@ enable_rclone_backup: false
 enable_transmission_daemon: false
 enable_luks_usb_key: false
 enable_topgrade_nightly: false
+enable_luks_usb_key_sdboot: false
 
 # Docker group members (docker role); grants root-equivalent access
 docker_users:
