@@ -1,0 +1,14 @@
+[Unit]
+Description=Report the nightly update run after its reboot
+Documentation=file:///usr/local/sbin/topgrade-nightly
+After=network-online.target multi-user.target
+Wants=network-online.target
+ConditionPathExists=/var/lib/topgrade-nightly/rebooted
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/topgrade-nightly --post-boot
+TimeoutStartSec=15min
+
+[Install]
+WantedBy=multi-user.target

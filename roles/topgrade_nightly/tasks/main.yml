@@ -89,6 +89,15 @@
     group: root
     mode: '0755'
 
+- name: Install the post-boot report
+  ansible.builtin.copy:
+    src: topgrade-nightly-postboot.service
+    dest: /etc/systemd/system/topgrade-nightly-postboot.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd
+
 - name: Install the service
   ansible.builtin.copy:
     src: topgrade-nightly.service
@@ -117,6 +126,12 @@
     TERM: dumb
   changed_when: false
   check_mode: false
+  when: not ansible_check_mode
+
+- name: Enable the post-boot report
+  ansible.builtin.systemd_service:
+    name: topgrade-nightly-postboot.service
+    enabled: true
   when: not ansible_check_mode
 
 - name: Enable the timer
