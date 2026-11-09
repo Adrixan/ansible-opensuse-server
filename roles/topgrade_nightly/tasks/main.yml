@@ -128,7 +128,7 @@
   ansible.builtin.meta: flush_handlers
 
 - name: Validate the allow-list with a dry run
-  ansible.builtin.command: topgrade --dry-run --config /etc/topgrade/nightly.toml
+  ansible.builtin.command: /usr/bin/topgrade --dry-run --config /etc/topgrade/nightly.toml
   environment:
     HOME: /root
     TERM: dumb

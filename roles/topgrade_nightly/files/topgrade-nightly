@@ -121,7 +121,7 @@ fi
 
 out=$(mktemp)
 trap 'rm -f "$out"' EXIT
-TERM=dumb topgrade --config "$TOML" </dev/null 2>&1 | tee "$out"
+TERM=dumb /usr/bin/topgrade --config "$TOML" </dev/null 2>&1 | tee "$out"   # the package, never a stray copy in /usr/local
 rc=${PIPESTATUS[0]}
 
 # A grub2 update rewrites the stock core; luks_usb_key's path unit puts the USB key core back.
