@@ -1,0 +1,12 @@
+---
+- name: Rebuild initrds and boot entries
+  ansible.builtin.command: sdbootutil mkinitrd
+  changed_when: true
+
+- name: Update boot entry options
+  ansible.builtin.command: sdbootutil update-all-entries
+  changed_when: true
+
+- name: Reload systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true

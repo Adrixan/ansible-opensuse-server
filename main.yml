@@ -219,3 +219,9 @@
         name: topgrade_nightly
       when: enable_topgrade_nightly | default(false) | bool
       tags: [topgrade_nightly]
+
+    - name: Include luks_usb_key_sdboot role
+      ansible.builtin.include_role:
+        name: luks_usb_key_sdboot
+      when: enable_luks_usb_key_sdboot | default(false) | bool
+      tags: [luks_usb_key_sdboot]

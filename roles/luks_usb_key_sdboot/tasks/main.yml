@@ -1,0 +1,112 @@
+---
+# tasks file for luks_usb_key_sdboot
+- name: Check the role variables
+  ansible.builtin.assert:
+    that:
+      - luks_usb_key_sdboot_root_uuid is match('^[0-9a-fA-F-]{36}$')
+      - luks_usb_key_sdboot_key_fs_uuid is match('^[0-9A-Za-z-]{4,36}$')
+      - luks_usb_key_sdboot_key_path is match('^/[A-Za-z0-9._/-]+$')
+      - luks_usb_key_sdboot_timeout is match('^[0-9]+s$')
+      - luks_usb_key_sdboot_swap_partuuid == '' or luks_usb_key_sdboot_swap_partuuid is match('^[0-9a-fA-F-]{36}$')
+    fail_msg: "Set the luks_usb_key_sdboot_* host variables"
+
+- name: Check for systemd-boot
+  ansible.builtin.command: grep -qx 'LOADER_TYPE="systemd-boot"' /etc/sysconfig/bootloader
+  changed_when: false
+  check_mode: false
+
+# Without the stick the keyfile wait ends after the timeout and systemd asks for the passphrase.
+- name: Open the root volume with the stick's keyfile
+  ansible.builtin.lineinfile:
+    path: /etc/crypttab
+    regexp: '^{{ luks_usb_key_sdboot_root_name }}\s'
+    line: >-
+      {{ luks_usb_key_sdboot_root_name }}  UUID={{ luks_usb_key_sdboot_root_uuid }}
+      {{ luks_usb_key_sdboot_key_path }}:UUID={{ luks_usb_key_sdboot_key_fs_uuid }}
+      x-initrd.attach,keyfile-timeout={{ luks_usb_key_sdboot_timeout }}
+    backup: true
+  notify: Rebuild initrds and boot entries
+
+- name: Put the USB and FAT drivers into the initrd
+  ansible.builtin.copy:
+    src: 90-usb-keyfile.conf
+    dest: /etc/dracut.conf.d/90-usb-keyfile.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Rebuild initrds and boot entries
+
+- name: Encrypted swap
+  when: luks_usb_key_sdboot_swap_partuuid | length > 0
+  block:
+    - name: Map swap with a new random key on every boot
+      ansible.builtin.lineinfile:
+        path: /etc/crypttab
+        regexp: '^cr_swap\s'
+        line: "cr_swap  PARTUUID={{ luks_usb_key_sdboot_swap_partuuid }}  /dev/urandom  swap,cipher=aes-xts-plain64,size=512,sector-size=4096"
+        backup: true
+
+    - name: Use the encrypted swap device
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^({{ luks_usb_key_sdboot_swap_old_fstab | regex_escape }}|/dev/mapper/cr_swap)\s+\S+\s+swap\s'
+        line: "/dev/mapper/cr_swap  swap  swap  defaults  0  0"
+        backup: true
+      when: luks_usb_key_sdboot_swap_old_fstab | length > 0
+
+    - name: Install the one-time wipe of the old plaintext swap
+      ansible.builtin.template:
+        src: swap-wipe-once.service.j2
+        dest: /etc/systemd/system/swap-wipe-once.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Create the cryptsetup drop-in directory for swap
+      ansible.builtin.file:
+        path: /etc/systemd/system/systemd-cryptsetup@cr_swap.service.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Run the wipe before encrypted swap opens
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/systemd-cryptsetup@cr_swap.service.d/10-wipe-once.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          # Managed by Ansible (luks_usb_key_sdboot)
+          [Unit]
+          Wants=swap-wipe-once.service
+          After=swap-wipe-once.service
+      notify: Reload systemd
+
+    # Random-key swap cannot hold a hibernation image; a resume= to a vanished device delays boot.
+    - name: Drop resume= from the kernel command line
+      ansible.builtin.replace:
+        path: /etc/kernel/cmdline
+        regexp: '\s*\bresume=\S+'
+        replace: ''
+        backup: true
+      notify: Update boot entry options
+
+- name: Apply the boot changes now
+  ansible.builtin.meta: flush_handlers
+
+- name: Install the initrd check
+  ansible.builtin.template:
+    src: luks-usb-key-check.j2
+    dest: /usr/local/sbin/luks-usb-key-check
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Check every boot entry's initrd
+  ansible.builtin.command: /usr/local/sbin/luks-usb-key-check
+  register: luks_usb_key_sdboot_check
+  changed_when: false
+  check_mode: false
+  when: not ansible_check_mode

@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# One-time zeroing of the former plaintext swap partition before encrypted swap first uses it,
+# so old memory pages do not stay readable on the disk.
+[Unit]
+Description=Zero the former plaintext swap partition once
+DefaultDependencies=no
+After=systemd-remount-fs.service
+Before=systemd-cryptsetup@cr_swap.service
+ConditionPathExists=!/var/lib/swap-wipe-once/done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/blkdiscard --zeroout --force /dev/disk/by-partuuid/{{ luks_usb_key_sdboot_swap_partuuid }}
+ExecStartPost=/usr/bin/mkdir -p /var/lib/swap-wipe-once
+ExecStartPost=/usr/bin/touch /var/lib/swap-wipe-once/done

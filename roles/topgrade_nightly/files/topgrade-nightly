@@ -1,25 +1,70 @@
 #!/usr/bin/env bash
-# topgrade-nightly: unattended nightly topgrade run with an allow-list of steps
+# topgrade-nightly: unattended nightly update run with an allow-list of topgrade steps
 # (/etc/topgrade/nightly.toml), Healthchecks pings and an optional reboot inside a night window.
 # Runs as root from topgrade-nightly.service; interactive runs keep using ~/.config/topgrade.toml.
+# Optional per host (nightly.conf): wait for other nightly jobs, snapshot /etc and the package list,
+# an Ansible run of chosen roles as the desktop user, a firmware report, and reboot gates (a stick
+# that must be present, a pre-reboot check, no agent session in a turn, notes for restored sessions).
 set -uo pipefail
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 umask 022
 
 readonly CONF=/etc/topgrade/nightly.conf
 readonly TOML=/etc/topgrade/nightly.toml
 
-HC_URL=""          # Healthchecks ping URL; empty disables pings
-REBOOT=false       # reboot when zypper reports it is needed and the run succeeded
-REBOOT_FROM=1      # reboot window start hour (inclusive)
-REBOOT_UNTIL=6     # reboot window end hour (exclusive)
-MIN_FREE_MB=4096   # free space needed on /
+HC_URL=""                 # Healthchecks ping URL; empty disables pings
+REBOOT=false              # reboot when zypper reports it is needed and the run succeeded
+REBOOT_FROM=1             # reboot window start hour (inclusive)
+REBOOT_UNTIL=6            # reboot window end hour (exclusive)
+MIN_FREE_MB=4096          # free space needed on /
+WAIT_UNITS=""             # "user:unit ..." user units to let finish before the run and before a reboot
+WAIT_MAX_MIN=90           # longest wait for them
+SNAPSHOT_DIR=""           # /etc tarball and package lists before the run (7 kept)
+ANSIBLE_USER=""           # run Ansible roles as this user ...
+ANSIBLE_REPO=""           # ... from this clone (only when it is clean on master) ...
+ANSIBLE_ROLES=""          # ... with these enable_<role> flags
+FIRMWARE_REPORT=false     # fwupd: refresh and report available updates, never install
+REBOOT_REQUIRE_FS_UUID="" # reboot only while this filesystem (the unlock stick) is present
+PRE_REBOOT_CHECK=""       # command that must succeed before a reboot (e.g. the initrd check)
+RC_USER=""                # user whose rc roles gate the reboot (rc quiet) and get reboot notes
+RC_QUIET_WAIT_MIN=60      # longest wait for agent sessions to finish their turn
 # shellcheck source=/dev/null
 [[ -r $CONF ]] && . "$CONF"
 
+NOTES=()
 log() { echo "topgrade-nightly: $*"; }
+note() { NOTES+=("$*"); log "$*"; }
 ping_hc() { # ping_hc [start|fail|""] [body]
   [[ -n $HC_URL ]] || return 0
   curl -fsS -m 15 --retry 3 -o /dev/null --data-binary "${2:-}" "${HC_URL}${1:+/$1}" || log "healthcheck ping failed"
+}
+# Runs a command as a user with that user's session bus, so `systemctl --user` works.
+as_user() {
+  local user="$1" uid home
+  shift
+  uid=$(id -u "$user") && home=$(getent passwd "$user" | cut -d: -f6) || return 1
+  runuser -u "$user" -- env HOME="$home" XDG_RUNTIME_DIR="/run/user/$uid" \
+    DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" \
+    PATH="$home/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" "$@"
+}
+# Prints the WAIT_UNITS that are running now.
+busy_units() {
+  local entry user unit
+  for entry in $WAIT_UNITS; do
+    user=${entry%%:*} unit=${entry#*:}
+    as_user "$user" systemctl --user is-active --quiet "$unit" 2>/dev/null && printf '%s ' "$unit"
+  done
+  return 0
+}
+wait_for_units() { # wait_for_units <phase>: true once none of WAIT_UNITS runs
+  local deadline busy
+  [[ -n $WAIT_UNITS ]] || return 0
+  deadline=$(($(date +%s) + WAIT_MAX_MIN * 60))
+  while busy=$(busy_units) && [[ -n $busy ]]; do
+    (($(date +%s) < deadline)) || { note "$1: still running after $WAIT_MAX_MIN min: $busy"; return 1; }
+    sleep 30
+  done
+  return 0
 }
 
 ping_hc start
@@ -29,6 +74,24 @@ if ((free_mb < MIN_FREE_MB)); then
   log "only ${free_mb} MB free on /, need ${MIN_FREE_MB} MB; skipping"
   ping_hc fail "low disk: ${free_mb} MB free on /"
   exit 1
+fi
+
+wait_for_units "start" || { ping_hc fail "$(printf '%s\n' "${NOTES[@]}")"; exit 1; }
+
+# No filesystem snapshots on ext4: keep /etc and the package lists of the last seven nights instead.
+if [[ -n $SNAPSHOT_DIR ]]; then
+  stamp=$(date +%Y%m%d-%H%M%S)
+  if install -d -m 700 "$SNAPSHOT_DIR" &&
+    tar -czf "$SNAPSHOT_DIR/etc-$stamp.tar.gz" -C / etc 2>/dev/null &&
+    rpm -qa --qf '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' | sort >"$SNAPSHOT_DIR/packages-$stamp.txt"; then
+    flatpak list --columns=application,version,installation >"$SNAPSHOT_DIR/flatpak-$stamp.txt" 2>/dev/null || true
+    for kind in etc packages flatpak; do
+      find "$SNAPSHOT_DIR" -maxdepth 1 -name "$kind-*" -printf '%T@ %p\n' | sort -rn | tail -n +8 | cut -d' ' -f2- | xargs -r rm -f --
+    done
+    note "snapshot: /etc and package lists in $SNAPSHOT_DIR"
+  else
+    note "snapshot: failed"
+  fi
 fi
 
 out=$(mktemp)
@@ -49,28 +112,80 @@ if command -v grub-usbkey-core >/dev/null; then
   fi
 fi
 
+# Ansible roles (npm prefixes with audit gates, uv tools, the MCP stack) from the user's clone,
+# only from a clean master so a half-done change of a session never runs unattended.
+if [[ -n $ANSIBLE_USER && -n $ANSIBLE_REPO && -n $ANSIBLE_ROLES ]]; then
+  branch=$(as_user "$ANSIBLE_USER" git -C "$ANSIBLE_REPO" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  dirty=$(as_user "$ANSIBLE_USER" git -C "$ANSIBLE_REPO" status --porcelain 2>/dev/null | grep -v '^??' | head -n 1)
+  if [[ $branch != master || -n $dirty ]]; then
+    note "ansible: skipped, $ANSIBLE_REPO is on '$branch'${dirty:+ with uncommitted changes}"
+  elif ! as_user "$ANSIBLE_USER" git -C "$ANSIBLE_REPO" pull -q --ff-only; then
+    note "ansible: git pull failed"
+    rc=1
+  else
+    flags=()
+    for role in $ANSIBLE_ROLES; do flags+=(-e "enable_${role}=true"); done
+    # shellcheck disable=SC2016  # expanded by the user's shell
+    if as_user "$ANSIBLE_USER" bash -c 'set -a; . "$HOME/.config/ai/env"; set +a; cd "$1" && shift && ansible-playbook main.yml "$@"' \
+      _ "$ANSIBLE_REPO" "${flags[@]}" >"$out.ansible" 2>&1; then
+      note "ansible: $(grep -E ' : ok=' "$out.ansible" | sed 's/^[^:]*: //' | tr -s ' ' | head -n 1)"
+    else
+      tail -n 30 "$out.ansible"
+      note "ansible: failed ($(grep -E '^fatal|FAILED!' "$out.ansible" | head -n 1 | cut -c1-200))"
+      rc=1
+    fi
+    rm -f "$out.ansible"
+  fi
+fi
+
+if [[ $FIRMWARE_REPORT == true ]] && command -v fwupdmgr >/dev/null; then
+  fwupdmgr refresh --force -y >/dev/null 2>&1 || true
+  fw=$(fwupdmgr get-updates --no-unreported-check -y 2>/dev/null | grep -E '^[├└]─|New version' | sed 's/^[│├└─ ]*//' | paste -sd' ' -)
+  note "firmware: ${fw:-no updates} (report only)"
+fi
+
 summary=$(sed -n '/Summary/,$p' "$out" | tail -n 40)
+[[ ${#NOTES[@]} -gt 0 ]] && summary+=$'\n'"$(printf '%s\n' "${NOTES[@]}")"
 needs_reboot=false
 zypper needs-rebooting >/dev/null 2>&1
 [[ $? -eq 102 ]] && needs_reboot=true
-hour=$(date +%-H)
 
 if ((rc != 0)); then
-  log "finished with failures (topgrade exit $rc)"
+  log "finished with failures (exit $rc)"
   ping_hc fail "$summary"
   exit "$rc"
 fi
 
+# Prints why a reboot cannot happen now, nothing when it can.
+reboot_blocker() {
+  local hour
+  hour=$(date +%-H)
+  [[ $REBOOT == true ]] || { echo "automatic reboot is off"; return; }
+  ((hour >= REBOOT_FROM && hour < REBOOT_UNTIL)) || { echo "outside the window $REBOOT_FROM-$REBOOT_UNTIL"; return; }
+  if [[ -n $REBOOT_REQUIRE_FS_UUID && ! -e /dev/disk/by-uuid/$REBOOT_REQUIRE_FS_UUID ]]; then
+    echo "the unlock stick is not plugged in"; return
+  fi
+  if [[ -n $PRE_REBOOT_CHECK ]] && ! $PRE_REBOOT_CHECK >/dev/null 2>&1; then
+    echo "pre-reboot check failed ($PRE_REBOOT_CHECK)"; return
+  fi
+  wait_for_units "reboot" >/dev/null || { echo "nightly jobs still running"; return; }
+  if [[ -n $RC_USER ]] && ! as_user "$RC_USER" rc quiet --wait "$RC_QUIET_WAIT_MIN" >/dev/null 2>&1; then
+    echo "an agent session is still in a turn"; return
+  fi
+}
+
 if $needs_reboot; then
-  if [[ $REBOOT == true ]] && ((hour >= REBOOT_FROM && hour < REBOOT_UNTIL)); then
+  blocker=$(reboot_blocker)
+  if [[ -z $blocker ]]; then
+    [[ -n $RC_USER ]] && as_user "$RC_USER" rc prepare-reboot
     log "reboot needed: rebooting"
     ping_hc "" "$summary
 reboot: rebooting"
     systemctl reboot
     exit 0
   fi
-  summary+=$'\n'"reboot: needed, not done (REBOOT=$REBOOT, hour $hour, window $REBOOT_FROM-$REBOOT_UNTIL)"
-  log "reboot needed, not done"
+  summary+=$'\n'"reboot: needed, pending ($blocker)"
+  log "reboot needed, pending: $blocker"
 fi
 ping_hc "" "$summary"
 log "finished"
