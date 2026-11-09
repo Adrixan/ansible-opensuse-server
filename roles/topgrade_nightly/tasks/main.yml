@@ -89,6 +89,14 @@
     group: root
     mode: '0755'
 
+- name: Install the on-demand command
+  ansible.builtin.copy:
+    src: update-system
+    dest: /usr/local/bin/update-system
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Install the post-boot report
   ansible.builtin.copy:
     src: topgrade-nightly-postboot.service
@@ -134,9 +142,9 @@
     enabled: true
   when: not ansible_check_mode
 
-- name: Enable the timer
+- name: Enable the timer (or keep it off where updates run only on demand)
   ansible.builtin.systemd_service:
     name: topgrade-nightly.timer
-    enabled: true
-    state: started
+    enabled: "{{ topgrade_nightly_timer | bool }}"
+    state: "{{ 'started' if topgrade_nightly_timer | bool else 'stopped' }}"
   when: not ansible_check_mode

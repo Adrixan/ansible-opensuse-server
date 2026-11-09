@@ -6,6 +6,7 @@
 # ruby_gems (would `gem update` RPM-owned gems), git_repos and yadm (pulls need a human),
 # pipx and pip (no supply-chain cooldown), AI CLIs with own self-updaters.
 topgrade_nightly_steps: [system, flatpak, node, tldr]   # add containers where Docker runs
+topgrade_nightly_timer: true            # false: no automatic runs, only `update-system` on demand
 topgrade_nightly_time: "03:30"
 topgrade_nightly_random_delay: 20min
 topgrade_nightly_reboot: false          # true only where an unattended boot works
