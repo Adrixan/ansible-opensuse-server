@@ -1,6 +1,8 @@
 # Session Handoff State
 
 ## Active Intent
+2026-11-10 (xps13, brief from the Greeter): `android_build` first run on xps13 done: run 1 rc 0 changed=15, run 2 changed=0; `ai_workstation` run 1 changed=8 (MCP manifests, mcp-shared restart), run 2 changed=0. `/dev/kvm` is 0666 there (no kvm group change). `~/code/sudoku-grove-android`: `npm ci`, `npm run build`, `npx cap sync android`, `bash kit/scripts/gradle.sh :app:assembleDebug` BUILD SUCCESSFUL (app-debug.apk 4.9 MB), repo clean. The xps13 next step below is closed.
+
 2026-11-09 evening (brief from the research session "Android apps", Peter: "Yes, nightly"): `android_build` runs in schulpc's nightly topgrade.
 - schulpc inventory (`hosts`, gitignored; backup in `.scratch/hosts.bak-*`): `topgrade_nightly_ansible_roles=["ai_workstation","android_build"]`; `topgrade_nightly` applied (run 1 changed=1 = `/etc/topgrade/nightly.conf`, run 2 changed=0), rendered `ANSIBLE_ROLES='ai_workstation android_build'`; timer next 2026-11-10 02:00. xps13 stays on demand (`update-system`), not in any nightly.
 - Verified: nightly-shaped run (env -i, nightly PATH, `~/.config/ai/env` sourced, clean master) of `-e enable_android_build=true` twice: rc 0, changed=0. Cooldown (24 h) and SHA-256/SHA-1 checks are role defaults, no inventory override. A network outage makes the planner exit 2, so the nightly reports "ansible: failed" and pings fail (intended: no silent skip). A Gradle build or emulator running at 02:00 delays a swap up to 30 min per lock; a timeout fails the run.
