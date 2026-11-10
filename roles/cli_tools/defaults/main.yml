@@ -7,6 +7,29 @@ build_packages:
   - zlib-devel
   - pcre2-devel
 
+# Command-line tools from the distribution (same set on every workstation, Peter 2026-11-10)
+cli_packages:
+  - ShellCheck
+  - mdbtools
+  - oath-toolkit
+  # PHP CLI with the extensions the PHP projects and their test suites use (edu-publisher, WordPress tools)
+  - php8-cli
+  - php8-ctype
+  - php8-curl
+  - php8-dom
+  - php8-iconv
+  - php8-mbstring
+  - php8-openssl
+  - php8-pdo
+  - php8-phar
+  - php8-sqlite
+  - php8-tokenizer
+  - php8-xmlreader
+  - php8-xmlwriter
+  - php8-zip
+  - php8-zlib
+  - php-composer2
+
 npm_global_packages:
   - tldr
 

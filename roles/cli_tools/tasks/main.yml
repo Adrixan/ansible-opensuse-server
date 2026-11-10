@@ -5,6 +5,11 @@
     name: "{{ build_packages }}"
     state: present
 
+- name: Install command-line tools from the distribution
+  community.general.zypper:
+    name: "{{ cli_packages }}"
+    state: present
+
 - name: Install global npm CLI tools
   community.general.npm:
     name: "{{ item }}"

@@ -6,6 +6,10 @@ ai_workstation_user_home: "{{ target_user_home | default('/home/' + ai_workstati
 ai_workstation_packages:
   - nodejs
   - npm
+  # Node.js 26 ahead of nodejs-default (Peter 2026-10-30, for the cf CLI); takes over /usr/bin/node.
+  # Drop both once nodejs-default moves to 26 or later.
+  - nodejs26
+  - npm26
   - git
   - sqlite3
   - python313-uv
