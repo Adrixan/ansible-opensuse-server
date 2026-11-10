@@ -1,6 +1,14 @@
 # Session Handoff State
 
 ## Active Intent
+2026-11-10 evening (schulpc, Peter): the nightly reboot at 02:22 was blocked by `luks-usb-key-check --key` (rc 1, no output). Cause: with the stick not mounted, `mnt=$(findmnt -rno TARGET "$dev" | head -n 1)` exits 1 under `set -euo pipefail`, so the script exited silently before mounting; on 2026-11-09 the check passed only because the stick was mounted during enrollment. Fixed in `luks_usb_key_sdboot` (`|| true`), and `topgrade-nightly` now appends the check's last output line to "pre-reboot check failed". Applied (`-e enable_luks_usb_key_sdboot=true -e enable_topgrade_nightly=true`): check mode showed only the two files, run 1 changed=2, run 2 changed=0; `--key` passes, stick unmounted afterwards.
+- Peter: the restart test with the stick worked (boot 2026-11-09 13:49), `yadm encrypt` is done (HC_URL_M11X, HC_URL_SCHULPC in the archive). Fallback boot entry moved (not deleted) to `/backup/luks-backups/schulpc/20261109-102827/fallback-pre-usbkey-boot/`; `/var/lib/topgrade-nightly/reboot-once` removed (test done).
+- Tonight: a reboot is due anyway (`zypper needs-rebooting` = 102, kernel 7.3.1 installed at 02:15 and is the default entry, its initrd passes the check). Next: read `journalctl -u topgrade-nightly -u topgrade-nightly-postboot` and Healthchecks `schulpc nightly` for the first unattended nightly reboot and the post-boot report.
+- Closed by Peter (2026-11-10): manual `system_update` on schulpc (the nightly runs `zypper dup`) and the TPM 2.0 conversion (the USB keyfile unlocks root). The FreeDOS stick image and downloads in `.scratch/` can go once Peter confirms.
+- bgutil unit on testground into Ansible (Peter's go): belongs to vps-maintenance, handed to its code session.
+- Still open: the unlock test without the stick at the console (Peter).
+
+### Earlier intent (2026-11-10 xps13)
 2026-11-10 (xps13, brief from the Greeter): `android_build` first run on xps13 done: run 1 rc 0 changed=15, run 2 changed=0; `ai_workstation` run 1 changed=8 (MCP manifests, mcp-shared restart), run 2 changed=0. `/dev/kvm` is 0666 there (no kvm group change). `~/code/sudoku-grove-android`: `npm ci`, `npm run build`, `npx cap sync android`, `bash kit/scripts/gradle.sh :app:assembleDebug` BUILD SUCCESSFUL (app-debug.apk 4.9 MB), repo clean. The xps13 next step below is closed.
 
 2026-11-09 evening (brief from the research session "Android apps", Peter: "Yes, nightly"): `android_build` runs in schulpc's nightly topgrade.
@@ -86,8 +94,8 @@
 - Cloudflare agent setup (2026-10-30): `cf` CLI in an audited prefix (`spec` minimum until Node 26.12 arrives with `zypper dup`, then drop it) and the upstream Claude plugin via `ai_workstation_claude_upstream_plugins`; both ran twice, second run `changed=0`. Garmin and Cloudflare are enabled in OpenCode and Antigravity through yadm. schulpc got `nodejs26`/`npm26` 26.12.0 alone via zypper on Peter's order, ahead of the pending `zypper dup`; `cf` stayed on beta.25 until beta.26 clears the cooldown. Claude and `cf` are logged in; OpenCode login skipped by Peter. `cf` is on beta.26 by Peter's one-off cooldown exception; a role run before 2026-10-30 21:18 puts it back on beta.25, a later one keeps beta.26.
 - m11x updates itself nightly since 2026-11-09 (`topgrade_nightly`); xps13: Peter says when to update it.
 - Old inventory credential: closed by Peter 2026-10-30, do not bring it up again. Reachable history only holds the `***REMOVED***` placeholder, so no rewrite was needed.
-- Open decision (Peter): bring schulpc up to date (see 2026-10-30 host check): `ansible-playbook main.yml -e enable_system_update=true`, then rerun `ai_workstation` for npm globals. A reboot afterwards needs Peter at the machine (manual LUKS unlock).
-- Open decision (Peter, 2026-11-03): TPM unlock of the desktop root LUKS. Blocked: the dTPM is TPM 1.2 (Nuvoton, fw 5.81); systemd-cryptenroll/sdbootutil need 2.0. Dell lists the OptiPlex 7040 as eligible for the 1.2 to 2.0 firmware conversion (Windows utility; runs from FreeDOS or WinPE per community reports). Peter chose the TPM 2.0 conversion (2026-11-03); preparation done, the flash at the console is his. Details in the 2026-11-03 entries.
+- Closed (Peter, 2026-11-10): manual schulpc update via `system_update`; `topgrade_nightly` runs `zypper dup` every night.
+- Closed (Peter, 2026-11-10): TPM unlock and the TPM 2.0 conversion; root opens from the USB keyfile (`luks_usb_key_sdboot`).
 - Uncommitted yadm changes on schulpc (`~/.gemini/config/config.json`, `~/.agents/session-handoff.md`), probably from another session: commit there or drop; not touched here.
 
 ## 2026-10-19: US-14.2 OpenCode on DragTokens
