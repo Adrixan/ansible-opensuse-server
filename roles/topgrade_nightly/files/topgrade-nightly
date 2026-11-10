@@ -211,8 +211,11 @@ reboot_blocker() {
   if [[ -n $REBOOT_REQUIRE_FS_UUID && ! -e /dev/disk/by-uuid/$REBOOT_REQUIRE_FS_UUID ]]; then
     echo "the unlock stick is not plugged in"; return
   fi
-  if [[ -n $PRE_REBOOT_CHECK ]] && ! $PRE_REBOOT_CHECK >/dev/null 2>&1; then
-    echo "pre-reboot check failed ($PRE_REBOOT_CHECK)"; return
+  if [[ -n $PRE_REBOOT_CHECK ]]; then
+    local out
+    if ! out=$($PRE_REBOOT_CHECK 2>&1); then
+      echo "pre-reboot check failed ($PRE_REBOOT_CHECK: $(tail -n 1 <<<"${out:-no output}"))"; return
+    fi
   fi
   wait_for_units "reboot" >/dev/null || { echo "nightly jobs still running"; return; }
   if [[ -n $RC_USER ]] && ! as_user "$RC_USER" rc quiet --wait "$RC_QUIET_WAIT_MIN" >/dev/null 2>&1; then

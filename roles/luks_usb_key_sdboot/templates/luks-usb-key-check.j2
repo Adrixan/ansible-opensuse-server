@@ -49,7 +49,8 @@ echo "all $checked sdbootutil initrds open the root volume from the stick"
 if [[ ${1:-} == --key ]]; then
   dev=/dev/disk/by-uuid/{{ luks_usb_key_sdboot_key_fs_uuid }}
   [[ -e $dev ]] || { echo "the stick is not plugged in"; exit 1; }
-  mnt=$(findmnt -rno TARGET "$dev" | head -n 1)
+  # findmnt exits 1 for an unmounted stick, which pipefail and set -e would turn into a silent exit 1
+  mnt=$(findmnt -rno TARGET "$dev" | head -n 1 || true)
   if [[ -z $mnt ]]; then
     mnt=$(mktemp -d)
     mount -o ro,nodev,nosuid,noexec "$dev" "$mnt"
