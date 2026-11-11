@@ -11,12 +11,19 @@ shopt -s nullglob
 # --post-boot: after an unattended reboot, one line on how the boot went; non-zero on a problem.
 if [[ ${1:-} == --post-boot ]]; then
   problems=() facts=()
-  # "… + 4.5s (initrd) + …" or "1min 12.3s (initrd)": a passphrase prompt keeps the initrd waiting
-  t=$(systemd-analyze 2>/dev/null | sed -n 's/.*+ \([^+]*\) (initrd).*/\1/p' | head -n 1)
-  secs=$(awk '{s=0; for (i=1;i<=NF;i++) { if ($i ~ /min$/) s+=60*$i; else if ($i ~ /ms$/) s+=$i/1000; else if ($i ~ /s$/) s+=$i } printf "%d", s}' <<<"$t")
-  if [[ -z $t ]]; then problems+=("initrd time unknown")
-  elif ((secs > 60)); then problems+=("initrd took $t: the root volume probably waited for the passphrase")
-  else facts+=("root unlocked in the initrd within $t"); fi
+  # Initrd time from the manager's timestamps (µs since boot): systemd-analyze refuses to answer
+  # until the boot has finished, and this runs as part of the boot. A passphrase prompt keeps the
+  # initrd waiting, so a long initrd means the stick did not open the root volume.
+  initrd_us=$(systemctl show -p InitRDTimestampMonotonic --value) || initrd_us=""
+  userspace_us=$(systemctl show -p UserspaceTimestampMonotonic --value) || userspace_us=""
+  if [[ ! $initrd_us =~ ^[0-9]+$ || ! $userspace_us =~ ^[0-9]+$ ]] || ((initrd_us == 0 || userspace_us <= initrd_us)); then
+    problems+=("initrd time unknown")
+  else
+    initrd_us=$((userspace_us - initrd_us))
+    t=$(awk -v us="$initrd_us" 'BEGIN { printf "%.1fs", us / 1e6 }')
+    if ((initrd_us > 60000000)); then problems+=("initrd took $t: the root volume probably waited for the passphrase")
+    else facts+=("root unlocked in the initrd within $t"); fi
+  fi
 [# swap checks only where the role encrypts swap #]
 {% if luks_usb_key_sdboot_swap_partuuid | length > 0 %}
   if lsblk -nro NAME,MOUNTPOINTS | grep -q '^cr_swap \[SWAP\]'; then facts+=("swap on cr_swap"); else problems+=("swap is not on cr_swap"); fi
