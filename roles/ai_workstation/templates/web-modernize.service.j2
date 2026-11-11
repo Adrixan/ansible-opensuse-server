@@ -1,13 +1,13 @@
 # {{ ansible_managed }}
-# One `rc code <project>` modernization session after the other (yadm ~/.local/bin/web-modernize;
-# project list ~/sync/ai/web-projects.txt; report ~/sync/ai/web-modernize/<date>.md)
+# `rc code <project>` modernization sessions, {{ ai_workstation_web_modernize_parallel }} at a time (yadm
+# ~/.local/bin/web-modernize; project list ~/sync/ai/web-projects.txt; reports ~/sync/ai/web-modernize/<date>/)
 [Unit]
-Description=Modern Web Guidance modernization of the web projects, one session at a time
+Description=Modern Web Guidance modernization of the web projects
 Wants=network-online.target
 After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/bin/web-modernize
+ExecStart=%h/.local/bin/web-modernize --parallel {{ ai_workstation_web_modernize_parallel }}
 Nice=5
 TimeoutStartSec=20h

@@ -1,7 +1,8 @@
 ---
-# Weekly modernization run of Peter's web projects with Modern Web Guidance (Peter, 2026-11-11: Sundays
-# 08:00). The runner (yadm ~/.local/bin/web-modernize) starts one `rc code <project>` session after the
-# other, so the rc RAM guard and the peer-workstation guard apply; machines without the flag get no timer.
+# One-off modernization run of Peter's web projects with Modern Web Guidance (Peter, 2026-11-11: once on
+# 2026-11-15 06:00, four sessions in parallel). The runner (yadm ~/.local/bin/web-modernize) starts the
+# `rc code <project>` sessions, so the rc RAM guard and the peer-workstation guard apply; machines without
+# the flag get no timer.
 
 - name: Deploy the web-modernize user units
   ansible.builtin.template:
