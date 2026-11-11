@@ -1,0 +1,27 @@
+#!/bin/bash
+# systemd-sleep hook for the Dell XPS 13 9310 (Qualcomm QCA6390 combo card):
+# unload ath11k (WiFi, PCIe) and hci_uart (Bluetooth, UART) before suspend or
+# hibernation and load them again after the resume. systemd-sleep runs hooks
+# synchronously, so the unload ends before the freeze and the reload starts
+# only after the resume. bluetoothd stays up and picks up the new hci0.
+# Managed by Ansible (power_management); local edits are overwritten.
+set -u
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+log() { echo "xps13-9310-wireless ${1:-}: $2" >&2; }
+
+case "${1:-}" in
+  pre)
+    if [ -d /sys/module/ath11k_pci ]; then
+      modprobe -r ath11k_pci ath11k || log pre "unloading ath11k failed"
+    fi
+    if [ -d /sys/module/hci_uart ]; then
+      modprobe -r hci_uart || log pre "unloading hci_uart failed"
+    fi
+    ;;
+  post)
+    modprobe ath11k_pci || log post "loading ath11k_pci failed"
+    modprobe hci_uart || log post "loading hci_uart failed"
+    ;;
+esac
+exit 0

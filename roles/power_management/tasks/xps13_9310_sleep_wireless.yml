@@ -1,0 +1,35 @@
+# The QCA6390 combo card needs ath11k (WiFi) and hci_uart (Bluetooth) unloaded
+# across suspend and hibernation. A systemd-sleep hook runs synchronously around
+# the freeze. It replaces hand-made ath11k-* units: the hibernate one was
+# Type=simple and ordered before hibernate.target (reached only after the
+# resume), so its unload raced the freeze and could unload hci_uart again after
+# the resume unit had loaded it, leaving the machine without Bluetooth.
+- name: Install the wireless sleep hook
+  ansible.builtin.copy:
+    src: xps13-9310-wireless.sleep
+    dest: /usr/lib/systemd/system-sleep/xps13-9310-wireless
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Remove the hand-made ath11k sleep units and scripts
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/systemd/system/hibernate.target.wants/ath11k-hibernate.service
+    - /etc/systemd/system/hibernate.target.wants/ath11k-resume.service
+    - /etc/systemd/system/suspend.target.wants/ath11k-suspend.service
+    - /etc/systemd/system/suspend.target.wants/ath11k-resume.service
+    - /etc/systemd/system/ath11k-hibernate.service
+    - /etc/systemd/system/ath11k-suspend.service
+    - /etc/systemd/system/ath11k-resume.service
+    - /usr/bin/hibernate.sh
+    - /usr/bin/hibernate.sh.bak-20261109
+    - /usr/bin/resume.sh
+  register: power_management_ath11k_units
+
+- name: Reload systemd after removing the ath11k units
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: power_management_ath11k_units is changed

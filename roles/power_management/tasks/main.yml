@@ -10,3 +10,9 @@
   when:
     - ansible_facts['system_vendor'] == "Dell Inc."
     - ansible_facts['product_name'] == "XPS 13 9310"
+
+- name: Reload the XPS 13 9310 wireless modules around sleep
+  ansible.builtin.include_tasks: xps13_9310_sleep_wireless.yml
+  when:
+    - ansible_facts['system_vendor'] == "Dell Inc."
+    - ansible_facts['product_name'] == "XPS 13 9310"
