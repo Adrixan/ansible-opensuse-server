@@ -1,6 +1,6 @@
 [Unit]
 Description=Resume: re-arm USB-C and EC wake GPEs
-After=hibernate.target dell-resume.service ath11k-resume.service
+After=hibernate.target dell-resume.service
 
 [Service]
 Type=oneshot
