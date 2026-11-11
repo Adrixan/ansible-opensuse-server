@@ -27,6 +27,9 @@ export NASA_API_KEY="{{ ai_workstation_nasa_api_key }}"
 # (the Ph.D. vault) would otherwise get index conflict copies from a mere status on two machines
 export GIT_OPTIONAL_LOCKS=0
 
+# Modern Web Guidance sends each search query to Google unless this is set (its skill calls npx directly)
+export DISABLE_TELEMETRY=1
+
 # Secrets owned by yadm (encrypted archive), never rendered by this role, e.g. TRIP_PLANNER_TOKEN
 [ -r "$HOME/.config/ai/env.local" ] && . "$HOME/.config/ai/env.local"
 

@@ -92,3 +92,38 @@
   loop: "{{ ai_workstation_mcp_node_servers }}"
   loop_control:
     label: "{{ item.name }}"
+
+- name: Install the wrappers for further commands of a Node.js package
+  ansible.builtin.copy:
+    dest: "/usr/local/bin/{{ item.1 }}"
+    content: |
+      #!/bin/sh
+      # Managed by Ansible (ai_workstation): {{ item.0.package }} (latest release) from {{ ai_workstation_mcp_node_dir }}/{{ item.0.name }}
+      {% for key, value in (item.0.env | default({})).items() %}
+      export {{ key }}={{ value | quote }}
+      {% endfor %}
+      exec {{ ai_workstation_mcp_node_dir }}/{{ item.0.name }}/node_modules/.bin/{{ item.1 }} "$@"
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ ai_workstation_mcp_node_servers | subelements('extra_bins', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.1 }}"
+
+- name: Check for the workstation-web plugin (comes with yadm)
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_web_plugin_dir }}/.claude-plugin/plugin.json"
+  register: ai_workstation_web_plugin
+
+- name: Copy the skills of the web packages into the workstation-web plugin
+  ansible.builtin.command:
+    argv: [rsync, -a, --delete, --itemize-changes, "--chown={{ ai_workstation_user }}:{{ ai_workstation_user }}",
+           "{{ ai_workstation_mcp_node_dir }}/{{ item.0.server }}/node_modules/{{ item.0.package }}/skills/{{ item.1 }}/",
+           "{{ ai_workstation_web_plugin_dir }}/skills/{{ item.1 }}/"]
+  loop: "{{ ai_workstation_web_plugin_skills | subelements('skills') }}"
+  loop_control:
+    label: "{{ item.1 }}"
+  register: ai_workstation_web_plugin_sync
+  changed_when: ai_workstation_web_plugin_sync.stdout | length > 0
+  when: ai_workstation_web_plugin.stat.exists and not ansible_check_mode
+

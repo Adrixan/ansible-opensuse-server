@@ -1,0 +1,58 @@
+---
+# Weekly modernization run of Peter's web projects with Modern Web Guidance (Peter, 2026-11-11: Sundays
+# 08:00). The runner (yadm ~/.local/bin/web-modernize) starts one `rc code <project>` session after the
+# other, so the rc RAM guard and the peer-workstation guard apply; machines without the flag get no timer.
+
+- name: Deploy the web-modernize user units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: [web-modernize.service, web-modernize.timer]
+  register: ai_workstation_web_modernize_units
+  when: ai_workstation_web_modernize | bool
+
+- name: Enable the web-modernize timer
+  ansible.builtin.systemd_service:
+    name: web-modernize.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: "{{ ai_workstation_web_modernize_units.changed }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when: ai_workstation_web_modernize | bool and not ansible_check_mode
+
+- name: Check for a web-modernize timer on a machine without the flag
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/web-modernize.timer"
+  register: ai_workstation_web_modernize_stale
+  when: not (ai_workstation_web_modernize | bool)
+
+- name: Disable the web-modernize timer where the flag is off
+  ansible.builtin.systemd_service:
+    name: web-modernize.timer
+    scope: user
+    enabled: false
+    state: stopped
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when:
+    - not (ai_workstation_web_modernize | bool)
+    - ai_workstation_web_modernize_stale.stat.exists | default(false)
+    - not ansible_check_mode
+
+- name: Remove the web-modernize units where the flag is off
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    state: absent
+  loop: [web-modernize.service, web-modernize.timer]
+  when: not (ai_workstation_web_modernize | bool)
