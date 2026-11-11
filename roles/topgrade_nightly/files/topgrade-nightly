@@ -56,14 +56,47 @@ as_user() {
     DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" \
     PATH="$home/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" "$@"
 }
-# Prints the WAIT_UNITS that are running now.
+# Prints the WAIT_UNITS that are running now. A running oneshot is "activating", which
+# `systemctl is-active` reports as not active, so compare the ActiveState itself.
 busy_units() {
-  local entry user unit
+  local entry user unit state
   for entry in $WAIT_UNITS; do
     user=${entry%%:*} unit=${entry#*:}
-    as_user "$user" systemctl --user is-active --quiet "$unit" 2>/dev/null && printf '%s ' "$unit"
+    state=$(as_user "$user" systemctl --user show -p ActiveState --value "$unit" 2>/dev/null) || state=""
+    case $state in active | activating | deactivating | reloading | refreshing) printf '%s ' "$unit" ;; esac
   done
   return 0
+}
+fmt_us() { awk -v us="$1" 'BEGIN { printf "%.1fs", us / 1e6 }'; }
+# Prints the boot phases like systemd-analyze, from the manager's timestamps (µs since boot):
+# systemd-analyze refuses to answer until the boot has finished, and the post-boot report is part of it.
+boot_times() {
+  local key value fw=0 loader=0 initrd=0 userspace=0 mu parts=()
+  while IFS='=' read -r key value; do
+    [[ $value =~ ^[0-9]+$ ]] || continue
+    case $key in
+      FirmwareTimestampMonotonic) fw=$value ;;
+      LoaderTimestampMonotonic) loader=$value ;;
+      InitRDTimestampMonotonic) initrd=$value ;;
+      UserspaceTimestampMonotonic) userspace=$value ;;
+    esac
+  done < <(systemctl show -p FirmwareTimestampMonotonic -p LoaderTimestampMonotonic \
+    -p InitRDTimestampMonotonic -p UserspaceTimestampMonotonic 2>/dev/null)
+  # firmware and loader count backwards from the kernel start
+  ((fw > loader)) && parts+=("$(fmt_us $((fw - loader))) (firmware)")
+  ((loader > 0)) && parts+=("$(fmt_us "$loader") (loader)")
+  if ((initrd > 0)); then
+    parts+=("$(fmt_us "$initrd") (kernel)")
+    ((userspace > initrd)) && parts+=("$(fmt_us $((userspace - initrd))) (initrd)")
+  elif ((userspace > 0)); then
+    parts+=("$(fmt_us "$userspace") (kernel)")
+  fi
+  mu=$(systemctl show -p ActiveEnterTimestampMonotonic --value multi-user.target 2>/dev/null) || mu=0
+  [[ $mu =~ ^[0-9]+$ ]] && ((userspace > 0 && mu > userspace)) && parts+=("$(fmt_us $((mu - userspace))) (userspace to multi-user.target)")
+  ((${#parts[@]})) || { echo "boot times unknown"; return 0; }
+  printf '%s' "${parts[0]}"
+  ((${#parts[@]} > 1)) && printf ' + %s' "${parts[@]:1}"
+  echo
 }
 wait_for_units() { # wait_for_units <phase>: true once none of WAIT_UNITS runs
   local deadline busy
@@ -82,7 +115,7 @@ if [[ ${1:-} == --post-boot ]]; then
   sleep 120   # let the user services and restored agent roles come up
   report="$(cat "$REBOOT_FLAG")"
   ok=true
-  report+=$'\n'"post-boot: up on kernel $(uname -r); $(systemd-analyze 2>/dev/null | head -n 1 | sed 's/^Startup finished in //')"
+  report+=$'\n'"post-boot: up on kernel $(uname -r); $(boot_times)"
   failed=$(systemctl --failed --no-legend --plain | awk '{print $1}' | paste -sd' ' -)
   [[ -z $failed ]] || { ok=false; report+=$'\n'"post-boot: failed units: $failed"; }
   if [[ -n $POST_BOOT_CHECK ]]; then
