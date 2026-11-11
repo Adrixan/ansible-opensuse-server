@@ -16,6 +16,7 @@ Ansible playbook that provisions openSUSE Tumbleweed workstations and laptops ag
 
 ## Scope and ownership
 - This repo installs software and services and renders yadm templates with secrets. Agent instructions, skills and harness configs (Claude plugins, OpenCode and Antigravity configs) belong to yadm (dotfiles), never to this repo.
+- One narrow exception: skills that ship inside an npm package this repo installs (Modern Web Guidance, Chrome DevTools MCP) are copied from `/opt/mcp` into the yadm plugin `workstation-web/skills/` (ignored by yadm) after each update, so skill and tool keep one version; the plugin manifest and MCP template stay in yadm.
 - Secrets come from the environment or `~/.config/ai/env` (rendered by `ai_workstation`, mode `0600`); `~/.config/ai/env.local` holds yadm-only secrets and is never written by a role.
 - `ai_workstation` must not restart Claude Code remote-control role servers that are running (it would kill the session running the playbook); it reports roles that need `rc restart <role>`.
 - `mcp-shared.service` (`127.0.0.1:8790`) runs the stateless MCP servers; the role restarts it after launcher, config, unit or tool updates.

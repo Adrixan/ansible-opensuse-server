@@ -184,6 +184,37 @@ ai_workstation_mcp_node_servers:
   - name: eur-lex
     package: "@cyanheads/eur-lex-mcp-server"
     bin: eur-lex-mcp-server
+  # Web development (Peter, 2026-11-11, after Chrome's "Modern Web Guidance 1.0" post): both are Google's
+  # own packages with no runtime dependencies. Their skills ship inside the package and are linked from
+  # the workstation-web plugin, so skill and tool always have the same version.
+  # Chrome DevTools for agents: MCP server per session (it holds a browser, so not in mcp-shared) plus the
+  # `chrome-devtools` CLI. Usage statistics and npm update checks off; the harness configs add
+  # --no-performance-crux (no URL lookups at Google's CrUX API) and the sandbox-preserving Chromium.
+  - name: chrome-devtools-mcp
+    package: chrome-devtools-mcp
+    bin: chrome-devtools-mcp
+    extra_bins: [chrome-devtools]
+    env:
+      CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1"
+      CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"
+  # Modern Web Guidance (Chrome, Firefox, Edge): search, retrieve and legacy-scan for the skill. Its
+  # telemetry sends every search query to Google; DISABLE_TELEMETRY is also set in ~/.config/ai/env for
+  # the `npx modern-web-guidance@latest` calls the upstream skill text makes.
+  - name: modern-web-guidance
+    package: modern-web-guidance
+    bin: modern-web-guidance
+    env:
+      DISABLE_TELEMETRY: "1"
+# Skills that ship inside these packages, copied (rsync --delete) into the yadm plugin workstation-web after
+# every update, so skill and tool keep one version. Claude Code refuses plugin skills that link outside the
+# marketplace, hence a copy; yadm ignores the copy (plugin .gitignore). OpenCode and Antigravity read it too.
+ai_workstation_web_plugin_dir: "{{ ai_workstation_user_home }}/.config/ai/claude-plugins/plugins/workstation-web"
+ai_workstation_web_plugin_skills:
+  - { server: modern-web-guidance, package: modern-web-guidance, skills: [modern-web-guidance] }
+  - server: chrome-devtools-mcp
+    package: chrome-devtools-mcp
+    skills: [chrome-devtools, chrome-devtools-cli, a11y-debugging, debug-optimize-lcp, memory-leak-debugging,
+             cookie-debugging, troubleshooting]
 ai_workstation_excalidraw_port: 3031
 # Thunderbird MCP from its latest GitHub release: the Node bridge (no dependencies) from the release
 # tag, the add-on (.xpi, verified against the release digest) next to it for a manual install in
@@ -374,6 +405,11 @@ ai_workstation_memory_merge_min_age_min: 0
 # stay off this machine (set per machine in its hosts file)
 ai_workstation_code_sync: true
 ai_workstation_code_sync_exclude: []
+# Weekly Modern Web Guidance modernization of the web projects in ~/sync/ai/web-projects.txt (yadm
+# ~/.local/bin/web-modernize starts one `rc code <project>` session after the other). Only the primary
+# workstation runs it: its local hosts file sets true.
+ai_workstation_web_modernize: false
+ai_workstation_web_modernize_calendar: "Sun *-*-* 08:00:00 Europe/Vienna"
 # Claude Code user-scope MCP servers, the same on every workstation (claude_user_mcp.py adds or fixes these
 # and never touches others). requires_path: skipped where the server cannot run.
 ai_workstation_claude_user_mcp_servers:
