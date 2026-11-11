@@ -115,6 +115,15 @@
     path: "{{ ai_workstation_web_plugin_dir }}/.claude-plugin/plugin.json"
   register: ai_workstation_web_plugin
 
+- name: Create the skills folder of the workstation-web plugin (yadm ignores it, so a fresh clone has none)
+  ansible.builtin.file:
+    path: "{{ ai_workstation_web_plugin_dir }}/skills"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0755'
+  when: ai_workstation_web_plugin.stat.exists
+
 - name: Copy the skills of the web packages into the workstation-web plugin
   ansible.builtin.command:
     argv: [rsync, -a, --delete, --itemize-changes, "--chown={{ ai_workstation_user }}:{{ ai_workstation_user }}",
