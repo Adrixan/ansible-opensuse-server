@@ -405,11 +405,14 @@ ai_workstation_memory_merge_min_age_min: 0
 # stay off this machine (set per machine in its hosts file)
 ai_workstation_code_sync: true
 ai_workstation_code_sync_exclude: []
-# Weekly Modern Web Guidance modernization of the web projects in ~/sync/ai/web-projects.txt (yadm
-# ~/.local/bin/web-modernize starts one `rc code <project>` session after the other). Only the primary
-# workstation runs it: its local hosts file sets true.
+# One-off Modern Web Guidance modernization of the web projects in ~/sync/ai/web-projects.txt (Peter,
+# 2026-11-11: once, Sunday 2026-11-15 06:00, four sessions in parallel; afterwards the web rule in the global
+# AGENTS.md is the standard). yadm ~/.local/bin/web-modernize starts the `rc code <project>` sessions. Only
+# the primary workstation runs it: its local hosts file sets true. A dated calendar fires once; Persistent
+# catches it up after a boot if the machine was off at that time.
 ai_workstation_web_modernize: false
-ai_workstation_web_modernize_calendar: "Sun *-*-* 08:00:00 Europe/Vienna"
+ai_workstation_web_modernize_calendar: "2026-11-15 06:00:00 Europe/Vienna"
+ai_workstation_web_modernize_parallel: 4
 # Claude Code user-scope MCP servers, the same on every workstation (claude_user_mcp.py adds or fixes these
 # and never touches others). requires_path: skipped where the server cannot run.
 ai_workstation_claude_user_mcp_servers:
