@@ -1,5 +1,9 @@
 # Session Handoff State
 
+## 2026-11-11: web development tools and one-off web modernization timer
+- `ai_workstation`: Node prefixes `chrome-devtools-mcp` (plus `extra_bins: [chrome-devtools]`) and `modern-web-guidance`, telemetry and update checks off in the wrappers; `ai_workstation_web_plugin_skills` rsyncs their shipped skills into the yadm plugin `workstation-web/skills/` (narrow exception, see AGENTS.md); `DISABLE_TELEMETRY=1` in `ai_env.j2`; `tasks/web_modernize.yml` with dated one-off timer behind `ai_workstation_web_modernize` (default false). Two live runs each, second `changed=0`.
+- Open: run the role on the standby laptop; remove the timer flag and units after 2026-11-15.
+
 ## Active Intent
 2026-11-11 noon (xps13, Peter via the Greeter: Bluetooth adapter missing, old module reload script broken?).
 - Cause: the QCA6390 Bluetooth on the XPS 13 9310 runs over UART (`hci_uart`, serdev `serial0-0`), not USB. Hand-made units (not from this repo) unloaded ath11k and `hci_uart` around sleep: `ath11k-hibernate.service` (Type=simple, `Before=hibernate.target`, runs `/usr/bin/hibernate.sh`) never blocked the freeze, because hibernate.target is reached only after the resume. On 2026-11-10 18:40 only `rmmod ath11k_pci` ran before the freeze; after the resume (2026-11-11 11:31:05) the rest of hibernate.sh ran in parallel with `ath11k-resume.service` and its `rmmod hci_uart` came one second after the resume script's `modprobe hci_uart`. Result: no hci0, bluetoothd running without a controller. The 2026-11-09 "hci_uart not loaded" failure was most likely the same race, not Bluetooth being off.
