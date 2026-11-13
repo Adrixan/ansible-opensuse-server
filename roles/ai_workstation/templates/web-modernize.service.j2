@@ -8,6 +8,6 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/bin/web-modernize --parallel {{ ai_workstation_web_modernize_parallel }}
+ExecStart=%h/.local/bin/web-modernize --parallel {{ ai_workstation_web_modernize_parallel }} --android-parallel {{ ai_workstation_web_modernize_android_parallel }}
 Nice=5
-TimeoutStartSec=20h
+TimeoutStartSec={{ ai_workstation_web_modernize_timeout }}

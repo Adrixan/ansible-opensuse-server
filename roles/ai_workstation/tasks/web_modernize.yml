@@ -2,7 +2,8 @@
 # One-off modernization run of Peter's web projects with Modern Web Guidance (Peter, 2026-11-11: once on
 # 2026-11-15 06:00, four sessions in parallel). The runner (yadm ~/.local/bin/web-modernize) starts the
 # `rc code <project>` sessions, so the rc RAM guard and the peer-workstation guard apply; machines without
-# the flag get no timer.
+# the flag get no timer. Since 2026-11-13 the same run continues with the Android apps that embed these web
+# projects (ai_workstation_web_modernize_android_parallel sessions at a time).
 
 - name: Deploy the web-modernize user units
   ansible.builtin.template:
