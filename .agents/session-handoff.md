@@ -1,5 +1,8 @@
 # Session Handoff State
 
+## 2026-11-13 evening: web-modernize pulled ahead
+- Timer moved from 2026-11-15 06:00 to 01:00 Europe/Vienna (commit 5a91707, applied earlier by another session; `systemctl --user list-timers web-modernize.timer` shows Sun 2026-11-15 01:00 CET, unit file matches). This session fixed the stale comment in `tasks/web_modernize.yml` and the knowledge map line. Overlap told to Peter: garmin-archive 01:15, daily-cloud-sync and topgrade_nightly 02:00 (reboot waits for rc turns; four parallel sessions may delay or skip the reboot; RAM gate vs backup load unchecked). Other jobs untouched.
+
 ## 2026-11-11: web development tools and one-off web modernization timer
 - `ai_workstation`: Node prefixes `chrome-devtools-mcp` (plus `extra_bins: [chrome-devtools]`) and `modern-web-guidance`, telemetry and update checks off in the wrappers; `ai_workstation_web_plugin_skills` rsyncs their shipped skills into the yadm plugin `workstation-web/skills/` (narrow exception, see AGENTS.md); `DISABLE_TELEMETRY=1` in `ai_env.j2`; `tasks/web_modernize.yml` with dated one-off timer behind `ai_workstation_web_modernize` (default false). Two live runs each, second `changed=0`.
 - Open: run the role on the standby laptop; remove the timer flag and units after 2026-11-15.
