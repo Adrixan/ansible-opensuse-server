@@ -14,8 +14,11 @@ StartLimitBurst=10
 [Service]
 Type=simple
 EnvironmentFile={{ ai_workstation_user_home }}/.config/claude-rc/%i.conf
+# Model of this start only (`rc up --model`, Peter 2026-11-13): RC_MODEL=<id>, exported as ANTHROPIC_MODEL after
+# ~/.config/ai/env (which may unset it). Without the file the sessions use "model" of ~/.claude/settings.json.
+EnvironmentFile=-{{ ai_workstation_user_home }}/.local/state/claude-rc/model/%i
 Environment=PATH={{ ai_workstation_user_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/bin/bash -c 'set -a; for f in "$$HOME/.config/ai/env" "$$HOME/.research_stack.env"; do [ -r "$$f" ] && . "$$f"; done; set +a; cd -- "$$RC_DIR" && exec claude remote-control --name "$$RC_NAME" --permission-mode {{ ai_workstation_claude_rc_permission_mode }} $${RC_ARGS:-}'
+ExecStart=/bin/bash -c 'set -a; for f in "$$HOME/.config/ai/env" "$$HOME/.research_stack.env"; do [ -r "$$f" ] && . "$$f"; done; set +a; [ -n "$${RC_MODEL:-}" ] && export ANTHROPIC_MODEL="$$RC_MODEL"; cd -- "$$RC_DIR" && exec claude remote-control --name "$$RC_NAME" --permission-mode {{ ai_workstation_claude_rc_permission_mode }} $${RC_ARGS:-}'
 StandardInput=null
 StandardOutput=journal
 StandardError=journal
