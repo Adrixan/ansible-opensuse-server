@@ -198,8 +198,9 @@ ai_workstation_mcp_node_servers:
       CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1"
       CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"
   # Modern Web Guidance (Chrome, Firefox, Edge): search, retrieve and legacy-scan for the skill. Its
-  # telemetry sends every search query to Google; DISABLE_TELEMETRY is also set in ~/.config/ai/env for
-  # the `npx modern-web-guidance@latest` calls the upstream skill text makes.
+  # telemetry sends every search query to Google, so the wrapper sets DISABLE_TELEMETRY for this command only.
+  # Never export it in ~/.config/ai/env: Claude Code then refuses Remote Control (2026-11-13). A call of
+  # `npx modern-web-guidance@latest` bypasses the wrapper and sends telemetry; the rules name the installed command.
   - name: modern-web-guidance
     package: modern-web-guidance
     bin: modern-web-guidance
@@ -406,12 +407,12 @@ ai_workstation_memory_merge_min_age_min: 0
 ai_workstation_code_sync: true
 ai_workstation_code_sync_exclude: []
 # One-off Modern Web Guidance modernization of the web projects in ~/sync/ai/web-projects.txt (Peter,
-# 2026-11-11: once, Sunday 2026-11-15 06:00, four sessions in parallel; afterwards the web rule in the global
+# 2026-11-11: once, four sessions in parallel; start pulled ahead to Sunday 2026-11-15 01:00 on 2026-11-13; afterwards the web rule in the global
 # AGENTS.md is the standard). yadm ~/.local/bin/web-modernize starts the `rc code <project>` sessions. Only
 # the primary workstation runs it: its local hosts file sets true. A dated calendar fires once; Persistent
 # catches it up after a boot if the machine was off at that time.
 ai_workstation_web_modernize: false
-ai_workstation_web_modernize_calendar: "2026-11-15 06:00:00 Europe/Vienna"
+ai_workstation_web_modernize_calendar: "2026-11-15 01:00:00 Europe/Vienna"
 ai_workstation_web_modernize_parallel: 4
 # Android follow-up in the same run (Peter, 2026-11-13): after the web sessions, every Android app whose web
 # repository moved past its web/ pin gets a session (pin, rebuild, emulator smoke, signed builds to
