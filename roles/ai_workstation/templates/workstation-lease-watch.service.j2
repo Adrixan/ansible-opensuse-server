@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# Takeover lease tick (ai_workstation lease.yml): renew, take over or fence; see /usr/local/libexec/workstation-lease
+[Unit]
+Description=Workstation takeover lease: renew, take over or fence
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/local/libexec/workstation-lease watch
+# Fencing waits for the roles' handoffs (rc down --wait, hard stop after twice that)
+TimeoutStartSec=15min

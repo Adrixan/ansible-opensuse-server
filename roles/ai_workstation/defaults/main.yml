@@ -408,6 +408,20 @@ ai_workstation_memory_merge_min_age_min: 0
 ai_workstation_agents_handoff: true
 ai_workstation_agents_handoff_devices: []
 ai_workstation_agents_handoff_min_age_min: 0
+# Takeover lease between the two workstations (tasks/lease.yml, files/workstation-lease.py): one machine at a
+# time serves the rc roles. Per host in its hosts file: ai_workstation_lease=true, the private arbiter repo
+# (git@github.com:<owner>/<repo>.git) and this host's short name as rc knows it (schulpc, xps).
+ai_workstation_lease: false
+ai_workstation_lease_remote: ""
+ai_workstation_lease_host: ""
+ai_workstation_lease_ttl: 600
+ai_workstation_lease_grace: 120
+ai_workstation_lease_fence_margin: 240
+ai_workstation_lease_auto_takeover: true
+ai_workstation_lease_takeover_roles: [greeter]
+# Services that run only on the holder (ExecCondition drop-in); for jobs present on both machines
+ai_workstation_lease_gated_user_units: []
+ai_workstation_lease_gated_system_units: []
 # ~/code alike on every workstation through the git remotes (tasks/code_sync.yml); repositories named here
 # stay off this machine (set per machine in its hosts file)
 ai_workstation_code_sync: true

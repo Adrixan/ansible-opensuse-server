@@ -1,0 +1,11 @@
+{{ {
+  "remote": ai_workstation_lease_remote,
+  "host": ai_workstation_lease_host,
+  "state_dir": ai_workstation_user_home ~ "/.local/state/workstation-lease",
+  "ttl": ai_workstation_lease_ttl | int,
+  "grace": ai_workstation_lease_grace | int,
+  "fence_margin": ai_workstation_lease_fence_margin | int,
+  "auto_takeover": ai_workstation_lease_auto_takeover | bool,
+  "takeover_roles": ai_workstation_lease_takeover_roles,
+  "rc_bin": ai_workstation_user_home ~ "/.local/bin/rc"
+} | to_nice_json(indent=2) }}
