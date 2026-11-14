@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# Unites Syncthing conflict copies of ~/.agents/session-handoff.md with the live note (ai_workstation agents_handoff.yml)
+[Unit]
+Description=Merge Syncthing conflict copies of the home-level agent handoff note
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/local/libexec/agents-handoff-merge --dir %h/.agents --file session-handoff.md --min-age-min {{ ai_workstation_agents_handoff_min_age_min }}
+Nice=10

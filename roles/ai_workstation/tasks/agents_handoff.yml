@@ -1,0 +1,116 @@
+---
+# The home-level handoff note ~/.agents/session-handoff.md left yadm on 2026-11-14 (Peter: the dotfiles repo
+# is public and several machines edit the note). It syncs through its own Syncthing folder "agents-home"
+# between the devices in ai_workstation_agents_handoff_devices (Syncthing device IDs, set in the local hosts
+# file; empty = no folder on this machine). ~/.agents also holds yadm-tracked files, so the folder's .stignore
+# lets only the note and its conflict copies through, and it is written before the folder exists. Staggered
+# versioning keeps old versions for 30 days; agents-handoff-merge unites conflict copies with the live note
+# (the primary at once, a standby after ai_workstation_agents_handoff_min_age_min minutes).
+
+- name: Limit the agents-home Syncthing folder to the handoff note
+  ansible.builtin.copy:
+    src: agents-home.stignore
+    dest: "{{ ai_workstation_user_home }}/.agents/.stignore"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+
+- name: Install the handoff note conflict merger
+  ansible.builtin.copy:
+    src: agents-handoff-merge.py
+    dest: /usr/local/libexec/agents-handoff-merge
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy the handoff merge user units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: [agents-handoff-merge.service, agents-handoff-merge.path, agents-handoff-merge.timer]
+  register: ai_workstation_agents_handoff_units
+
+- name: Enable the handoff merge path watch and timer
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    scope: user
+    enabled: true
+    state: "{{ 'restarted' if ai_workstation_agents_handoff_units.changed else 'started' }}"
+    daemon_reload: "{{ ai_workstation_agents_handoff_units.changed }}"
+  loop: [agents-handoff-merge.path, agents-handoff-merge.timer]
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when: not ansible_check_mode
+
+- name: Configure the agents-home Syncthing folder
+  when:
+    - ai_workstation_agents_handoff_devices | length > 0
+    - not ansible_check_mode
+  block:
+    - name: Read the local Syncthing GUI address and API key
+      ansible.builtin.command: "syncthing cli config gui {{ item }} get"
+      loop: [raw-address, apikey]
+      register: ai_workstation_syncthing_gui
+      changed_when: false
+      no_log: true
+      become: true
+      become_user: "{{ ai_workstation_user }}"
+
+    - name: Read the local Syncthing device ID
+      ansible.builtin.uri:
+        url: "http://{{ ai_workstation_syncthing_gui.results[0].stdout }}/rest/system/status"
+        headers: { X-API-Key: "{{ ai_workstation_syncthing_gui.results[1].stdout }}" }
+      register: ai_workstation_syncthing_status
+      no_log: true
+
+    - name: Read the agents-home folder
+      ansible.builtin.uri:
+        url: "http://{{ ai_workstation_syncthing_gui.results[0].stdout }}/rest/config/folders/agents-home"
+        headers: { X-API-Key: "{{ ai_workstation_syncthing_gui.results[1].stdout }}" }
+        status_code: [200, 404]
+      register: ai_workstation_agents_home_current
+      no_log: true
+
+    - name: Work out the wanted agents-home folder settings
+      ansible.builtin.set_fact:
+        ai_workstation_agents_home_wanted:
+          id: agents-home
+          label: Agents handoff (~/.agents)
+          path: "{{ ai_workstation_user_home }}/.agents"
+          type: sendreceive
+          devices: "{{ ([ai_workstation_syncthing_status.json.myID] + ai_workstation_agents_handoff_devices)
+                       | unique | sort | map('community.general.dict_kv', 'deviceID') | list }}"
+          versioning:
+            type: staggered
+            params: { maxAge: "2592000" }
+            cleanupIntervalS: 3600
+        ai_workstation_agents_home_have: >-
+          {{ {} if ai_workstation_agents_home_current.status == 404 else
+             {'id': ai_workstation_agents_home_current.json.id,
+              'label': ai_workstation_agents_home_current.json.label,
+              'path': ai_workstation_agents_home_current.json.path,
+              'type': ai_workstation_agents_home_current.json.type,
+              'devices': ai_workstation_agents_home_current.json.devices | map(attribute='deviceID') | sort
+                         | map('community.general.dict_kv', 'deviceID') | list,
+              'versioning': {'type': ai_workstation_agents_home_current.json.versioning.type,
+                             'params': ai_workstation_agents_home_current.json.versioning.params,
+                             'cleanupIntervalS': ai_workstation_agents_home_current.json.versioning.cleanupIntervalS}} }}
+
+    - name: Create or update the agents-home folder
+      ansible.builtin.uri:
+        url: "http://{{ ai_workstation_syncthing_gui.results[0].stdout }}/rest/config/folders/agents-home"
+        method: PUT
+        headers: { X-API-Key: "{{ ai_workstation_syncthing_gui.results[1].stdout }}" }
+        body_format: json
+        body: "{{ (ai_workstation_agents_home_current.json if ai_workstation_agents_home_current.status == 200 else {})
+                  | combine(ai_workstation_agents_home_wanted) }}"
+        status_code: [200]
+      when: ai_workstation_agents_home_have != ai_workstation_agents_home_wanted
+      changed_when: true
+      no_log: true

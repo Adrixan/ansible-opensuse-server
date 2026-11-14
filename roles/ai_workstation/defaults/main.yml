@@ -402,6 +402,12 @@ ai_workstation_mcp_memory_dir: "{{ ai_workstation_user_home }}/sync/ai"
 # merges at once; a standby (its local hosts file sets 15) only takes copies the primary left for that long.
 ai_workstation_memory_merge: true
 ai_workstation_memory_merge_min_age_min: 0
+# Home-level handoff note ~/.agents/session-handoff.md, out of yadm since 2026-11-14 (tasks/agents_handoff.yml):
+# Syncthing folder "agents-home" with the device IDs listed here (local hosts file; empty = merger only, no
+# folder). The primary merges conflict copies at once; a standby (its hosts file sets 10) waits that long.
+ai_workstation_agents_handoff: true
+ai_workstation_agents_handoff_devices: []
+ai_workstation_agents_handoff_min_age_min: 0
 # ~/code alike on every workstation through the git remotes (tasks/code_sync.yml); repositories named here
 # stay off this machine (set per machine in its hosts file)
 ai_workstation_code_sync: true

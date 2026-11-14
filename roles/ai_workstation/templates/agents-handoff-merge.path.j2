@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# Any change of the entries in ~/.agents (Syncthing creates conflict copies there) starts a merge run
+[Unit]
+Description=Watch ~/.agents for Syncthing conflict copies of the handoff note
+
+[Path]
+PathChanged=%h/.agents
+Unit=agents-handoff-merge.service
+
+[Install]
+WantedBy=default.target
