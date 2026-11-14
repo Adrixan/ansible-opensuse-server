@@ -60,3 +60,14 @@ None (Sprint 15 Complete)
 ### Deferred / Backlog
 - **US-1.1**: Encrypt Plaintext Password in `hosts` File (Deferred per user instruction, retained in state/memory log).
 - **US-5.6**: Modernize Source Code Compilation Roles (PulseAudio 11.1 version parameterization).
+
+## D33 B: takeover lease schulpc/xps13 (Peter, 2026-11-14; design: vault report 2026-11-03-schulpc-xps-mirror § 4)
+Goal: one machine serves the rc roles; after a power loss of the holder the standby takes over automatically; a returning machine stays passive.
+- Arbiter: branch `lease` in the private GitHub repo `Adrixan/workstation-lease`. Each state is a parentless commit with `lease.json` (`holder`, `epoch`, `expires`, `renewed`); writes are compare-and-swap pushes (`--force-with-lease=refs/heads/lease:<seen sha>`), so two machines cannot both win and history does not grow.
+- Tool `/usr/local/libexec/workstation-lease` (Python stdlib + git CLI, `roles/ai_workstation/files/workstation-lease.py`): `status`, `check` (local cached state only: this host holds and `now < expires - fence margin`), `ensure` (check, else acquire a free or own lease), `acquire [--force]`, `renew [--ttl]`, `release` (stop roles, then free the lease), `watch` (timer).
+- Timings: TTL 10 min, watch every 2 min (calendar timer, so it also fires right after a laptop resume), fence margin 4 min (the holder stops its roles when its last renew is that close to expiry), takeover grace 2 min after expiry. `rc prepare-reboot` renews with TTL 45 min before the nightly reboot.
+- watch: holder renews (and restarts roles it fenced earlier); a valid foreign lease stops local roles; an expired or free lease is taken when `auto_takeover` is on, then the takeover roles start (`greeter`).
+- Gates: drop-in `ExecCondition=workstation-lease ensure` on `claude-remote-control@.service` (covers the boot Greeter and Restart=always); `rc up` checks first for a clear error; `rc lease status|take|release|force`; optional `ExecCondition=workstation-lease check` drop-ins for listed user/system units (`ai_workstation_lease_gated_user_units`, `_system_units`, empty by default: no timer runs on both machines today).
+- Ansible: `tasks/lease.yml` behind `ai_workstation_lease` (default false; host var true on schulpc and xps13), config `~/.config/workstation-lease/config.json`, units `workstation-lease-watch.{service,timer}`.
+- Tests first: `python3 -I roles/ai_workstation/files/tests/test_workstation_lease.py` against a local bare repo (CAS race, expiry, takeover, fence, release, force, check offline).
+- Rollout: schulpc now; xps13 needs a role run with sudo while awake (Peter), never unattended while asleep.

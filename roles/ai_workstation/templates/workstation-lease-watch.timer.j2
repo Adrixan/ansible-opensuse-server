@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# A calendar timer, so the first tick after a laptop resume comes at once
+[Unit]
+Description=Workstation takeover lease tick every 2 minutes
+
+[Timer]
+OnBootSec=1min
+OnCalendar=*:0/2
+AccuracySec=10s
+Unit=workstation-lease-watch.service
+
+[Install]
+WantedBy=timers.target

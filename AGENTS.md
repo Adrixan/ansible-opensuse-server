@@ -28,3 +28,10 @@ Ansible playbook that provisions openSUSE Tumbleweed workstations and laptops ag
 - PEP 668: system pip tasks use `--break-system-packages`; prefer `uv tool` for Python CLIs.
 - FQCN modules (`ansible.builtin.*`, `community.general.*`), idempotent tasks, `changed_when`/`failed_when` on commands, `no_log: true` on anything touching secrets.
 - Git: work on a feature branch off `master`, Conventional Commits, `git merge --no-ff` into `master`, push. No force-push.
+
+## Takeover lease (D33 B, decided 2026-11-14)
+- `ai_workstation` `tasks/lease.yml` (flag `ai_workstation_lease`, host vars `ai_workstation_lease_remote` and `ai_workstation_lease_host` in the hosts file) installs `/usr/local/libexec/workstation-lease` (`files/workstation-lease.py`): branch `lease` of a private arbiter repo, compare-and-swap pushes, TTL 10 min, watch every 2 min, fence margin 4 min, takeover grace 2 min.
+- The two workstations only. Never enable it on a laptop that is not one of the pair or on a VPS; never edit the arbiter branch by hand (use `rc lease release|take|force`).
+- Gates: `ExecCondition` on `claude-remote-control@.service` plus `rc up` (yadm `rc`). Timer gates only for services that run on both machines (`ai_workstation_lease_gated_*_units`); schulpc-only jobs stay ungated so backups keep running while the standby holds the lease.
+- Tests: `python3 -I tests/test_workstation_lease.py` after every change to the tool; changes to timings need the margin rule (`ttl >= fence_margin + 120`) and a fence that finishes before expiry (`rc down --wait`, hard stop after twice that).
+- Rollout on a standby laptop needs a role run with sudo while it is awake; no unattended root changes there.

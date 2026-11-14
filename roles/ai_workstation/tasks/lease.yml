@@ -1,0 +1,147 @@
+---
+# Takeover lease between the two workstations (Peter, 2026-11-14, D33 B): one machine at a time serves the
+# rc roles; the arbiter is branch `lease` of a private GitHub repo (files/workstation-lease.py has the
+# design). Gates: ExecCondition on claude-remote-control@.service (boot Greeter, restarts, rc up), the
+# check in rc up, and optional ExecCondition drop-ins on the services listed in
+# ai_workstation_lease_gated_user_units / _system_units.
+
+- name: Check the lease variables
+  ansible.builtin.assert:
+    that:
+      - ai_workstation_lease_remote is match('^git@github\.com:[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\.git$')
+      - ai_workstation_lease_host is match('^[a-z0-9][a-z0-9-]{0,62}$')
+      - ai_workstation_lease_gated_user_units | select('match', '^[A-Za-z0-9@_.:-]+\.service$') | list | length == ai_workstation_lease_gated_user_units | length
+      - ai_workstation_lease_gated_system_units | select('match', '^[A-Za-z0-9@_.:-]+\.service$') | list | length == ai_workstation_lease_gated_system_units | length
+    fail_msg: "Set ai_workstation_lease_remote (git@github.com:<owner>/<repo>.git) and ai_workstation_lease_host for this host"
+  when: ai_workstation_lease | bool
+
+- name: Install the workstation lease tool
+  ansible.builtin.copy:
+    src: workstation-lease.py
+    dest: /usr/local/libexec/workstation-lease
+    owner: root
+    group: root
+    mode: '0755'
+  when: ai_workstation_lease | bool
+
+- name: Create the lease config and drop-in directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0700'
+  loop:
+    - "{{ ai_workstation_user_home }}/.config/workstation-lease"
+    - "{{ ai_workstation_user_home }}/.config/systemd/user/claude-remote-control@.service.d"
+  when: ai_workstation_lease | bool
+
+- name: Deploy the lease config
+  ansible.builtin.template:
+    src: workstation-lease-config.json.j2
+    dest: "{{ ai_workstation_user_home }}/.config/workstation-lease/config.json"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0600'
+  when: ai_workstation_lease | bool
+
+- name: Deploy the lease watch units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: [workstation-lease-watch.service, workstation-lease-watch.timer]
+  register: ai_workstation_lease_units
+  when: ai_workstation_lease | bool
+
+# %i is the role; a start while the arbiter is unreachable is queued for the next tick (boot)
+- name: Gate every rc role unit on the lease
+  ansible.builtin.copy:
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/claude-remote-control@.service.d/workstation-lease.conf"
+    content: |
+      # Managed by Ansible (ai_workstation lease.yml): a role runs only on the lease holder
+      [Service]
+      ExecCondition=/usr/bin/python3 -I /usr/local/libexec/workstation-lease ensure --role %i
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  register: ai_workstation_lease_rc_gate
+  when: ai_workstation_lease | bool
+
+- name: Gate the listed user services on the lease
+  ansible.builtin.copy:
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}.d/workstation-lease.conf"
+    content: |
+      # Managed by Ansible (ai_workstation lease.yml): runs only on the lease holder
+      [Service]
+      ExecCondition=/usr/bin/python3 -I /usr/local/libexec/workstation-lease check
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: "{{ ai_workstation_lease_gated_user_units }}"
+  register: ai_workstation_lease_user_gates
+  when: ai_workstation_lease | bool
+
+- name: Gate the listed system services on the lease
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/{{ item }}.d/workstation-lease.conf"
+    content: |
+      # Managed by Ansible (ai_workstation lease.yml): runs only on the lease holder (cached state, no network)
+      [Service]
+      ExecCondition=/usr/bin/python3 -I /usr/local/libexec/workstation-lease --config {{ ai_workstation_user_home }}/.config/workstation-lease/config.json check
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ ai_workstation_lease_gated_system_units }}"
+  register: ai_workstation_lease_system_gates
+  when: ai_workstation_lease | bool
+
+- name: Remove the lease gate and watch units where the lease is off
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    state: absent
+  loop:
+    - claude-remote-control@.service.d/workstation-lease.conf
+    - workstation-lease-watch.timer
+    - workstation-lease-watch.service
+    - timers.target.wants/workstation-lease-watch.timer
+  register: ai_workstation_lease_removed
+  when: not ai_workstation_lease | bool
+
+- name: Reload the user manager after lease unit changes
+  ansible.builtin.systemd_service:
+    scope: user
+    daemon_reload: true
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when:
+    - not ansible_check_mode
+    - (ai_workstation_lease_units is changed) or (ai_workstation_lease_rc_gate is changed)
+      or (ai_workstation_lease_user_gates is changed) or (ai_workstation_lease_removed is changed)
+
+- name: Reload systemd after lease gate changes on system services
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when:
+    - not ansible_check_mode
+    - ai_workstation_lease_system_gates is changed
+
+- name: Enable the lease watch timer
+  ansible.builtin.systemd_service:
+    name: workstation-lease-watch.timer
+    scope: user
+    enabled: true
+    state: "{{ 'restarted' if ai_workstation_lease_units is changed else 'started' }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when:
+    - ai_workstation_lease | bool
+    - not ansible_check_mode

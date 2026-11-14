@@ -15,5 +15,8 @@
 - name: Configure remote control defaults across harnesses
   ansible.builtin.import_tasks: remote_control.yml
 
+- name: Configure the takeover lease between the workstations
+  ansible.builtin.import_tasks: lease.yml
+
 - name: Clean up legacy and redundant AI files
   ansible.builtin.import_tasks: cleanup.yml
