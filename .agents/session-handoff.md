@@ -1,5 +1,9 @@
 # Session Handoff State
 
+## 2026-11-14: home handoff note sync (agents_handoff.yml)
+- `ai_workstation` `tasks/agents_handoff.yml` (imported from `mcp.yml` after memory_merge, flag `ai_workstation_agents_handoff`, default true): `.stignore` whitelist in `~/.agents`, `/usr/local/libexec/agents-handoff-merge` (files/agents-handoff-merge.py, line union of Syncthing conflict copies), user units path+timer, Syncthing folder `agents-home` via the local REST API when `ai_workstation_agents_handoff_devices` (hosts file) is non-empty. schulpc: check, live, second run changed=0.
+- Open: xps13 hosts file gets the schulpc device ID and `ai_workstation_agents_handoff_min_age_min=10`, then a role run (Peter, sudo).
+
 ## 2026-11-13 evening: web-modernize pulled ahead
 - Timer moved from 2026-11-15 06:00 to 01:00 Europe/Vienna (commit 5a91707, applied earlier by another session; `systemctl --user list-timers web-modernize.timer` shows Sun 2026-11-15 01:00 CET, unit file matches). This session fixed the stale comment in `tasks/web_modernize.yml` and the knowledge map line. Overlap told to Peter: garmin-archive 01:15, daily-cloud-sync and topgrade_nightly 02:00 (reboot waits for rc turns; four parallel sessions may delay or skip the reboot; RAM gate vs backup load unchecked). Other jobs untouched. Greeter re-check 2026-11-13: master clean and in sync, timer Sun 2026-11-15 01:00 CET; nothing open, no decisions for Peter.
 
