@@ -1,0 +1,6 @@
+// Managed by ansible (ai_workstation agents_handoff.yml).
+// ~/.agents also holds files that yadm tracks (AGENTS.md link, skills); this folder syncs only the
+// home-level handoff note and the conflict copies Syncthing makes of it.
+!/session-handoff.md
+!/session-handoff.sync-conflict-*.md
+*

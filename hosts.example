@@ -1,4 +1,7 @@
 [all:vars]
+# Home handoff note sync (ai_workstation agents_handoff.yml): Syncthing device IDs of the peer workstations;
+# the standby also sets ai_workstation_agents_handoff_min_age_min=10
+#ai_workstation_agents_handoff_devices=["PEER-DEVICE-ID"]
 ansible_connection=local
 ansible_user=Adrixan
 

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# Fallback to the path watch, and the clock for a standby's waiting time
+[Unit]
+Description=Periodic merge of handoff note conflict copies
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Unit=agents-handoff-merge.service
+
+[Install]
+WantedBy=timers.target

@@ -338,6 +338,10 @@
   ansible.builtin.import_tasks: memory_merge.yml
   when: ai_workstation_memory_merge
 
+- name: Sync the home-level handoff note between workstations
+  ansible.builtin.import_tasks: agents_handoff.yml
+  when: ai_workstation_agents_handoff
+
 - name: Serve the stateless MCP servers once on loopback for all sessions
   ansible.builtin.import_tasks: mcp_shared.yml
   when: ai_workstation_mcp_shared
