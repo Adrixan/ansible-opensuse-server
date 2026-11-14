@@ -27,12 +27,6 @@
       when: enable_dns_setup | default(false) | bool
       tags: [dns_setup]
 
-    - name: Include luks_boot_setup role
-      ansible.builtin.include_role:
-        name: luks_boot_setup
-      when: enable_luks_boot_setup | default(false) | bool
-      tags: [luks_boot_setup]
-
     - name: Include power_management role
       ansible.builtin.include_role:
         name: power_management

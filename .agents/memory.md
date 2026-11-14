@@ -8,7 +8,7 @@ It is configured to run pull-style deployments (`ansible_connection=local`) targ
 
 ## Compact Semantic Role Architecture
 - **[roles/system_update](file:///home/Adrixan/code/ansible-opensuse-server/roles/system_update)**: System package upgrade & `topgrade` utility via zypper.
-- **[roles/luks_boot_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/luks_boot_setup)**: LUKS keyfile, Dracut, initramfs.
+- **[roles/luks_usb_key](file:///home/Adrixan/code/ansible-opensuse-server/roles/luks_usb_key)**: root LUKS unlock from a USB keyfile (replaced `luks_boot_setup`, deleted 2026-11-14).
 - **[roles/power_management](file:///home/Adrixan/code/ansible-opensuse-server/roles/power_management)**: Power management (`powertop`).
 - **[roles/bluetooth_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/bluetooth_setup)**: Bluetooth stack (`bluez`).
 - **[roles/printing_setup](file:///home/Adrixan/code/ansible-opensuse-server/roles/printing_setup)**: CUPS printing subsystem.
