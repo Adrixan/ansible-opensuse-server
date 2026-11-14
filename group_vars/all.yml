@@ -13,7 +13,6 @@ enable_desktop_defaults: false
 enable_dns_setup: false
 enable_power_management: false
 enable_printing_setup: false
-enable_luks_boot_setup: false
 enable_base_software: false
 enable_python_environment: false
 enable_shell_environment: false
