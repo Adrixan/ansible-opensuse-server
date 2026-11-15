@@ -23,8 +23,12 @@ android_build_jdk_feature: 21
 android_build_sdk_packages:
   - platform-tools
   - platforms;android-36
+  # compileSdk 37 for current AndroidX (Compose BOM 2026.08+, lifecycle 2.11, core-ktx 1.19 need
+  # minCompileSdk 37; 2026-11-15); targetSdk stays 36 in the apps, android-36 stays for them
+  - platforms;android-37.0
   - build-tools;36.0.0
   - build-tools;36.1.0
+  - build-tools;37.0.0
   - emulator
   - system-images;android-36;google_apis;x86_64
 
