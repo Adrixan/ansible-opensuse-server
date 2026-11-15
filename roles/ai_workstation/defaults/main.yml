@@ -77,9 +77,10 @@ ai_workstation_mcp_uv_tools:
     github_release: jkawamoto/mcp-youtube-transcript
   # Taxuspt/garmin_mcp: the only release (0.1.0) predates the tool filter and PyPI's garmin-mcp is an
   # unrelated project, so this installs a reviewed commit. Commit pin because the server holds a token
-  # for the whole Garmin account and git sources bypass the 24 h cooldown; to bump it, review the new
-  # commit, change it here and run `uv tool install --force` with the same arguments. Upstream pins
-  # garminconnect==0.3.2 (GHSA-wjhr-76vg-2hvc, world-readable token store, fixed in 0.3.5).
+  # for the whole Garmin account and git sources bypass the 24 h cooldown; it stays pinned and is bumped
+  # only on purpose (Peter, 2026-11-15, D52): review the new commit, change it here and run
+  # `uv tool install --force` with the same arguments. Upstream pins garminconnect==0.3.2
+  # (GHSA-wjhr-76vg-2hvc, world-readable token store, fixed in 0.3.5).
   - name: garmin-mcp
     python: "3.13"
     source: git+https://github.com/Taxuspt/garmin_mcp@a2ca5fcac34524b83814fe2fcf3d479f8a75983f
