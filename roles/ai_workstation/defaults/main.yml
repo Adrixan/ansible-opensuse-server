@@ -430,20 +430,6 @@ ai_workstation_lease_gated_system_units: []
 # stay off this machine (set per machine in its hosts file)
 ai_workstation_code_sync: true
 ai_workstation_code_sync_exclude: []
-# One-off Modern Web Guidance modernization of the web projects in ~/sync/ai/web-projects.txt (Peter,
-# 2026-11-11: once, four sessions in parallel; start pulled ahead to Sunday 2026-11-15 01:00 on 2026-11-13; afterwards the web rule in the global
-# AGENTS.md is the standard). yadm ~/.local/bin/web-modernize starts the `rc code <project>` sessions. Only
-# the primary workstation runs it: its local hosts file sets true. A dated calendar fires once; Persistent
-# catches it up after a boot if the machine was off at that time.
-ai_workstation_web_modernize: false
-ai_workstation_web_modernize_calendar: "2026-11-15 01:00:00 Europe/Vienna"
-ai_workstation_web_modernize_parallel: 4
-# Android follow-up in the same run (Peter, 2026-11-13): after the web sessions, every Android app whose web
-# repository moved past its web/ pin gets a session (pin, rebuild, emulator smoke, signed builds to
-# ~/sync/play-releases; nothing goes to the Play Console), this many at a time (Peter: at least two; Gradle and
-# the emulator are serialized by the kit's locks). The longer run needs the longer start timeout.
-ai_workstation_web_modernize_android_parallel: 2
-ai_workstation_web_modernize_timeout: 36h
 # Claude Code user-scope MCP servers, the same on every workstation (claude_user_mcp.py adds or fixes these
 # and never touches others). requires_path: skipped where the server cannot run.
 ai_workstation_claude_user_mcp_servers:
