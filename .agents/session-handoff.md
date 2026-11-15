@@ -9,9 +9,12 @@
 - Low items still open: `cf` `spec` minimum (needs xps13 confirmed on Node 26.12; `ssh xps` failed, asleep); nodejs26/npm26 extras (nodejs-default 6.1 still requires nodejs24); `tasks/searxng.yml` removal-only file (drop once m11x and xps13 have run the role, unverified); sdkmanager deprecation (still works); Thunderbird bridge download reports changed in check mode (check-mode artifact, unverified).
 - Knowledge map: web-modernize line marked done, Syncthing versioning line; details file: web-modernize done note, D62 in the backup line and the "Claude transcripts" table row. Map 12,273 bytes (budget 12,288).
 
+### Decided by Peter (AskUserQuestion, 2026-11-15 ~08:45)
+- O1 Antigravity parity: B, all three. yadm 083db32: `ptsd` and `file-accountant` as `serverUrl` entries on 127.0.0.1:8790 in the non-Termux block, `newspaper-testground` as ssh stdio for every platform; rendered config valid JSON (40 servers), mode 600; both shared endpoints `configured`, the newspaper server answered `initialize` over SSH. Details file updated. Not done: Antigravity has no client-repo deny like Claude's `client-settings.json` (the servers' own confirm tokens still apply); same as the cloud MCP servers there.
+- O2 Cast-Game: A. Already done by another session before this one got to it (list entry commented out, local branch gone).
+
 ### Open decisions
-- O1 Antigravity MCP parity gap: Antigravity lacks `ptsd`, `file-accountant` and `newspaper-testground` (Claude Code and OpenCode have all three; no reason recorded). A: add only `newspaper-testground` (stdio over SSH, as in OpenCode) and record in the details file that ptsd (minors' data) and file-accountant (client books) stay out of Antigravity by data minimisation (recommended). B: add all three (full parity). C: leave all out and only record the reason. Work is in yadm (`~/.gemini/config/mcp_config.json##template`).
-- O2 Cast-Game in `~/sync/ai/web-projects.txt`: archived on GitHub since 2026-11-09, successor knots-of-alderwick. A: remove it from the list and delete its unpushed local branch `refactor/modern-scrollbar-css` (the contrast proposal stays in knots-of-alderwick's to-do) (recommended). B: keep both.
+- None.
 
 ### Needs Peter
 - Phone: accept "Claude transcripts" in Syncthing-Fork (steps in the 2026-11-15 morning section below); versioning on schulpc is now in place.
