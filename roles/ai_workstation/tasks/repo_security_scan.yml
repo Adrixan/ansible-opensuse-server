@@ -1,0 +1,77 @@
+---
+# Nightly dependency security scan of ~/code (Peter, 2026-11-15): the units are versioned in the private repo
+# ~/code/repo-security-scanner (systemd/) and copied from its checkout; the scan starts `rc code <project>`
+# update sessions and mails a summary. Primary workstation only (its local hosts file sets the flag); the
+# timer fires at 04:00, the service is never started by this role. Flag off: timer and units are removed.
+
+- name: Check for the repo security scanner checkout
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_repo_security_scan_dir }}/systemd"
+  register: ai_workstation_repo_security_scan_src
+
+- name: Install the repo security scan user units
+  ansible.builtin.copy:
+    src: "{{ ai_workstation_repo_security_scan_dir }}/systemd/{{ item }}"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    remote_src: true
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: "{{ ai_workstation_repo_security_scan_units }}"
+  register: ai_workstation_repo_security_scan_installed
+  when:
+    - ai_workstation_repo_security_scan | bool
+    - ai_workstation_repo_security_scan_src.stat.isdir | default(false)
+
+- name: Enable the repo security scan timer
+  ansible.builtin.systemd_service:
+    name: repo-security-scan.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: "{{ ai_workstation_repo_security_scan_installed.changed }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when:
+    - ai_workstation_repo_security_scan | bool
+    - ai_workstation_repo_security_scan_src.stat.isdir | default(false)
+    - not ansible_check_mode
+
+- name: Report a missing scanner checkout
+  ansible.builtin.debug:
+    msg: "ai_workstation_repo_security_scan is on, but {{ ai_workstation_repo_security_scan_dir }}/systemd is missing (code-sync clones it); units not installed."
+  when:
+    - ai_workstation_repo_security_scan | bool
+    - not (ai_workstation_repo_security_scan_src.stat.isdir | default(false))
+
+- name: Check for a repo security scan timer on a machine without the flag
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/repo-security-scan.timer"
+  register: ai_workstation_repo_security_scan_stale
+  when: not (ai_workstation_repo_security_scan | bool)
+
+- name: Disable the repo security scan timer where the flag is off
+  ansible.builtin.systemd_service:
+    name: repo-security-scan.timer
+    scope: user
+    enabled: false
+    state: stopped
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when:
+    - not (ai_workstation_repo_security_scan | bool)
+    - ai_workstation_repo_security_scan_stale.stat.exists | default(false)
+    - not ansible_check_mode
+
+- name: Remove the repo security scan units where the flag is off
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    state: absent
+  loop: "{{ ai_workstation_repo_security_scan_units }}"
+  when: not (ai_workstation_repo_security_scan | bool)
