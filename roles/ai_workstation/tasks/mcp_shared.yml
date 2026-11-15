@@ -37,15 +37,43 @@
     mode: '0644'
   register: ai_workstation_mcp_shared_unit
 
+# The launcher checks requires_path only at start, so a server whose file appeared later (garmin after
+# garmin-mcp-auth, ptsd after its first build) stays unserved until a restart: find those servers.
+- name: Read the servers the running shared MCP service serves
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ ai_workstation_mcp_shared_port }}/status"
+  register: ai_workstation_mcp_shared_before
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: List the unserved servers that depend on paths
+  ansible.builtin.set_fact:
+    ai_workstation_mcp_shared_unserved: "{{ ai_workstation_mcp_shared_unserved | default([]) + [{'name': item.name, 'paths': item.requires_path + [item.command]}] }}"
+  loop: "{{ ai_workstation_mcp_shared_servers | selectattr('requires_path', 'defined') | rejectattr('name', 'in', ai_workstation_mcp_shared_before.json.server_instances.keys() | list) }}"
+  loop_control: { label: "{{ item.name }}" }
+  when: ai_workstation_mcp_shared_before.status == 200
+
+- name: Check the required paths and commands of those servers
+  ansible.builtin.stat:
+    path: "{{ item.1 }}"
+  loop: "{{ ai_workstation_mcp_shared_unserved | default([]) | subelements('paths') }}"
+  loop_control: { label: "{{ item.0.name }}: {{ item.1 }}" }
+  register: ai_workstation_mcp_shared_paths
+
 - name: Enable and start the shared MCP user service
   ansible.builtin.systemd_service:
     name: mcp-shared.service
     scope: user
     enabled: true
-    state: "{{ 'restarted' if (_own_files_changed or _servers_updated) else 'started' }}"
+    state: "{{ 'restarted' if (_own_files_changed or _servers_updated or _newly_startable | length > 0) else 'started' }}"
     daemon_reload: true
   vars:
     _own_files_changed: "{{ ai_workstation_mcp_shared_launcher_file.changed or ai_workstation_mcp_shared_config.changed or ai_workstation_mcp_shared_unit.changed }}"
+    # Unserved servers whose required paths and command all exist now
+    _newly_startable: >-
+      {{ ai_workstation_mcp_shared_unserved | default([]) | map(attribute='name')
+         | difference(ai_workstation_mcp_shared_paths.results | rejectattr('stat.exists') | map(attribute='item.0.name')) }}
     # Upgraded uv tools or Node servers in this run (docs and Obsidian search run as their own services)
     _servers_updated: >-
       {{ (ai_workstation_uv_upgrade.changed | default(false))
