@@ -342,6 +342,10 @@
   ansible.builtin.import_tasks: agents_handoff.yml
   when: ai_workstation_agents_handoff
 
+- name: Keep old versions of selected Syncthing folders
+  ansible.builtin.import_tasks: syncthing_versioning.yml
+  when: ai_workstation_syncthing_versioned_folders | length > 0
+
 - name: Serve the stateless MCP servers once on loopback for all sessions
   ansible.builtin.import_tasks: mcp_shared.yml
   when: ai_workstation_mcp_shared

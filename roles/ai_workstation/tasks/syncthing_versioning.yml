@@ -1,0 +1,57 @@
+---
+# Staggered file versioning for existing Syncthing folders this role does not create itself (D62, Peter
+# 2026-11-15: "Claude transcripts" on schulpc, so a deletion or edit made on the phone stays recoverable).
+# Each entry of ai_workstation_syncthing_versioned_folders (local hosts file) names a folder ID and the number
+# of days old versions are kept. Only the folder's versioning block is touched; a folder that does not exist
+# on this machine is skipped. Syncthing versions files changed or deleted by another device, never local edits.
+
+- name: Read the local Syncthing GUI address and API key
+  ansible.builtin.command: "syncthing cli config gui {{ item }} get"
+  loop: [raw-address, apikey]
+  register: ai_workstation_syncthing_versioning_gui
+  changed_when: false
+  check_mode: false
+  no_log: true
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+
+- name: Read the folders that get versioning
+  ansible.builtin.uri:
+    url: "http://{{ ai_workstation_syncthing_versioning_gui.results[0].stdout }}/rest/config/folders/{{ item.id | urlencode }}"
+    headers: { X-API-Key: "{{ ai_workstation_syncthing_versioning_gui.results[1].stdout }}" }
+    status_code: [200, 404]
+  loop: "{{ ai_workstation_syncthing_versioned_folders }}"
+  loop_control: { label: "{{ item.id }}" }
+  register: ai_workstation_syncthing_versioning_current
+  check_mode: false
+  no_log: true
+
+- name: Report folders that do not exist on this machine
+  ansible.builtin.debug:
+    msg: "Syncthing folder {{ item.item.id }} is not configured here; versioning skipped."
+  loop: "{{ ai_workstation_syncthing_versioning_current.results }}"
+  loop_control: { label: "{{ item.item.id }}" }
+  when: item.status == 404
+
+- name: Set staggered versioning on the folders
+  ansible.builtin.uri:
+    url: "http://{{ ai_workstation_syncthing_versioning_gui.results[0].stdout }}/rest/config/folders/{{ item.item.id | urlencode }}"
+    method: PATCH
+    headers: { X-API-Key: "{{ ai_workstation_syncthing_versioning_gui.results[1].stdout }}" }
+    body_format: json
+    body: { versioning: "{{ item.json.versioning | combine(wanted) }}" }
+    status_code: [200]
+  vars:
+    wanted:
+      type: staggered
+      params: { maxAge: "{{ (item.item.max_age_days | int * 86400) | string }}" }
+      cleanupIntervalS: 3600
+  loop: "{{ ai_workstation_syncthing_versioning_current.results }}"
+  loop_control: { label: "{{ item.item.id }}" }
+  when:
+    - item.status == 200
+    - item.json.versioning.type != wanted.type
+      or item.json.versioning.params != wanted.params
+      or item.json.versioning.cleanupIntervalS != wanted.cleanupIntervalS
+  changed_when: true
+  no_log: true

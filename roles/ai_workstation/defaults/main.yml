@@ -409,6 +409,9 @@ ai_workstation_memory_merge_min_age_min: 0
 ai_workstation_agents_handoff: true
 ai_workstation_agents_handoff_devices: []
 ai_workstation_agents_handoff_min_age_min: 0
+# Staggered versioning for existing Syncthing folders this role does not create (tasks/syncthing_versioning.yml),
+# per host in the local hosts file, e.g. [{"id": "claude-projects", "max_age_days": 30}] on schulpc (D62).
+ai_workstation_syncthing_versioned_folders: []
 # Takeover lease between the two workstations (tasks/lease.yml, files/workstation-lease.py): one machine at a
 # time serves the rc roles. Per host in its hosts file: ai_workstation_lease=true, the private arbiter repo
 # (git@github.com:<owner>/<repo>.git) and this host's short name as rc knows it (schulpc, xps).
