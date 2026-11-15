@@ -428,6 +428,12 @@ ai_workstation_lease_gated_system_units: []
 # stay off this machine (set per machine in its hosts file)
 ai_workstation_code_sync: true
 ai_workstation_code_sync_exclude: []
+# Nightly dependency security scan of ~/code at 04:00 that starts `rc code` update sessions (Peter, 2026-11-15;
+# tasks/repo_security_scan.yml, units from the private repo checkout below). Primary workstation only: its
+# local hosts file sets true.
+ai_workstation_repo_security_scan: false
+ai_workstation_repo_security_scan_dir: "{{ ai_workstation_user_home }}/code/repo-security-scanner"
+ai_workstation_repo_security_scan_units: [repo-security-scan.service, repo-security-scan-alert.service, repo-security-scan.timer]
 # Claude Code user-scope MCP servers, the same on every workstation (claude_user_mcp.py adds or fixes these
 # and never touches others). requires_path: skipped where the server cannot run.
 ai_workstation_claude_user_mcp_servers:
