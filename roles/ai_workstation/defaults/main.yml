@@ -93,13 +93,11 @@ ai_workstation_mcp_uv_overrides_dir: "{{ ai_workstation_user_home }}/.config/ai/
 # install scripts run), `env` is exported by the wrapper, `spec` replaces `latest` in the manifest.
 ai_workstation_mcp_node_dir: /opt/mcp
 ai_workstation_mcp_node_servers:
-  # Cloudflare CLI (agent setup, 2026-10-30), only published as a beta. Below Node 26.12 `latest`
-  # resolves to beta.19 with known advisories, so the minimum keeps the first audited release; drop
-  # the spec once every machine runs Node 26.12 (zypper dup).
+  # Cloudflare CLI (agent setup, 2026-10-30), only published as a beta; `latest` needs Node 26.12, which
+  # nodejs26 provides on every machine with this role (schulpc and xps13 checked 2026-11-15).
   - name: cf
     package: cf
     bin: cf
-    spec: ">=1.0.0-beta.25"
   # Google Cloud: all of gcloud, limited only by the active account's IAM, plus logs, metrics and traces
   # Both ship a self-contained dist/bundle.js with their own zod 3 (GHSA for zod <4.6.6, no fixed release
   # upstream). The overrides satisfy npm audit but do not change the bundled copy: remove them once
