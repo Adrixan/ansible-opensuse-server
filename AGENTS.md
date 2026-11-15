@@ -25,6 +25,7 @@ Ansible playbook that provisions openSUSE Tumbleweed workstations and laptops ag
 - Latest stable release everywhere, no version pins: zypper `state: present` plus `zypper dup` in `system_update`, npm prefixes and uv tools updated on every run, GitHub downloads via `github_release` (sha256 from release metadata). A cap only where a newer major is known to break, with a comment.
 - 24-hour supply-chain cooldown: `ai_workstation` sets `min-release-age=1` in the system npmrc, `github_release` skips releases younger than `github_release_cooldown_hours` (24); the user-level npm, uv and pnpm settings live in yadm.
 - `npm audit` gates each Node prefix; findings without a fixed release need Peter's acceptance recorded in the repo.
+- Exception to the no-pin rule: `garmin-mcp` stays on a reviewed commit and is bumped only on purpose (it holds the Garmin login and upload rights; Peter, 2026-11-15, D52).
 - PEP 668: system pip tasks use `--break-system-packages`; prefer `uv tool` for Python CLIs.
 - FQCN modules (`ansible.builtin.*`, `community.general.*`), idempotent tasks, `changed_when`/`failed_when` on commands, `no_log: true` on anything touching secrets.
 - Git: work on a feature branch off `master`, Conventional Commits, `git merge --no-ff` into `master`, push. No force-push.
