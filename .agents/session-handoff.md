@@ -7,6 +7,7 @@
 - vps-maintenance `feat/educator-edu-micro`: all commits on both sides are in `main`; stale local copies dropped on both machines. Deleting the remote branch was refused by the agent permission check: Peter's call.
 - beat-cue: private GitHub repo `Adrixan/beat-cue`, main pushed, AGENTS.md updated, registered in the shared repo list.
 - Leftovers: wpengine-launcher `uv.lock` committed (refreshed, osv clean, 107 tests); in-memoriam-pascal February edits to the third-party Pascal.js submodule archived as a patch in that repo and the submodule reset (copies in `.scratch/ws-sync/pascal-js-backup-20261116/`); LinguaFusion Serena config committed from xps13; empty lesson scaffolds in AwesomeDIGGB and awesome-cs excluded locally (`.git/info/exclude`); Cast-Game and petersgasse.at notes stay local (archived remotes).
+- Also (yadm abf6c01): role runs are due only for role-relevant changes (`.agents/` and Markdown alone do not count). Final state: `ws-sync status` from xps13 reports 0 differences, same script md5 on both, 25 tests pass on both, greeting "ok, aligned".
 - Host-specific (kept): `sdbootutil`, `systemd-boot` on schulpc (systemd-boot there, GRUB2 on xps13); schulpc-only timers (nightly jobs, backups, PTSD grading); `code-ptsd` conf; xps13 `.gemini/config/config.json`.
 
 ### Open decisions
