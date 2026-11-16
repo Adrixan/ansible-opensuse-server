@@ -23,6 +23,8 @@ REBOOT_UNTIL=6            # reboot window end hour (exclusive)
 MIN_FREE_MB=4096          # free space needed on /
 WAIT_UNITS=""             # "user:unit ..." user units to let finish before the run and before a reboot
 WAIT_MAX_MIN=90           # longest wait for them
+REBOOT_WAIT_UNITS=""      # "user:unit ..." user units to let finish before a reboot only (not before the run)
+REBOOT_WAIT_MAX_MIN=150   # longest wait for them; still running then: the reboot stays pending
 SNAPSHOT_DIR=""           # /etc tarball and package lists before the run (7 kept)
 ANSIBLE_USER=""           # run Ansible roles as this user ...
 ANSIBLE_REPO=""           # ... from this clone (only when it is clean on master) ...
@@ -58,9 +60,9 @@ as_user() {
 }
 # Prints the WAIT_UNITS that are running now. A running oneshot is "activating", which
 # `systemctl is-active` reports as not active, so compare the ActiveState itself.
-busy_units() {
+busy_units() { # busy_units [units]: default WAIT_UNITS
   local entry user unit state
-  for entry in $WAIT_UNITS; do
+  for entry in ${1-$WAIT_UNITS}; do
     user=${entry%%:*} unit=${entry#*:}
     state=$(as_user "$user" systemctl --user show -p ActiveState --value "$unit" 2>/dev/null) || state=""
     case $state in active | activating | deactivating | reloading | refreshing) printf '%s ' "$unit" ;; esac
@@ -98,12 +100,12 @@ boot_times() {
   ((${#parts[@]} > 1)) && printf ' + %s' "${parts[@]:1}"
   echo
 }
-wait_for_units() { # wait_for_units <phase>: true once none of WAIT_UNITS runs
-  local deadline busy
-  [[ -n $WAIT_UNITS ]] || return 0
-  deadline=$(($(date +%s) + WAIT_MAX_MIN * 60))
-  while busy=$(busy_units) && [[ -n $busy ]]; do
-    (($(date +%s) < deadline)) || { note "$1: still running after $WAIT_MAX_MIN min: $busy"; return 1; }
+wait_for_units() { # wait_for_units <phase> [units max_min]: true once none of the units (default WAIT_UNITS) runs
+  local units=${2-$WAIT_UNITS} max=${3:-$WAIT_MAX_MIN} deadline busy
+  [[ -n $units ]] || return 0
+  deadline=$(($(date +%s) + max * 60))
+  while busy=$(busy_units "$units") && [[ -n $busy ]]; do
+    (($(date +%s) < deadline)) || { note "$1: still running after $max min: $busy"; return 1; }
     sleep 30
   done
   return 0
@@ -251,9 +253,16 @@ reboot_blocker() {
     fi
   fi
   wait_for_units "reboot" >/dev/null || { echo "nightly jobs still running"; return; }
+  # Jobs that may run past the topgrade start but must not be cut by the reboot (the weekly repo security
+  # scan with its update sessions until 04:30): waited for here only, so the run itself does not wait.
+  wait_for_units "reboot" "$REBOOT_WAIT_UNITS" "$REBOOT_WAIT_MAX_MIN" >/dev/null \
+    || { echo "reboot-only wait units still running"; return; }
   if [[ -n $RC_USER ]] && ! as_user "$RC_USER" rc quiet --wait "$RC_QUIET_WAIT_MIN" >/dev/null 2>&1; then
     echo "an agent session is still in a turn"; return
   fi
+  # the waits can take hours: the window must still be open when the reboot happens
+  hour=$(date +%-H)
+  ((hour >= REBOOT_FROM && hour < REBOOT_UNTIL)) || { echo "the window $REBOOT_FROM-$REBOOT_UNTIL closed while waiting"; return; }
 }
 
 if $needs_reboot; then

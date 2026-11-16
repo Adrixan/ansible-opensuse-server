@@ -17,6 +17,10 @@ topgrade_nightly_npm_prefix: ""       # root's global npm prefix, e.g. /usr/loca
 topgrade_nightly_hc_url: ""             # Healthchecks ping URL (from the controller env, never in git)
 topgrade_nightly_wait_units: []         # "user:unit" user units that finish first (before the run and a reboot)
 topgrade_nightly_wait_max_min: 90
+# "user:unit" user units that only the reboot waits for (not the run), e.g. the weekly repo security scan whose
+# update sessions run until 04:30 (Peter, 2026-11-16); still running after the max: the reboot stays pending.
+topgrade_nightly_reboot_wait_units: []
+topgrade_nightly_reboot_wait_max_min: 150
 topgrade_nightly_snapshot_dir: ""       # /etc tarball and package lists before the run, 7 kept (no fs snapshots on ext4)
 topgrade_nightly_ansible_user: ""       # Ansible roles run as this user from its clone ...
 topgrade_nightly_ansible_repo: ""       # ... only when the clone is clean on master ...

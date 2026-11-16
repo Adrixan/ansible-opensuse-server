@@ -1,5 +1,8 @@
 # Session Handoff State
 
+## 2026-11-16 08:30: topgrade reboot-only wait units (from the repo-security-scanner session; Peter's answer via the Greeter: "Reboot wait ... - yes")
+- `topgrade-nightly`: new `REBOOT_WAIT_UNITS` / `REBOOT_WAIT_MAX_MIN` (role vars `topgrade_nightly_reboot_wait_units`, default `[]`, and `_max_min`, 150), waited for in the reboot gate only (after WAIT_UNITS, before `rc quiet`), so the run's start never waits for them; still running after the max: reboot pending. The gate also re-checks the reboot window after all waits ("closed while waiting"). schulpc hosts (local, backup `.scratch/hosts.bak-20261116-reboot-wait`): `["Adrixan:repo-security-scan.service"]`, 150. Function harness `.scratch/test-reboot-gate.sh`: 9 cases ok; shellcheck clean. Role run with `~/.config/ai/env` sourced (HC URL kept): check changed=2, live changed=2, second live changed=0; installed wrapper matches the repo.
+
 ## 2026-11-16 06:55: repo security scan sessions until 04:30 (from the repo-security-scanner session, Peter's order via the Greeter)
 - Scanner merge d2fc096 moves the session end from 01:50 to 04:30; here only comments. Single-task run: check changed=1, live changed=1, second live changed=0; next run Sat 2026-11-21 23:01. No change to topgrade_nightly, daily-cloud-sync or the grading units (Peter accepted the overlap); open recommendation in the scanner README: none applied.
 
