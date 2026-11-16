@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+# Weekly aspirations job (ai_workstation tasks/aspirations.yml; script: yadm ~/.local/bin/aspirations,
+# config: ~/sync/ai/aspirations/config.toml). Reads the task list, starts one rc session, marks the idea,
+# mails Peter. rc's RAM guard is respected; refused starts are retried for retry_window_min (6 h).
+[Unit]
+Description=aspirations: start this week's project idea as an rc session
+Wants=network-online.target
+After=network-online.target mcp-shared.service
+ConditionPathExists=%h/.local/bin/aspirations
+ConditionPathExists=%h/sync/ai/aspirations/config.toml
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 -I %h/.local/bin/aspirations
+# 5: another run holds the lock
+SuccessExitStatus=5
+UMask=0077
+Nice=10
+TimeoutStartSec=7h

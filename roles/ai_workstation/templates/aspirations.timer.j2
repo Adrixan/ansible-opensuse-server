@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Weekly aspirations job: start the top project idea from the Nextcloud task list
+
+[Timer]
+OnCalendar={{ ai_workstation_aspirations_on_calendar }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target

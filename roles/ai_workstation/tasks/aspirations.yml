@@ -1,0 +1,61 @@
+---
+# Weekly aspirations job (Peter, 2026-11-16, via the Greeter: "Schedule each sunday at 05:00 to check the list,
+# pick an idea according to priority, read its note and subtask and start working on it."). The script
+# (~/.local/bin/aspirations, tests in ~/.local/share/aspirations) belongs to yadm, its private config
+# (~/sync/ai/aspirations/config.toml) to Syncthing; this file only schedules it. Primary workstation only:
+# its local hosts file sets the flag. The service is never started by this role. Flag off: units removed.
+
+- name: Deploy the aspirations user units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: [aspirations.service, aspirations.timer]
+  register: ai_workstation_aspirations_units
+  when: ai_workstation_aspirations | bool
+
+- name: Enable the aspirations timer
+  ansible.builtin.systemd_service:
+    name: aspirations.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: "{{ ai_workstation_aspirations_units.changed }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when: ai_workstation_aspirations | bool and not ansible_check_mode
+
+- name: Check for an aspirations timer on a machine without the flag
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/aspirations.timer"
+  register: ai_workstation_aspirations_stale
+  when: not (ai_workstation_aspirations | bool)
+
+- name: Disable the aspirations timer where the flag is off
+  ansible.builtin.systemd_service:
+    name: aspirations.timer
+    scope: user
+    enabled: false
+    state: stopped
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  failed_when: false
+  when:
+    - not (ai_workstation_aspirations | bool)
+    - ai_workstation_aspirations_stale.stat.exists | default(false)
+    - not ansible_check_mode
+
+- name: Remove the aspirations units where the flag is off
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    state: absent
+  loop: [aspirations.service, aspirations.timer]
+  when: not (ai_workstation_aspirations | bool)

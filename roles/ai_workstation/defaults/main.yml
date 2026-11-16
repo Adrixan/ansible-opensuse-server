@@ -439,6 +439,11 @@ ai_workstation_ws_sync_interval: 4h
 ai_workstation_repo_security_scan: false
 ai_workstation_repo_security_scan_dir: "{{ ai_workstation_user_home }}/code/repo-security-scanner"
 ai_workstation_repo_security_scan_units: [repo-security-scan.service, repo-security-scan-alert.service, repo-security-scan.timer]
+# Weekly aspirations job (Peter, 2026-11-16: "Schedule each sunday at 05:00 to check the list, pick an idea according
+# to priority ..."; tasks/aspirations.yml; script yadm ~/.local/bin/aspirations, config ~/sync/ai/aspirations).
+# Primary workstation only: its local hosts file sets true.
+ai_workstation_aspirations: false
+ai_workstation_aspirations_on_calendar: "Sun *-*-* 05:00:00 Europe/Vienna"
 # Claude Code user-scope MCP servers, the same on every workstation (claude_user_mcp.py adds or fixes these
 # and never touches others). requires_path: skipped where the server cannot run.
 ai_workstation_claude_user_mcp_servers:
