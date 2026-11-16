@@ -332,6 +332,9 @@
   ansible.builtin.import_tasks: code_sync.yml
   when: ai_workstation_code_sync
 
+- name: Schedule unattended ws-sync runs (the two workstations)
+  ansible.builtin.import_tasks: ws_sync.yml
+
 - name: Schedule the weekly repo security scan (primary workstation only)
   ansible.builtin.import_tasks: repo_security_scan.yml
 
