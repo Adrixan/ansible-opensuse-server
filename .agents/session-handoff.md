@@ -1,5 +1,8 @@
 # Session Handoff State
 
+## 2026-11-16 06:30: repo security scan weekly (from the repo-security-scanner session, Peter's order via the Greeter)
+- Units come from the scanner checkout (scanner merge b9b1e8a): timer `Sat *-*-* 23:00:00 Europe/Vienna`, 5 min jitter; the scanner ends every update session by 01:50. Here only comments and the task name changed. Single-task run (`.scratch/repo-security-scan.yml`, `tasks_from: repo_security_scan.yml`): check changed=1, live changed=1, second live changed=0; `systemctl --user list-timers` shows next run Sat 2026-11-21 23:02.
+
 ## 2026-11-15 12:30 to 13:10: xps13 work (brief from the Greeter: "do all work that needs to be done on xps13 now")
 - Lease rollout on xps13: idle `code-lernspiele-android-kit` role stopped first (0 sessions, kit repo clean); `git pull` (a0ee022); hosts [all:vars] `ai_workstation_lease=true`, `_remote`, `_host=xps` (backup `.scratch/hosts.bak-20261115-lease` there); `yadm-sync-all xps` (stopped once: `keybindings.json` changed locally and upstream with identical content, restored; local `.gemini/config/config.json` `swarm.enabled` kept, it exists only on xps13). Role run 1 changed=17 (lease tool, config, watch units, rc gate, routine updates), run 2 changed=0 failed=0. `rc lease status` on both: schulpc, epoch 1; xps13 watch timer every 2 min, "held by schulpc".
 - agents_handoff: device ID and `min_age_min=10` were already in the xps13 hosts file; folder exists; live round trip: line written on xps13 arrived on schulpc in 15 s, line written on schulpc arrived on xps13 in 16 s, md5 equal.

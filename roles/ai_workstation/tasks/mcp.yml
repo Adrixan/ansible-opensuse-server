@@ -332,7 +332,7 @@
   ansible.builtin.import_tasks: code_sync.yml
   when: ai_workstation_code_sync
 
-- name: Schedule the nightly repo security scan (primary workstation only)
+- name: Schedule the weekly repo security scan (primary workstation only)
   ansible.builtin.import_tasks: repo_security_scan.yml
 
 - name: Merge Syncthing conflict copies of the memory graph
