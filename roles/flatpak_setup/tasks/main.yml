@@ -11,3 +11,24 @@
     state: present
     flatpakrepo_url: "{{ flathub_repo_url }}"
     method: system
+
+- name: Read the extra locales of the system flatpak installation
+  ansible.builtin.command:
+    argv: [flatpak, config, --system, --get, extra-languages]
+  register: flatpak_extra_languages_current
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Set the extra locales of the system flatpak installation
+  ansible.builtin.command:
+    argv: [flatpak, config, --system, --set, extra-languages, "{{ flatpak_extra_languages | join(';') }}"]
+  when: (flatpak_extra_languages_current.stdout | trim) != (flatpak_extra_languages | join(';'))
+  register: flatpak_extra_languages_set
+  changed_when: true
+
+- name: Fetch the runtime locale data for the new locales
+  ansible.builtin.command:
+    argv: [flatpak, update, --system, --noninteractive, -y]
+  when: flatpak_extra_languages_set is changed
+  changed_when: true

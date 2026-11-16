@@ -2,3 +2,8 @@
 # defaults file for obsidian
 obsidian_flatpak_name: "md.obsidian.Obsidian"
 obsidian_flatpak_remote: "flathub"
+# PDF export from inside Obsidian (Enhancing Export plugin, pandoc bundled in the flatpak): install the
+# TeX Live SDK extension in the branch the Obsidian flatpak declares (2.5 GB download, 5 GB installed).
+# The export defaults (LuaLaTeX, A4, wikilinks as text) live in each vault's plugin settings (Syncthing).
+obsidian_pdf_export: true
+obsidian_texlive_extension: "org.freedesktop.Sdk.Extension.texlive"

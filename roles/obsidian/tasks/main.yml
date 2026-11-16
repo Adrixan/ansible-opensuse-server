@@ -11,9 +11,35 @@
     state: present
     method: system
 
-- name: Keep the flatpak at the latest release
+# PDF export (Enhancing Export plugin): pandoc ships inside the Obsidian flatpak, a PDF engine does not.
+# The flatpak declares the TeX Live SDK extension (mounted at /app/texlive, already on its PATH), so
+# LuaLaTeX runs inside the sandbox and no host-exec grant (talk-name org.freedesktop.Flatpak) is needed.
+- name: Read the TeX Live extension branch the Obsidian flatpak declares
+  ansible.builtin.command:
+    argv: [flatpak, info, --system, --show-metadata, "{{ obsidian_flatpak_name }}"]
+  register: obsidian_flatpak_metadata
+  changed_when: false
+  check_mode: false
+  when: obsidian_pdf_export | bool
+
+- name: Set the TeX Live extension ref
+  ansible.builtin.set_fact:
+    obsidian_texlive_ref: >-
+      runtime/{{ obsidian_texlive_extension }}/{{ ansible_facts['architecture'] }}/{{
+      obsidian_flatpak_metadata.stdout
+      | regex_search('\[Extension ' ~ (obsidian_texlive_extension | regex_escape) ~ '\][^\[]*?\nversion=(\S+)', '\1')
+      | first }}
+  when: obsidian_pdf_export | bool
+
+- name: Install the TeX Live extension for the Obsidian flatpak (LuaLaTeX for PDF export)
+  ansible.builtin.command:
+    argv: [flatpak, install, --system, --noninteractive, -y, "{{ obsidian_flatpak_remote }}", "{{ obsidian_texlive_ref }}"]
+    creates: "/var/lib/flatpak/{{ obsidian_texlive_ref }}/active"
+  when: obsidian_pdf_export | bool
+
+- name: Keep the flatpaks at the latest release
   ansible.builtin.include_role:
     name: flatpak_setup
     tasks_from: update
   vars:
-    flatpak_update_apps: ["{{ obsidian_flatpak_name }}"]
+    flatpak_update_apps: "{{ [obsidian_flatpak_name] + ([obsidian_texlive_ref] if obsidian_pdf_export | bool else []) }}"

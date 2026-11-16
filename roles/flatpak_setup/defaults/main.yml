@@ -4,3 +4,8 @@ flatpak_packages:
   - flatpak
 
 flathub_repo_url: "https://dl.flathub.org/repo/flathub.flatpakrepo"
+
+# Locales the system flatpak runtimes ship besides the system language (flatpak config extra-languages).
+# The desktop sets LC_PAPER and other LC_* to de_AT; without that locale in the runtime, strict programs in
+# a sandbox (LuaLaTeX in Obsidian's PDF export) abort with "Unable to read locale data".
+flatpak_extra_languages: ["de_AT"]
