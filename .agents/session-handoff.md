@@ -1,5 +1,8 @@
 # Session Handoff State
 
+## 2026-11-16 06:55: repo security scan sessions until 04:30 (from the repo-security-scanner session, Peter's order via the Greeter)
+- Scanner merge d2fc096 moves the session end from 01:50 to 04:30; here only comments. Single-task run: check changed=1, live changed=1, second live changed=0; next run Sat 2026-11-21 23:01. No change to topgrade_nightly, daily-cloud-sync or the grading units (Peter accepted the overlap); open recommendation in the scanner README: none applied.
+
 ## 2026-11-16 06:30: repo security scan weekly (from the repo-security-scanner session, Peter's order via the Greeter)
 - Units come from the scanner checkout (scanner merge b9b1e8a): timer `Sat *-*-* 23:00:00 Europe/Vienna`, 5 min jitter; the scanner ends every update session by 01:50. Here only comments and the task name changed. Single-task run (`.scratch/repo-security-scan.yml`, `tasks_from: repo_security_scan.yml`): check changed=1, live changed=1, second live changed=0; `systemctl --user list-timers` shows next run Sat 2026-11-21 23:02.
 
