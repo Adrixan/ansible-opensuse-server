@@ -1,5 +1,25 @@
 # Session Handoff State
 
+## 2026-11-16 09:00 to 10:30: ws-sync, state sync and hand-off between schulpc and xps13 (brief from the Greeter, Peter's words: "write a script that efficiently syncs the state of schulpc and xps13 for full hand-offs ... must not relie on your intervention")
+- Script `ws-sync` in yadm (`~/.local/bin/ws-sync`, Python stdlib; offline tests `python3 -I ~/.local/share/ws-sync/test_ws_sync.py`, 16 pass; greeting `~/.config/zsh/ws-sync-status`, sourced by `.zshrc`; yadm 20a402d, 8b01277). Private config and state in `~/sync/ai/ws-sync/` (config.toml with hosts, aliases, push allowlist, barrier, per-host exceptions; per-host manifests, package baseline). Modes `status` (default, read-only, about 20 s), `sync [-n]`, `handoff [-n] [--to]`, `sync --auto`. Full description: knowledge-map details "Two workstations", paragraph ws-sync.
+- This repo: `tasks/ws_sync.yml` (imported from `mcp.yml`) schedules `ws-sync sync --auto` every 4 h (`ai_workstation_ws_sync` defaults to `ai_workstation_lease`, so exactly the pair); exit 3, 4, 5 count as success. Merges 364058a and the docs/unit fix after it; single-task run changed=1, second run changed=0; timers active on both machines.
+- `yadm-sync-all`: `YADM_SYNC_SELF` lets a machine whose alias differs from its hostname (xps vs xps13) run itself locally instead of over its own tunnel.
+- Tests: status, `sync -n`, live `sync` from schulpc (both directions of every step), live `sync` from xps13, `handoff -n`, barrier live (new file through m11x in 15 s; deletion propagated), unreachable peer (exit 4, last manifest shown), busy lock (exit 5). Bugs found and fixed on the way: `LC_ALL=C` broke ansible-playbook (now C.UTF-8, full log `~/.local/state/ws-sync/ansible-last.log` per host), `$HOME` not expanded in the role-dir lookup, timer first run failing on a busy lock.
+- Not tested live: a real `ws-sync handoff`. It stops every running role on the holder (7 on schulpc at the time, this session included), so it waits for Peter. Started inside an rc role it detaches itself into `systemd-run --user`.
+- Gaps closed: xps13 got Zotero (Flatpak), texlive set, python313 matplotlib/pytest/ruamel.yaml, gimp, mpv, yt-dlp, rembg; file-accountant tool reinstalled from the checkout; stale `~/.local/bin/uv` 0.11 moved aside (`.scratch/stale-uv-20261116/` on xps13); schulpc mcp-proxy unpinned 0.13 -> 0.15 (receipt pin `==0.13.0`), mcp-shared restarted, 26 servers configured. Both role runs failed=0 (schulpc changed=4, xps13 changed=9).
+- Safety: `code.push_remotes` allows only `github.com:Adrixan/*`; a client repository on GitLab (72 commits ahead on both machines) is never pushed. Secrets: names only, never decrypted over a newer local file; `rclone.conf` marked volatile (token refresh) and kept across decrypts.
+
+### Open decisions
+- Peter: packages kept schulpc-only by ws-sync (steam, lutris, 32-bit Mesa, guayadeque, plus the documented backup and boot packages) and FreeFileSync xps13-only; moving a name out of `only_on` in the config installs it on the other machine at the next sync.
+
+### Needs Peter
+- Run the first real hand-off when convenient: `ws-sync handoff -n`, then `ws-sync handoff` (from either machine).
+- Left for a person (reported each run): uncommitted work in AwesomeDIGGB, awesome-cs, Cast-Game, in-memoriam-pascal, lernspiele-trainer-android, petersgasse.at, wpengine-launcher (schulpc) and LinguaFusion (xps13, `.serena/project.yml`); one client repository 72 commits ahead of its remote (name in the knowledge-map details); `vps-maintenance` `feat/educator-edu-micro` diverged; `beat-cue` without a remote.
+
+### Next
+- After a few timer runs: `journalctl --user -u ws-sync` on both; the greeting line shows the result.
+
+
 ## 2026-11-16 08:30: topgrade reboot-only wait units (from the repo-security-scanner session; Peter's answer via the Greeter: "Reboot wait ... - yes")
 - `topgrade-nightly`: new `REBOOT_WAIT_UNITS` / `REBOOT_WAIT_MAX_MIN` (role vars `topgrade_nightly_reboot_wait_units`, default `[]`, and `_max_min`, 150), waited for in the reboot gate only (after WAIT_UNITS, before `rc quiet`), so the run's start never waits for them; still running after the max: reboot pending. The gate also re-checks the reboot window after all waits ("closed while waiting"). schulpc hosts (local, backup `.scratch/hosts.bak-20261116-reboot-wait`): `["Adrixan:repo-security-scan.service"]`, 150. Function harness `.scratch/test-reboot-gate.sh`: 9 cases ok; shellcheck clean. Role run with `~/.config/ai/env` sourced (HC URL kept): check changed=2, live changed=2, second live changed=0; installed wrapper matches the repo.
 
