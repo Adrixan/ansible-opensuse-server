@@ -428,6 +428,10 @@ ai_workstation_lease_gated_system_units: []
 # stay off this machine (set per machine in its hosts file)
 ai_workstation_code_sync: true
 ai_workstation_code_sync_exclude: []
+# Unattended `ws-sync sync --auto` between the two workstations (tasks/ws_sync.yml; script, greeting and
+# config: yadm and ~/sync/ai/ws-sync). On by default exactly where the takeover lease is on (the pair).
+ai_workstation_ws_sync: "{{ ai_workstation_lease | default(false) }}"
+ai_workstation_ws_sync_interval: 4h
 # Weekly dependency security scan of ~/code (Saturday 23:00, sessions end by 04:30) that starts `rc code` update
 # sessions (Peter, 2026-11-15, weekly since 2026-11-16;
 # tasks/repo_security_scan.yml, units from the private repo checkout below). Primary workstation only: its

@@ -1,0 +1,60 @@
+---
+# Unattended ws-sync runs between the two workstations (Peter, 2026-11-16). The script itself
+# (~/.local/bin/ws-sync), its shell greeting and its private config (~/sync/ai/ws-sync/config.toml)
+# belong to yadm and Syncthing; this file only schedules `ws-sync sync --auto`: user-level steps
+# (yadm, ~/code, rc confs, uv tools), no root changes, no pushes, no Ansible runs.
+
+- name: Deploy the ws-sync user units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    owner: "{{ ai_workstation_user }}"
+    group: "{{ ai_workstation_user }}"
+    mode: '0644'
+  loop: [ws-sync.service, ws-sync.timer]
+  register: ai_workstation_ws_sync_units
+  when: ai_workstation_ws_sync | bool
+
+- name: Enable the ws-sync timer
+  ansible.builtin.systemd_service:
+    name: ws-sync.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: "{{ ai_workstation_ws_sync_units.changed }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  when: ai_workstation_ws_sync | bool and not ansible_check_mode
+
+- name: Check for ws-sync units on a machine that is not one of the pair
+  ansible.builtin.stat:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/ws-sync.timer"
+  register: ai_workstation_ws_sync_timer_file
+  when: not (ai_workstation_ws_sync | bool)
+
+- name: Stop the ws-sync timer where it is off
+  ansible.builtin.systemd_service:
+    name: ws-sync.timer
+    scope: user
+    enabled: false
+    state: stopped
+  become: true
+  become_user: "{{ ai_workstation_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
+  failed_when: false
+  when:
+    - not (ai_workstation_ws_sync | bool)
+    - ai_workstation_ws_sync_timer_file.stat.exists | default(false)
+    - not ansible_check_mode
+
+- name: Remove the ws-sync units where it is off
+  ansible.builtin.file:
+    path: "{{ ai_workstation_user_home }}/.config/systemd/user/{{ item }}"
+    state: absent
+  loop: [ws-sync.service, ws-sync.timer]
+  when: not (ai_workstation_ws_sync | bool)

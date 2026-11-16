@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+# Unattended alignment with the other workstation (ai_workstation ws_sync.yml; script and config: yadm, Syncthing)
+[Unit]
+Description=ws-sync: align this workstation with the other one (user-level steps)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=%h/.local/bin/ws-sync
+ConditionPathExists=%h/sync/ai/ws-sync/config.toml
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 -I %h/.local/bin/ws-sync sync --auto
+# 3: differences left that need a person or a full sync; 4: the other machine is asleep or offline.
+SuccessExitStatus=3 4
+Nice=10
+TimeoutStartSec=45min

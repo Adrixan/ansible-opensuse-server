@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+[Unit]
+Description=ws-sync every {{ ai_workstation_ws_sync_interval }} (unattended, user-level steps)
+
+[Timer]
+OnBootSec=20min
+OnUnitActiveSec={{ ai_workstation_ws_sync_interval }}
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
