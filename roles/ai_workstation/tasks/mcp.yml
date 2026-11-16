@@ -338,6 +338,9 @@
 - name: Schedule the weekly repo security scan (primary workstation only)
   ansible.builtin.import_tasks: repo_security_scan.yml
 
+- name: Schedule the weekly aspirations job (primary workstation only)
+  ansible.builtin.import_tasks: aspirations.yml
+
 - name: Merge Syncthing conflict copies of the memory graph
   ansible.builtin.import_tasks: memory_merge.yml
   when: ai_workstation_memory_merge
