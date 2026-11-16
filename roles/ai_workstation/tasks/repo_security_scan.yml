@@ -1,8 +1,9 @@
 ---
-# Nightly dependency security scan of ~/code (Peter, 2026-11-15): the units are versioned in the private repo
-# ~/code/repo-security-scanner (systemd/) and copied from its checkout; the scan starts `rc code <project>`
-# update sessions and mails a summary. Primary workstation only (its local hosts file sets the flag); the
-# timer fires at 04:00, the service is never started by this role. Flag off: timer and units are removed.
+# Weekly dependency security scan of ~/code (Peter, 2026-11-15; weekly since 2026-11-16): the units are versioned
+# in the private repo ~/code/repo-security-scanner (systemd/) and copied from its checkout; the scan starts
+# `rc code <project>` update sessions and mails a summary. Primary workstation only (its local hosts file sets the
+# flag); the timer fires on Saturday at 23:00 and the scanner ends every session by 01:50, before the 02:00 jobs.
+# The service is never started by this role. Flag off: timer and units are removed.
 
 - name: Check for the repo security scanner checkout
   ansible.builtin.stat:

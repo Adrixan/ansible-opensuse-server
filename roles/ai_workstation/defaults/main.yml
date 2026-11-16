@@ -428,7 +428,8 @@ ai_workstation_lease_gated_system_units: []
 # stay off this machine (set per machine in its hosts file)
 ai_workstation_code_sync: true
 ai_workstation_code_sync_exclude: []
-# Nightly dependency security scan of ~/code at 04:00 that starts `rc code` update sessions (Peter, 2026-11-15;
+# Weekly dependency security scan of ~/code (Saturday 23:00, sessions end by 01:50) that starts `rc code` update
+# sessions (Peter, 2026-11-15, weekly since 2026-11-16;
 # tasks/repo_security_scan.yml, units from the private repo checkout below). Primary workstation only: its
 # local hosts file sets true.
 ai_workstation_repo_security_scan: false
