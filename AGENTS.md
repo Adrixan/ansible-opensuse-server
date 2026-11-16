@@ -20,6 +20,7 @@ Ansible playbook that provisions openSUSE Tumbleweed workstations and laptops ag
 - Secrets come from the environment or `~/.config/ai/env` (rendered by `ai_workstation`, mode `0600`); `~/.config/ai/env.local` holds yadm-only secrets and is never written by a role.
 - `ai_workstation` must not restart Claude Code remote-control role servers that are running (it would kill the session running the playbook); it reports roles that need `rc restart <role>`.
 - `mcp-shared.service` (`127.0.0.1:8790`) runs the stateless MCP servers; the role restarts it after launcher, config, unit or tool updates.
+- `tasks/ws_sync.yml` only schedules `ws-sync sync --auto` (user timer, on where the lease is on). The script `ws-sync`, its greeting and tests belong to yadm, its config and state to `~/sync/ai/ws-sync/` (private); intended per-machine differences go into that config, never into this repo.
 
 ## Conventions
 - Latest stable release everywhere, no version pins: zypper `state: present` plus `zypper dup` in `system_update`, npm prefixes and uv tools updated on every run, GitHub downloads via `github_release` (sha256 from release metadata). A cap only where a newer major is known to break, with a comment.

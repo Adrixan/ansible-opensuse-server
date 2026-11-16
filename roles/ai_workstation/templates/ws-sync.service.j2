@@ -11,7 +11,8 @@ ConditionPathExists=%h/sync/ai/ws-sync/config.toml
 Type=oneshot
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/usr/bin/python3 -I %h/.local/bin/ws-sync sync --auto
-# 3: differences left that need a person or a full sync; 4: the other machine is asleep or offline.
-SuccessExitStatus=3 4
+# 3: differences left that need a person or a full sync; 4: the other machine is asleep or offline;
+# 5: another ws-sync run (on either machine) holds the lock, this run is skipped.
+SuccessExitStatus=3 4 5
 Nice=10
 TimeoutStartSec=45min
