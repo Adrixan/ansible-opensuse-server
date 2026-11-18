@@ -1,7 +1,8 @@
 # CLI and TUI tools that follow the workstations to Termux on the phone.
 # Key: openSUSE package name; value: Termux package name (checked against the termux-main index, 2026-11-18).
 # A tool lands in the phone's list only while it is installed on the source workstation (schulpc), so a tool
-# dropped there drops off the phone list too. Add a line here to extend the set; never list servers or GUI apps.
+# dropped there drops off the phone list too. A key can also be an executable path (/usr/local/bin/<name>)
+# for tools a role installs from upstream. Add a line here to extend the set; never list servers or GUI apps.
 7zip: 7zip
 aria2: aria2
 bind-utils: dnsutils
@@ -21,7 +22,7 @@ ncdu: ncdu
 neovim: neovim
 openssh: openssh
 p7zip-full: 7zip
-pandoc-cli: pandoc
+/usr/local/bin/pandoc: pandoc
 qpdf: qpdf
 rclone: rclone
 ripgrep: ripgrep
