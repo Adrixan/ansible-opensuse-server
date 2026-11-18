@@ -38,16 +38,17 @@ Modular, production-ready Ansible playbook designed for automated provisioning, 
 * **`desktop_fonts`**: Installs Adobe Source Code Pro, Source Sans Pro, and Source Serif Pro typography packages.
 * **`graphical_environment`**: Core desktop software suite (`MozillaFirefox`, `MozillaThunderbird`, `partitionmanager`, `gwenview`, `ark`, `tigervnc` VNC viewer).
 * **`desktop_messaging`**: Removes legacy zypper repository/packages and installs Signal Desktop client via Flatpak (`org.signal.Signal`).
-* **`multimedia_codecs`**: Configures high-priority Packman repository and installs unrestricted audio/video codecs (`ffmpeg`, `vlc`, `mpv`, `gstreamer-plugins-*`, `x264`, `x265`, `faac`, `faad2`).
-* **`office_suite`**: Installs full LibreOffice productivity suite, Okular PDF viewer, FileZilla FTP client, pandoc from the latest upstream release (verified against the GitHub release digest) and Marp CLI in `/opt/marp-cli` (latest release, whole tree updated on every run, npm overrides force vulnerable transitive dependencies to their latest release, `npm audit` gates the role, wrapper uses the system Chromium).
-* **`graphics_tools`**: Image manipulation and editing tools (GIMP, Gwenview).
-* **`gaming_environment`**: Installs Linux gaming platforms and emulators (`steam`, `lutris`, `dosbox`, `doomsday`).
+* **`multimedia_codecs`**: Configures high-priority Packman repository and installs unrestricted audio/video codecs (`ffmpeg`, `vlc`, `gstreamer-plugins-*`, `x264`, `x265`, `faac`, `faad2`).
+* **`office_suite`**: Installs full LibreOffice productivity suite, Okular PDF viewer, pandoc from the latest upstream release (verified against the GitHub release digest) and Marp CLI in `/opt/marp-cli` (latest release, whole tree updated on every run, npm overrides force vulnerable transitive dependencies to their latest release, `npm audit` gates the role, wrapper uses the system Chromium).
 
 ### 📦 Containers & Application Packaging
 * **`docker`**: Installs Docker engine, container utilities, and manages `docker.service`.
 * **`flatpak_setup`**: Installs Flatpak daemon and configures the Flathub remote repository.
 * **`obsidian`**: Installs Obsidian knowledge management app via Flatpak (automatically includes `flatpak_setup`).
 * **`zotero`**: Installs Zotero via Flatpak, creates a default profile if Zotero never ran, installs Better BibTeX from the latest upstream release (verified against the GitHub release digest) into the profile, keeps the flatpak updated and enforces the local API, UTF-8 BibTeX export and the citekey format through `user.js`. Zotero sync login and the Better BibTeX auto-export stay manual.
+
+### 🧹 Package policy
+* **`workstation_packages`**: Removes the apps dropped on 2026-11-18 (list in the role defaults) through a guarded helper (`files/pkg-policy.py`: a zypper dry run first, refused when the removal would take any other package along) and adds a zypper lock for each, so pattern recommends, role runs and ws-sync never bring them back. Per-host exceptions: `workstation_packages_keep`. With `workstation_packages_align=true` (m11x) it also installs what schulpc installed on purpose plus every Flatpak app, read from the ws-sync state in `~/sync/ai/ws-sync` (boot chain, kernels, firmware and patterns excluded).
 
 ### 📱 Android Build Toolchain
 * **`android_build`**: User-space toolchain for the Android apps under `~/.local/share/android` (paths fixed by the app repos and the kit's `scripts/env.sh`; `JAVA_HOME` and `ANDROID_HOME` stay per repo, never global). A read-only planner (`files/android_toolchain_plan.py`, tests in `tests/test_android_toolchain_plan.py`) looks up the newest stable releases at the vendors and applies the 24-hour cooldown; the role then installs the Eclipse Temurin JDK (`jdk-21`, SHA-256 from the Adoptium API), the command-line tools (`sdk/cmdline-tools/latest`, the build listed on developer.android.com with its SHA-256, cross-checked with the SHA-1 of Google's repository XML) and the sdkmanager packages from `android_build_sdk_packages` (sdkmanager checks the SHA-1 of the repository XML; Google publishes no SHA-256 for them). It accepts the SDK licences (`android_build_accept_licenses`), creates the AVDs from `android_build_avds` once (default `sg-phone` in `~/.android/avd`), creates the kit lock files `gradle.lock` and `emulator.lock`, swaps JDK, command-line tools and packages only while those locks are free, sets `~/.android/adbkey` to 0600 and gives the user KVM access (kvm group where `/dev/kvm` is not world-writable). Play upload keys (`~/.local/share/play-upload-keys`) are never touched. Enabled on schulpc and xps13; schulpc runs it every night through `topgrade_nightly` (`topgrade_nightly_ansible_roles` in its inventory), where it reports `changed=0` until a release passes the cooldown and waits for the gradle and emulator locks before any swap; xps13 runs it on demand.
@@ -78,7 +79,7 @@ ansible-playbook main.yml --check -e "enable_base_software=true enable_shell_env
 ### Provision Local Host
 Run selected roles directly on `localhost`:
 ```bash
-sudo ansible-playbook main.yml -e "enable_multimedia_codecs=true enable_office_suite=true enable_gaming_environment=true"
+sudo ansible-playbook main.yml -e "enable_multimedia_codecs=true enable_office_suite=true"
 ```
 
 ---

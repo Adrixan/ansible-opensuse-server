@@ -124,18 +124,6 @@
       when: enable_office_suite | default(false) | bool
       tags: [office_suite]
 
-    - name: Include graphics_tools role
-      ansible.builtin.include_role:
-        name: graphics_tools
-      when: enable_graphics_tools | default(false) | bool
-      tags: [graphics_tools]
-
-    - name: Include gaming_environment role
-      ansible.builtin.include_role:
-        name: gaming_environment
-      when: enable_gaming_environment | default(false) | bool
-      tags: [gaming_environment]
-
     - name: Include docker role
       ansible.builtin.include_role:
         name: docker
@@ -231,3 +219,9 @@
         name: android_build
       when: enable_android_build | default(false) | bool
       tags: [android_build]
+
+    - name: Include workstation_packages role
+      ansible.builtin.include_role:
+        name: workstation_packages
+      when: enable_workstation_packages | default(false) | bool
+      tags: [workstation_packages]

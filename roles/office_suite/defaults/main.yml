@@ -9,7 +9,6 @@ office_packages:
   - libreoffice-math
   - libreoffice-writer
   - okular
-  - filezilla
   - chromium   # headless renderer for Marp PDF/PPTX export
 
 # Marp CLI (Markdown slide decks to PDF, PPTX, HTML) in its own prefix, always on the latest release:

@@ -1,7 +1,0 @@
----
-# defaults file for gaming_environment
-gaming_packages:
-  - steam
-  - lutris
-  - dosbox
-  - doomsday

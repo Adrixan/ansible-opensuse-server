@@ -1,0 +1,76 @@
+---
+# workstation_packages: keep apps Peter dropped off the workstations (removal plus zypper lock), and
+# optionally align a host to schulpc's package set from the ws-sync state (m11x).
+
+# Apps removed on Peter's decision (cleanup list, 2026-11-18). Only leaf applications belong here:
+# a lock on a library would block `zypper dup` once a kept package starts to require it. Libraries,
+# compilers and JDKs dropped the same day were removed once by hand and are not locked.
+workstation_packages_absent:
+  - accerciser
+  - doomsday
+  - dosbox
+  - epson-inkjet-printer-escpr
+  - filezilla
+  - fpc
+  - gemini-cli
+  - gimp
+  - gksu
+  - gnome-tour
+  - gnumeric
+  - guayadeque
+  - heimdall-frontend
+  - hexchat
+  - hplip
+  - joe
+  - jupyter-jupyterlab
+  - jupyter-notebook
+  - kakoune
+  - kexec-tools
+  - kompare
+  - konversation
+  - lutris
+  - memcached
+  - mpv
+  - nfs-kernel-server
+  - opensuse-welcome
+  - projectM
+  - qt5ct
+  - snobol4
+  - splix
+  - sqlitebrowser
+  - steam
+  - steamtricks
+  - supermin
+  - swtpm
+  - unison
+  - valkey
+  - xscreensaver
+  - Z-Library
+
+# Per-host exceptions (hosts file): names this host keeps although they are in the list above.
+workstation_packages_keep: []
+
+# Packages that may leave together with the list (language packs, completions, plugins of the same app).
+workstation_packages_remove_allow: '(-lang|-bash-completion|-zsh-completion|-fish-completion|-data|-plugin-.*|-mpris|-apparmor|-devel)$'
+
+workstation_packages_lock: true
+workstation_packages_lock_comment: "dropped by Peter 2026-11-18 (ansible workstation_packages)"
+
+# Alignment (m11x): install what schulpc installed on purpose, read from the ws-sync state that Syncthing
+# brings to every machine. Boot chain and hardware-specific packages never follow.
+workstation_packages_align: false
+workstation_packages_align_user: "{{ target_user | default('Adrixan') }}"
+workstation_packages_align_state_dir: "/home/{{ workstation_packages_align_user }}/sync/ai/ws-sync"
+workstation_packages_align_source: schulpc
+workstation_packages_align_exclude:
+  - "kernel-*"
+  - "grub2*"
+  - shim
+  - mokutil
+  - sdbootutil
+  - systemd-boot
+  - "patterns-*"
+  - "*-firmware*"
+  - "ucode-*"
+
+workstation_packages_helper: "{{ role_path }}/files/pkg-policy.py"
