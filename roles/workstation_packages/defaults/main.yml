@@ -74,3 +74,8 @@ workstation_packages_align_exclude:
   - "ucode-*"
 
 workstation_packages_helper: "{{ role_path }}/files/pkg-policy.py"
+
+# Termux list (schulpc only): CLI/TUI tools from files/termux-map.yml that are installed on the source host,
+# written to the Syncthing folder the phone reads; termux-sync (yadm) installs them with `pkg`. Empty: off.
+workstation_packages_termux_list: ""
+workstation_packages_termux_map: "{{ role_path }}/files/termux-map.yml"
