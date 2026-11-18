@@ -74,10 +74,10 @@
     _newly_startable: >-
       {{ ai_workstation_mcp_shared_unserved | default([]) | map(attribute='name')
          | difference(ai_workstation_mcp_shared_paths.results | rejectattr('stat.exists') | map(attribute='item.0.name')) }}
-    # Upgraded uv tools or Node servers in this run (docs and Obsidian search run as their own services)
+    # Upgraded uv tools or Node servers in this run (docs runs as its own service)
     _servers_updated: >-
       {{ (ai_workstation_uv_upgrade.changed | default(false))
-         or (ai_workstation_mcp_node_update.results | default([]) | rejectattr('item.item.name', 'in', ['docs', 'obsidian-hybrid-search'])
+         or (ai_workstation_mcp_node_update.results | default([]) | rejectattr('item.item.name', 'in', ['docs'])
              | selectattr('changed') | list | length > 0) }}
   become: true
   become_user: "{{ ai_workstation_user }}"

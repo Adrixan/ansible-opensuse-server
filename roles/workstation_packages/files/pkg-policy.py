@@ -54,7 +54,9 @@ def zypper_removals(names: list[str]) -> tuple[set[str], str]:
     except ET.ParseError:
         return set(), p.stdout[-2000:] + p.stderr[-2000:]
     errors = [m.text or "" for m in root.iter("message") if m.get("type") == "error"]
-    gone = {s.get("name", "") for blk in root.iter("to-remove") for s in blk.iter("solvable")}
+    # A pattern solvable (type "pattern") leaves with its patterns-* package, which is checked as a package
+    gone = {s.get("name", "") for blk in root.iter("to-remove") for s in blk.iter("solvable")
+            if s.get("type", "package") == "package"}
     return gone, "; ".join(errors)
 
 

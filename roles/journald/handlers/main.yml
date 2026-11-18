@@ -1,0 +1,6 @@
+---
+- name: Restart journald and vacuum the journal
+  ansible.builtin.shell: >-
+    systemctl restart systemd-journald.service
+    && journalctl --vacuum-size={{ journald_system_max_use | quote }}
+  changed_when: true

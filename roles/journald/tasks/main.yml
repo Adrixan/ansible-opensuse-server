@@ -1,0 +1,25 @@
+---
+- name: Validate the journal size limit
+  ansible.builtin.assert:
+    that: journald_system_max_use is match('^[0-9]+[KMGT]$')
+    fail_msg: "journald_system_max_use must be a size such as 1G"
+
+- name: Create the journald drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Cap the persistent journal
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/50-size.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      # Managed by Ansible (ansible-opensuse-server, role journald)
+      [Journal]
+      SystemMaxUse={{ journald_system_max_use }}
+  notify: Restart journald and vacuum the journal
