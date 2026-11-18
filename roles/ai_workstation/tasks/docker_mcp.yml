@@ -1,46 +1,35 @@
 ---
-# Exposes a GET/HEAD-only Docker API on 127.0.0.1 so the docker MCP server cannot mutate
-# containers, regardless of which tools it offers. Skipped where Docker is not installed.
+# The docker MCP server and its read-only docker-socket-proxy were dropped on Peter's review (2026-11-18).
+# Removes the proxy stack where an earlier run deployed it; docker itself and docker-compose@ stay.
 
-- name: Check for Docker and the docker-compose@ systemd unit
+- name: Check for the retired docker-socket-proxy stack
   ansible.builtin.stat:
-    path: "{{ item }}"
-  loop:
-    - /usr/bin/docker
-    - /etc/systemd/system/docker-compose@.service
-  register: ai_workstation_docker_presence
+    path: /etc/docker-compose/docker-socket-proxy
+  register: ai_workstation_docker_proxy_dir
 
-- name: Deploy docker-socket-proxy
-  when:
-    - ai_workstation_docker_mcp_proxy | bool
-    - ai_workstation_docker_presence.results | map(attribute='stat.exists') | min
+- name: Remove the retired docker-socket-proxy
+  when: ai_workstation_docker_proxy_dir.stat.exists
   block:
-    - name: Resolve the latest docker-socket-proxy release (image tag)
-      ansible.builtin.include_role:
-        name: github_release
-      vars:
-        github_release_repo: "{{ ai_workstation_docker_mcp_proxy_repo }}"
-
-    - name: Create docker-compose directory for docker-socket-proxy
-      ansible.builtin.file:
-        path: /etc/docker-compose/docker-socket-proxy
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Upload docker-socket-proxy docker-compose configuration
-      ansible.builtin.template:
-        src: docker-socket-proxy.compose.yml.j2
-        dest: /etc/docker-compose/docker-socket-proxy/docker-compose.yml
-        owner: root
-        group: root
-        mode: '0644'
-      register: ai_workstation_docker_proxy_compose
-
-    - name: Start and enable docker-socket-proxy
+    - name: Stop and disable docker-socket-proxy
       ansible.builtin.systemd_service:
         name: docker-compose@docker-socket-proxy
-        state: "{{ 'restarted' if ai_workstation_docker_proxy_compose.changed else 'started' }}"
-        enabled: true
-      when: not ansible_check_mode
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Remove the docker-socket-proxy compose directory
+      ansible.builtin.file:
+        path: /etc/docker-compose/docker-socket-proxy
+        state: absent
+
+    - name: Remove the docker-socket-proxy images
+      ansible.builtin.shell: |
+        set -o pipefail
+        ids=$(docker images --format '{{ '{{' }}.Repository{{ '}}' }} {{ '{{' }}.ID{{ '}}' }}' | awk '$1 == "{{ ai_workstation_docker_mcp_proxy_image }}" {print $2}')
+        [ -z "$ids" ] && exit 0
+        docker rmi -f $ids >/dev/null && echo removed
+      args:
+        executable: /bin/bash
+      register: ai_workstation_docker_proxy_rmi
+      changed_when: "'removed' in ai_workstation_docker_proxy_rmi.stdout"
+      failed_when: false

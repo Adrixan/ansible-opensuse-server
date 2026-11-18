@@ -3,7 +3,6 @@
 base_packages:
   - zellij
   - neovim
-  - mosh
   - htop
   - exfat-utils
   - findutils
@@ -12,9 +11,7 @@ base_packages:
   - lsof
   - ntfs-3g
   - ntfsprogs
-  - ntfsprogs-extra
   - p7zip
   - p7zip-full
-  - powertop
   - unrar
   - unzip

@@ -9,12 +9,11 @@ shell_packages:
   - yadm
   - aria2
   - gpg
-  - youtube-dl
+  - yt-dlp
   - ripgrep
   - topgrade
   - ansible
   - npm-default
-  - pdfgrep
   - fzf
 
 # Login shell of the target user (zsh is installed above)

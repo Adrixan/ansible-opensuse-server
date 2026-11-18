@@ -20,3 +20,11 @@
   ansible.builtin.pip:
     name: "{{ python_pip_packages }}"
     extra_args: "--break-system-packages"
+  when: python_pip_packages | length > 0
+
+- name: Uninstall retired Python CLI packages
+  ansible.builtin.pip:
+    name: "{{ python_pip_retired }}"
+    state: absent
+    extra_args: "--break-system-packages"
+  when: python_pip_retired | length > 0
