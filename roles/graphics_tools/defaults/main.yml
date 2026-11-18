@@ -1,5 +1,0 @@
----
-# defaults file for graphics_tools
-graphics_packages:
-  - gimp
-  - gwenview

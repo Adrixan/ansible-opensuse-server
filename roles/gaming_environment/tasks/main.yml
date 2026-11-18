@@ -1,6 +1,0 @@
----
-# tasks file for gaming_environment
-- name: Install gaming platforms and emulators
-  community.general.zypper:
-    name: "{{ gaming_packages }}"
-    state: present

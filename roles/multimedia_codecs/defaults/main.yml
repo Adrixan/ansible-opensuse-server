@@ -7,7 +7,6 @@ multimedia_packages:
   - faac
   - faad2
   - ffmpeg
-  - mpv
   - gstreamer
   - gstreamer-plugins-bad
   - gstreamer-plugins-base
@@ -15,6 +14,5 @@ multimedia_packages:
   - gstreamer-plugins-good-extra
   - gstreamer-plugins-libav
   - gstreamer-plugins-vaapi
-  - guayadeque
   - x264
   - x265

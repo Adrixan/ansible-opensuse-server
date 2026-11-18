@@ -23,8 +23,6 @@ enable_graphical_environment: false
 enable_multimedia_codecs: false
 enable_desktop_messaging: false
 enable_office_suite: false
-enable_graphics_tools: false
-enable_gaming_environment: false
 enable_docker: false
 enable_flatpak_setup: false
 enable_obsidian: false
@@ -43,6 +41,7 @@ enable_topgrade_nightly: false
 enable_luks_usb_key_sdboot: false
 enable_text_mode: false
 enable_android_build: false
+enable_workstation_packages: false
 
 # Docker group members (docker role); grants root-equivalent access
 docker_users:
