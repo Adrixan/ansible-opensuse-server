@@ -13,8 +13,15 @@
 - name: Install global npm CLI tools
   community.general.npm:
     name: "{{ item }}"
-    global: yes
+    global: true
   loop: "{{ npm_global_packages }}"
+
+- name: Uninstall retired global npm CLI tools
+  community.general.npm:
+    name: "{{ item }}"
+    global: true
+    state: absent
+  loop: "{{ npm_global_retired }}"
 
 - name: Install pip CLI tools
   ansible.builtin.pip:
@@ -22,14 +29,45 @@
     extra_args: "--break-system-packages"
   loop: "{{ pip_cli_packages }}"
 
-- name: Clone tintin++ repository
-  ansible.builtin.git:
-    repo: 'https://github.com/scandum/tintin.git'
-    dest: /tmp/tintin
+- name: Uninstall retired pip CLI tools
+  ansible.builtin.pip:
+    name: "{{ pip_cli_retired }}"
+    state: absent
+    extra_args: "--break-system-packages"
+  when: pip_cli_retired | length > 0
 
-- name: Build and install tintin++
-  ansible.builtin.shell: ./configure && make && make install
-  args:
-    chdir: /tmp/tintin/src
-    creates: /usr/local/bin/tt++
-  when: not ansible_check_mode
+- name: Check for tintin++
+  ansible.builtin.stat:
+    path: /usr/local/bin/tt++
+  register: cli_tools_tintin
+
+- name: Build tintin++ where it is missing (headers only for the build)
+  when:
+    - not cli_tools_tintin.stat.exists
+    - not ansible_check_mode
+  block:
+    - name: Record the packages present before the tintin++ build
+      ansible.builtin.package_facts:
+        manager: rpm
+
+    - name: Install the tintin++ build headers
+      community.general.zypper:
+        name: "{{ tintin_build_packages }}"
+        state: present
+
+    - name: Clone tintin++ repository
+      ansible.builtin.git:
+        repo: 'https://github.com/scandum/tintin.git'
+        dest: /tmp/tintin
+
+    - name: Build and install tintin++
+      ansible.builtin.shell: ./configure && make && make install
+      args:
+        chdir: /tmp/tintin/src
+        creates: /usr/local/bin/tt++
+  always:
+    - name: Remove the build headers this build installed
+      community.general.zypper:
+        name: "{{ tintin_build_packages | reject('in', ansible_facts.packages | default({})) | list }}"
+        state: absent
+      when: tintin_build_packages | reject('in', ansible_facts.packages | default({})) | list | length > 0

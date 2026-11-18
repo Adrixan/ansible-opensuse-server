@@ -4,6 +4,7 @@
   community.general.zypper:
     name: "{{ power_packages }}"
     state: present
+  when: power_packages | length > 0
 
 - name: Apply the XPS 13 9310 USB-C wake workaround
   ansible.builtin.include_tasks: xps13_9310_wake_gpes.yml

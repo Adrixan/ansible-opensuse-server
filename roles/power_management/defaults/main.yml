@@ -1,4 +1,4 @@
 ---
 # defaults file for power_management
-power_packages:
-  - powertop
+# powertop dropped on Peter's review (2026-11-18); the XPS 13 9310 workarounds remain
+power_packages: []

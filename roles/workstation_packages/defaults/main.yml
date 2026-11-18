@@ -2,7 +2,7 @@
 # workstation_packages: keep apps Peter dropped off the workstations (removal plus zypper lock), and
 # optionally align a host to schulpc's package set from the ws-sync state (m11x).
 
-# Apps removed on Peter's decision (cleanup list, 2026-11-18). Only leaf applications belong here:
+# Apps removed on Peter's decision (cleanup list and role-packages review, 2026-11-18). Only leaf applications belong here:
 # a lock on a library would block `zypper dup` once a kept package starts to require it. Libraries,
 # compilers and JDKs dropped the same day were removed once by hand and are not locked.
 workstation_packages_absent:
@@ -10,6 +10,8 @@ workstation_packages_absent:
   - doomsday
   - dosbox
   - epson-inkjet-printer-escpr
+  - faac
+  - faad2
   - filezilla
   - fpc
   - gemini-cli
@@ -30,10 +32,15 @@ workstation_packages_absent:
   - konversation
   - lutris
   - memcached
+  - mosh
   - mpv
   - nfs-kernel-server
+  - ntfsprogs-extra
   - opensuse-welcome
+  - pdfgrep
+  - powertop
   - projectM
+  - python313-ocrmypdf
   - qt5ct
   - snobol4
   - splix
@@ -44,7 +51,10 @@ workstation_packages_absent:
   - swtpm
   - unison
   - valkey
+  - x264
+  - x265
   - xscreensaver
+  - yt-dlp-youtube-dl
   - Z-Library
 
 # Per-host exceptions (hosts file): names this host keeps although they are in the list above.

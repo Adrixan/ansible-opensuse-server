@@ -17,13 +17,11 @@ hugo: hugo
 jq: jq
 less: less
 lsof: lsof
-mosh: mosh
 ncdu: ncdu
 neovim: neovim
 openssh: openssh
 p7zip-full: 7zip
 pandoc-cli: pandoc
-pdfgrep: pdfgrep
 qpdf: qpdf
 rclone: rclone
 ripgrep: ripgrep

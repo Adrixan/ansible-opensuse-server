@@ -4,11 +4,12 @@ python_packages:
   - python3
   - python3-pip
   - python3-neovim
-  # OCR for scanned PDFs (Ph.D. literature pipeline); flavour matches system python3
-  - python313-ocrmypdf
+  # Tesseract language data: digi4school-backup-tool runs the system tesseract for OCR and its OCR test
+  # (ocrmypdf comes from that project's own venv; the system python313-ocrmypdf went on 2026-11-18)
   - tesseract-ocr-traineddata-deu
   - tesseract-ocr-traineddata-eng
   - tesseract-ocr-traineddata-osd
 
-python_pip_packages:
-  - manly
+python_pip_packages: []
+# Removed on Peter's review (2026-11-18); uninstalled where present
+python_pip_retired: [manly]

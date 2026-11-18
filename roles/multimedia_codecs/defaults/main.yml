@@ -4,8 +4,6 @@ multimedia_packages:
   - vlc
   - vlc-codecs
   - vlc-codec-gstreamer
-  - faac
-  - faad2
   - ffmpeg
   - gstreamer
   - gstreamer-plugins-bad
@@ -14,5 +12,3 @@ multimedia_packages:
   - gstreamer-plugins-good-extra
   - gstreamer-plugins-libav
   - gstreamer-plugins-vaapi
-  - x264
-  - x265

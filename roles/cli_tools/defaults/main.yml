@@ -4,6 +4,10 @@ build_packages:
   - gcc
   - gcc-c++
   - make
+
+# Headers for the tintin++ source build only: installed for the build where tt++ is missing, removed after
+# (Peter's review 2026-11-18 dropped them as standing packages)
+tintin_build_packages:
   - zlib-devel
   - pcre2-devel
 
@@ -29,9 +33,12 @@ cli_packages:
   - php8-zip
   - php8-zlib
   - php-composer2
+  # tldr pages client (replaces the npm tldr, 2026-11-18)
+  - tealdeer
 
-npm_global_packages:
-  - tldr
+npm_global_packages: []
+# Removed on Peter's review (2026-11-18); uninstalled where present
+npm_global_retired: [tldr]
 
-pip_cli_packages:
-  - tmuxp
+pip_cli_packages: []
+pip_cli_retired: [tmuxp]
