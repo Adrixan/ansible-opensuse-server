@@ -128,8 +128,15 @@ def cmd_align(a: argparse.Namespace) -> int:
     flist = run(["flatpak", "list", "--app", "--columns=application"]).stdout.split()
     fmissing = sorted(set(apps) - set(flist))
     # Names no enabled repository offers (an orphaned package on the source host) are reported, not retried.
-    unavailable = [n for n in missing
-                   if run(["zypper", "-x", *ZYPPER[1:], "se", "-x", "-t", "package", "--", n]).returncode != 0]
+    offered: set[str] = set()
+    if missing:
+        p = run(["zypper", "-x", *ZYPPER[1:], "se", "-x", "-t", "package", "--", *missing], timeout=600)
+        try:
+            root = ET.fromstring(p.stdout[p.stdout.find("<?xml"):]) if "<?xml" in p.stdout else None
+        except ET.ParseError:
+            root = None
+        offered = {s.get("name", "") for s in root.iter("solvable")} if root is not None else set(missing)
+    unavailable = [n for n in missing if n not in offered]
     missing = [n for n in missing if n not in unavailable]
     res: dict = {"changed": bool(missing or fmissing), "packages": missing, "flatpaks": fmissing,
                  "unavailable": unavailable, "failed": [], "source": a.source}
