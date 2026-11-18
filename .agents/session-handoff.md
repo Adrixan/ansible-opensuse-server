@@ -1,5 +1,18 @@
 # Session Handoff State
 
+## 2026-11-18 10:05 to 10:40: cleanup round 3 list, old choice files removed (brief from the Greeter, Peter's words: "Tell code-ansible-opensuse-server to continue with the next iteration and remove the old choice markdown files")
+- New list `~/Obsidian/Adrixan/AI/cleanup-round-3.md`: 51 items (12 certain, 23 likely, 16 unsure), two-box format checked (51 keep + 51 delete sub-items), per-host evidence from a fresh read-only inventory (`.scratch/round3/`: `inv.sh`, `req.sh`, `unneeded.sh`, outputs per host, leaf analysis) and 60 days of agent transcripts (strict count of MCP tool calls and skill invocations). SendUserFile refused (not a project thread); path given to Peter.
+- Security finding (item 1): schulpc `~/.local/bin/claude-zai` and `/usr/local/bin/claude-zai` (mode 755) hold a z.ai API token in plain text; not in yadm, not synced, not on xps13 or m11x. Peter should revoke it at z.ai regardless of the tick.
+- Old choice files `AI/xps13-app-cleanup.md` and `AI/role-packages-review.md` deleted (`command rm`) after the durable record: knowledge-map details, Machines, bullet "Package decisions" (removals of rounds 1 and 2, keeps against a delete tick, keeps by tick, where each is enforced); the "Package policy" and "Role-packages review" bullets now point there. No vault links to them existed; older handoff entries below still name them as history.
+- Nothing removed this round; no code changes.
+
+### Open decisions
+- Peter: ticks in `AI/cleanup-round-3.md`.
+
+### Next
+- After the ticks: removals per host with the guarded helper (`pkg-policy.py remove`, no `zypper rm -u`; for any manual zypper rm, a full dry-run list first, the `-devel` allowance hid 25 packages in round 2), role and harness-config changes, locks for leaf apps, two role runs per host, smoke test (`.scratch/cleanup/smoke.sh`), update the round-3 file's status and the "Package decisions" record, then delete the round-3 file once recorded.
+- Items that need Peter's own hands: z.ai token revocation, claude.ai connector removal (account settings), Signal re-link on m11x if he ticks the Flatpak move.
+
 ## 2026-11-18 08:40 to 10:30: role-packages review removals (brief from the Greeter, Peter's words: "I've gone thorugh \"AI/role-packages-review.md\" tell code-ansible-opensuse-server to pick up work")
 - Ticks: 15 delete, 11 keep, 0 both/none. Merge 7676dfc (roles), yadm 6137f10 (harness configs). Removed on all three hosts: pip tmuxp and manly, mosh, pdfgrep, powertop, ntfsprogs-extra, x264/x265/faac/faad2 CLIs, yt-dlp-youtube-dl (role lists `yt-dlp`), python313-ocrmypdf, npm tldr (cli_tools installs zypper `tealdeer`), pcre2-devel, zlib-devel (not on m11x: kernel-default-devel, kernel-syms and dkms need it), MCP Serena, git, docker (+ docker-socket-proxy; `tasks/docker_mcp.yml` now only removes it, template deleted), Excalidraw, draw.io (`ai_workstation_retired_*`). Absent list now 50 apps, locked; termux-map without mosh and pdfgrep.
 - Kept against the tick: tesseract and deu/eng/osd data (digi4school-backup-tool calls the system tesseract; python_environment comment says so).
