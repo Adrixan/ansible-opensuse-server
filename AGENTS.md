@@ -28,6 +28,7 @@ Ansible playbook that provisions openSUSE Tumbleweed workstations and laptops ag
 - `npm audit` gates each Node prefix; findings without a fixed release need Peter's acceptance recorded in the repo.
 - Exception to the no-pin rule: `garmin-mcp` stays on a reviewed commit and is bumped only on purpose (it holds the Garmin login and upload rights; Peter, 2026-11-15, D52).
 - PEP 668: system pip tasks use `--break-system-packages`; prefer `uv tool` for Python CLIs.
+- Dropped apps (Peter's keep/delete lists): remove them from every role list and add leaf apps to `workstation_packages_absent` (removed through a guarded dry run, then zypper-locked); libraries are removed once and never locked. Never `zypper rm -u` on the workstations: it cascades through pattern recommends (2026-11-18 dry run: 434 packages on m11x).
 - FQCN modules (`ansible.builtin.*`, `community.general.*`), idempotent tasks, `changed_when`/`failed_when` on commands, `no_log: true` on anything touching secrets.
 - Git: work on a feature branch off `master`, Conventional Commits, `git merge --no-ff` into `master`, push. No force-push.
 
