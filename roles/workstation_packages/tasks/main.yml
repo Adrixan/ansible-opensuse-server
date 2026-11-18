@@ -43,3 +43,18 @@
   ansible.builtin.debug:
     msg: "{{ workstation_packages_aligned.stdout | from_json }}"
   when: workstation_packages_align | bool and (workstation_packages_aligned.stdout | from_json).changed
+
+- name: Write the Termux package list for the phone
+  ansible.builtin.command:
+    argv: >-
+      {{ ['/usr/bin/python3', '-I', workstation_packages_helper, 'termux', '--state-dir', workstation_packages_align_state_dir,
+          '--source', workstation_packages_align_source, '--map', workstation_packages_termux_map,
+          '--out', workstation_packages_termux_list]
+         + ([] if ansible_check_mode else ['--apply']) }}
+  become: true
+  become_user: "{{ workstation_packages_align_user }}"
+  check_mode: false
+  when: workstation_packages_termux_list | length > 0
+  register: workstation_packages_termux
+  changed_when: (workstation_packages_termux.stdout | from_json).changed
+  failed_when: workstation_packages_termux.rc != 0
