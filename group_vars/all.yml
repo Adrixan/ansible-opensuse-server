@@ -42,6 +42,7 @@ enable_luks_usb_key_sdboot: false
 enable_text_mode: false
 enable_android_build: false
 enable_workstation_packages: false
+enable_journald: false
 
 # Docker group members (docker role); grants root-equivalent access
 docker_users:

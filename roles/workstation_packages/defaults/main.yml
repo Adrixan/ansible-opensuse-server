@@ -2,17 +2,27 @@
 # workstation_packages: keep apps Peter dropped off the workstations (removal plus zypper lock), and
 # optionally align a host to schulpc's package set from the ws-sync state (m11x).
 
-# Apps removed on Peter's decision (cleanup list and role-packages review, 2026-11-18). Only leaf applications belong here:
+# Apps removed on Peter's decision (cleanup rounds 1 to 3, 2026-11-18). Only leaf applications belong here:
 # a lock on a library would block `zypper dup` once a kept package starts to require it. Libraries,
 # compilers and JDKs dropped the same day were removed once by hand and are not locked.
 workstation_packages_absent:
   - accerciser
+  - akonadi-import-wizard
+  - akregator
+  - discover6
+  - discover6-backend-flatpak
+  - discover6-backend-fwupd
+  - discover6-backend-packagekit
+  - discover6-notifier
   - doomsday
   - dosbox
+  - efont-unicode-bitmap-fonts
   - epson-inkjet-printer-escpr
   - faac
   - faad2
   - filezilla
+  - fluid-soundfont-gm
+  - fluid-soundfont-gs
   - fpc
   - gemini-cli
   - gimp
@@ -23,25 +33,48 @@ workstation_packages_absent:
   - heimdall-frontend
   - hexchat
   - hplip
+  - hstr
+  - hub
   - joe
   - jupyter-jupyterlab
   - jupyter-notebook
+  - kaddressbook
   - kakoune
+  - kcharselect
   - kexec-tools
+  - kleopatra
+  - kmag
+  - kmahjongg
+  - kmail
+  - kmines
+  - kmousetool
   - kompare
+  - kontact
   - konversation
+  - korganizer
+  - kpat
+  - kreversi
+  - ksudoku
+  - ktnef
   - lutris
+  - mbox-importer
   - memcached
   - mosh
   - mpv
   - nfs-kernel-server
   - ntfsprogs-extra
   - opensuse-welcome
+  - patterns-games-games
+  - patterns-kde-kde_games
+  - patterns-kde-kde_pim
   - pdfgrep
+  - pim-data-exporter
+  - pim-sieve-editor
   - powertop
   - projectM
   - python313-ocrmypdf
   - qt5ct
+  - skanlite
   - snobol4
   - splix
   - sqlitebrowser
@@ -51,13 +84,20 @@ workstation_packages_absent:
   - swtpm
   - unison
   - valkey
+  - winetricks
   - x264
   - x265
+  - xorg-x11-fonts-legacy
   - xscreensaver
+  - xterm
   - yt-dlp-youtube-dl
   - Z-Library
 
-# Per-host exceptions (hosts file): names this host keeps although they are in the list above.
+# Per-host additions (hosts file): apps dropped on one host only, removed and locked there (round 3: m11x
+# Discord, GameHub, File Roller, Filelight, transmission-gtk; xps13 transmission, CJK fonts, Cockpit remnants).
+workstation_packages_absent_host: []
+
+# Per-host exceptions (hosts file): names this host keeps although they are in the lists above.
 workstation_packages_keep: []
 
 # Packages that may leave together with the list (language packs, completions, plugins of the same app).

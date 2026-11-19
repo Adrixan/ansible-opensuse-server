@@ -225,3 +225,9 @@
         name: workstation_packages
       when: enable_workstation_packages | default(false) | bool
       tags: [workstation_packages]
+
+    - name: Include journald role
+      ansible.builtin.include_role:
+        name: journald
+      when: enable_journald | default(false) | bool
+      tags: [journald]

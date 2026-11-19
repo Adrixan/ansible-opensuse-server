@@ -1,0 +1,26 @@
+---
+# /tmp is a 3.8 GB tmpfs with a per-user quota. Browser profiles of killed Puppeteer and Playwright runs (the
+# lighthouse, accessibility and Playwright MCP servers) and `pnpm dlx`/`npx` package dirs stay behind, and the
+# 10-day default ageing of /tmp let them fill the quota (2026-11-18: a role run failed at `go build`).
+# systemd-tmpfiles-clean.timer (daily, 15 min after boot) empties these leftovers once they are a day old;
+# a profile in use keeps fresh timestamps. Their empty directories go with the 10-day rule for /tmp.
+- name: Age out browser profiles and package-runner leftovers in /tmp after one day
+  ansible.builtin.copy:
+    dest: /etc/tmpfiles.d/tmp-tool-leftovers.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      # Managed by Ansible (ansible-opensuse-server, role ai_workstation)
+      e /tmp/puppeteer_dev_chrome_profile-* - - - 1d
+      e /tmp/playwright_chromiumdev_profile-* - - - 1d
+      e /tmp/playwright-artifacts-* - - - 1d
+      e /tmp/chrome-devtools-mcp-* - - - 1d
+      e /tmp/tmp-[0-9]*-* - - - 1d
+  register: ai_workstation_tmp_cleanup_conf
+
+- name: Apply the /tmp ageing rule now
+  ansible.builtin.command:
+    argv: [systemd-tmpfiles, --clean, /etc/tmpfiles.d/tmp-tool-leftovers.conf]
+  when: ai_workstation_tmp_cleanup_conf.changed and not ansible_check_mode
+  changed_when: true

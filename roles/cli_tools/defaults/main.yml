@@ -5,12 +5,6 @@ build_packages:
   - gcc-c++
   - make
 
-# Headers for the tintin++ source build only: installed for the build where tt++ is missing, removed after
-# (Peter's review 2026-11-18 dropped them as standing packages)
-tintin_build_packages:
-  - zlib-devel
-  - pcre2-devel
-
 # Command-line tools from the distribution (same set on every workstation, Peter 2026-11-10)
 cli_packages:
   - ShellCheck

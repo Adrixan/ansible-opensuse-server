@@ -1,24 +1,16 @@
 ---
-# Obsidian Hybrid Search: one loopback HTTP MCP server per vault, shared by all harness sessions
+# Obsidian Hybrid Search (one loopback MCP server per vault) was dropped by Peter in cleanup round 3
+# (2026-11-18: no MCP calls in 60 days; agents read and search the vault files directly). This removes the
+# user services, their units and the per-machine indexes; the Node prefix and wrapper go with
+# ai_workstation_retired_node_servers (tasks/retired.yml).
 
-# The server keeps its SQLite index in the vault; each machine builds its own, so Syncthing skips it
-- name: Exclude the Obsidian Hybrid Search index from Syncthing
-  ansible.builtin.lineinfile:
-    path: "{{ ai_workstation_ohs_syncthing_root }}/.stignore"
-    line: "(?d).obsidian-hybrid-search.db*"
-    create: true
-    owner: "{{ ai_workstation_user }}"
-    group: "{{ ai_workstation_user }}"
-    mode: '0644'
-  when: ai_workstation_ohs_vaults | length > 0
-
-- name: Stop and disable Obsidian Hybrid Search on hosts a vault skips
+- name: Stop and disable the retired Obsidian Hybrid Search user services
   ansible.builtin.systemd_service:
     name: "obsidian-hybrid-search-{{ item.name }}.service"
     scope: user
     enabled: false
     state: stopped
-  loop: "{{ ai_workstation_ohs_vaults | selectattr('skip_hosts', 'defined') | selectattr('skip_hosts', 'contains', ansible_facts['hostname']) | list }}"
+  loop: "{{ ai_workstation_ohs_retired_vaults }}"
   loop_control:
     label: "{{ item.name }}"
   become: true
@@ -26,34 +18,35 @@
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
-  failed_when: false
+  register: ai_workstation_ohs_stop
+  # A unit that no longer exists is the goal state
+  failed_when: ai_workstation_ohs_stop.failed and 'Could not find the requested service' not in (ai_workstation_ohs_stop.msg | default(''))
   when: not ansible_check_mode
 
-- name: Deploy the Obsidian Hybrid Search user systemd units
-  ansible.builtin.template:
-    src: obsidian-hybrid-search.service.j2
-    dest: "{{ ai_workstation_user_home }}/.config/systemd/user/obsidian-hybrid-search-{{ item.name }}.service"
-    owner: "{{ ai_workstation_user }}"
-    group: "{{ ai_workstation_user }}"
-    mode: '0644'
-  loop: "{{ ai_workstation_ohs_vaults | rejectattr('skip_hosts', 'defined') | list + (ai_workstation_ohs_vaults | selectattr('skip_hosts', 'defined') | rejectattr('skip_hosts', 'contains', ansible_facts['hostname']) | list) }}"
-  loop_control:
-    label: "{{ item.name }}"
-  register: ai_workstation_ohs_units
+- name: Remove the retired Obsidian Hybrid Search units and indexes
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: >-
+    {{ ai_workstation_ohs_retired_vaults | map(attribute='name')
+         | map('regex_replace', '^(.*)$', ai_workstation_user_home + '/.config/systemd/user/obsidian-hybrid-search-\1.service') | list
+       + ai_workstation_ohs_retired_vaults | map(attribute='path') | product(['', '-shm', '-wal'])
+         | map('join', '/.obsidian-hybrid-search.db') | list }}
+  register: ai_workstation_ohs_removed
 
-- name: Enable and start the Obsidian Hybrid Search user services
+- name: Reload the user systemd manager after removing the units
   ansible.builtin.systemd_service:
-    name: "obsidian-hybrid-search-{{ item.item.name }}.service"
-    scope: user
-    enabled: true
-    state: "{{ 'restarted' if (item.changed or (ai_workstation_mcp_node_update.results | default([]) | selectattr('item.item.name', 'equalto', 'obsidian-hybrid-search') | map(attribute='changed') | first | default(false))) else 'started' }}"
     daemon_reload: true
-  loop: "{{ ai_workstation_ohs_units.results }}"
-  loop_control:
-    label: "{{ item.item.name }}"
+    scope: user
   become: true
   become_user: "{{ ai_workstation_user }}"
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ ai_workstation_user_uid }}"
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_workstation_user_uid }}/bus"
-  when: not ansible_check_mode
+  when: ai_workstation_ohs_removed.changed and not ansible_check_mode
+
+- name: Drop the Syncthing ignore line of the retired index
+  ansible.builtin.lineinfile:
+    path: "{{ ai_workstation_ohs_syncthing_root }}/.stignore"
+    line: "(?d).obsidian-hybrid-search.db*"
+    state: absent

@@ -9,6 +9,9 @@
 - name: Configure unified MCP servers across harnesses
   ansible.builtin.import_tasks: mcp.yml
 
+- name: Age out tool leftovers in /tmp
+  ansible.builtin.import_tasks: tmp_cleanup.yml
+
 - name: Configure local TLS 1.3 ECH reverse proxy for DragTokens
   ansible.builtin.import_tasks: dragtokens_ech_proxy.yml
 

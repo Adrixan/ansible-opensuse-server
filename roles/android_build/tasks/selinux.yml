@@ -1,0 +1,20 @@
+---
+# The emulator's SwiftShader renderer JIT-compiles into heap memory. With SELinux enforcing, unconfined user
+# processes need selinuxuser_execheap for that; without it every AVD start dies in RenderThread (SIGSEGV,
+# SEGV_ACCERR, audit "denied { execheap }"). Until 2026-11-18 the package selinux-policy-targeted-gaming set it
+# (together with execmod and execstack, which the emulator does not need); it went with cleanup round 3.
+- name: Read the SELinux state
+  ansible.builtin.command:
+    argv: [/usr/sbin/getenforce]
+  register: android_build_selinux
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Allow executable heap for user processes (Android emulator, SwiftShader JIT)
+  ansible.posix.seboolean:
+    name: selinuxuser_execheap
+    state: true
+    persistent: true
+  become: true
+  when: android_build_selinux.rc == 0 and android_build_selinux.stdout | trim in ['Enforcing', 'Permissive']

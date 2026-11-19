@@ -1,5 +1,29 @@
 # Session Handoff State
 
+## 2026-11-19 03:50 to 04:20: Android emulator crash after round 3 (request from the taktfunke-android session)
+- Cause: the unneeded pass of 2026-11-18 15:56 removed `selinux-policy-targeted-gaming`, which had set `selinuxuser_execheap/execmod/execstack`; SELinux then denied `execheap` to the emulator's SwiftShader JIT (RenderThread SIGSEGV, SEGV_ACCERR; audit "denied { execheap }"). Not the nightly glibc/kernel.
+- Peter chose (AskUserQuestion, 2026-11-19): only `selinuxuser_execheap=on`, persistent, via `android_build` `tasks/selinux.yml`; execmod/execstack stay off. Runs 1/0, AVD sg-phone booted in 35 s. The classifier had blocked the change until Peter decided.
+- xps13: its round-3 pass must keep the boolean (android_build sets it wherever SELinux runs); run android_build there too.
+
+## 2026-11-18 14:50 to 17:30: cleanup round 3 applied, /tmp fix (Peter's words: "1. schulpc: find the easiest automated solution for schulpc tmp 2. I've made the newest decisions in the markdown file. go ahead with the cleanup")
+- /tmp (schulpc 3.8 GB tmpfs, user quota): `ai_workstation` `tasks/tmp_cleanup.yml` writes `/etc/tmpfiles.d/tmp-tool-leftovers.conf` (`e` lines, age 1d: puppeteer and playwright profiles, playwright-artifacts, chrome-devtools-mcp, `tmp-<pid>-*` from npx/pnpm dlx; the systemd 10-day rule removes the emptied dirs). Applied: /tmp 1.6 GB to 1.1 GB. No GOTMPDIR needed.
+- Branch `feat/cleanup-round-3` (pushed, not merged yet): workstation_packages +35 leaf apps/patterns (85 locks), `workstation_packages_absent_host`, pattern solvables ignored in the helper's extra check; ai_workstation Obsidian Hybrid Search retired (`tasks/obsidian_search.yml` now removes it), tmp rule; cli_tools tintin++ removed; new role `journald` (1G). yadm 2000aa2 + e8ce749 (OSV, Semgrep, obsidian-* MCP entries, frontend-design plugin and its skill paths; plugins dev 1.3.0, research 1.1.0; e8ce749 untracks rendered `.mcp.json` I had added by mistake, no secrets in them).
+- schulpc: run 1 changed=19 ok; one-off script `.scratch/round3/do/oneoff-schulpc.sh` (zai wrapper, agy.old, pandoc 3.12.1, Docker build cache and 3 images, core dumps, pip shims only, multigravity, caches; /home 43 to 63 GB free); one-off packages (cpp15, leftovers, 28 -lang); unneeded passes 1-26 (~950 packages; kept flatpak-selinux, defusedxml, mysqlclient/mariadb, SANE, gphoto, GTK2, fluidsynth). `dup --dry-run` resolves (php8 vendor downgrades predate today).
+- m11x: hosts updated (absent_host list, Signal no longer excluded; backup `.hosts.bak-20261118-r3`), local clone on the branch; workstation_packages run (90 locks, Signal Flatpak via align); rpm Signal (never linked, no profile) + nodejs-electron + repo `signal` removed; repo `home:nad1r` removed (docker-compose, xsel back to repo-oss; dkms completions to X11:Bumblebee); aider, Copilot, old agy, caches; 74 one-off packages; unneeded passes (~640). INCIDENT: a pass removed `sysconfig-netconfig` and `grub2-i386-pc-extras`; m11x lost DNS (no `/etc/resolv.conf`) for minutes; both restored from rpms downloaded on schulpc (`.scratch/round3/rpms`, signatures OK), `netconfig update -f`. Filter now holds back packages with units/udev/PAM/NSS/boot/network/sysconfig files (`.scratch/round3/do/unneeded-filter.sh`); rule in AGENTS.md. journald role 2/0. `dup --dry-run` resolves.
+- Knowledge map: per-session MCP list; details: Package decisions Round 3 bullets, alignment, MCP lines.
+
+### Open decisions
+- None for Peter beyond the hands-on items below.
+
+### Needs Peter
+- Revoke the z.ai token at z.ai (it sat in plain text in `claude-zai`).
+- Link the Signal Flatpak on m11x as a new device when he next uses m11x.
+- claude.ai connectors: kept by his tick, nothing to do.
+
+### Next
+- xps13 (asleep since ~15:20; a watcher polled every 2 min until 18:34 without an answer): `ssh xps`; yadm-sync-all xps; hosts: `workstation_packages_absent_host=["transmission","transmission-gtk","transmission-qt","cockpit-system","cockpit-ws", <CJK font names found there>]`; roles workstation_packages, journald, cli_tools, ai_workstation twice; `.scratch/round3/do/oneoff-xps.sh`; one-off packages (cpp15, desktop-translations-devel + update-desktop-files, libdiscord-rpc3_4_0, libfilezilla59, libfzssh14_0_0, libspandsp3(-32bit), man-pages-de, yast2-trans-de, MozillaFirefox-translations-common, meson vala bison flex sparse gettext-tools makeinfo, stack leftovers, -lang), rclone back to repo-oss then drop repo `home:nad1r` (check dkms/other packages from it first), kernel 7.3.1, unneeded passes with the review filter, `zypper clean -a` last. Then schulpc kernel 7.3.1 and the ws-sync state refresh.
+- Merge `feat/cleanup-round-3` after xps13 verifies; m11x clone back to master then; delete `AI/cleanup-round-3.md` once xps13 is recorded in the details.
+
 ## 2026-11-18 10:05 to 10:40: cleanup round 3 list, old choice files removed (brief from the Greeter, Peter's words: "Tell code-ansible-opensuse-server to continue with the next iteration and remove the old choice markdown files")
 - New list `~/Obsidian/Adrixan/AI/cleanup-round-3.md`: 51 items (12 certain, 23 likely, 16 unsure), two-box format checked (51 keep + 51 delete sub-items), per-host evidence from a fresh read-only inventory (`.scratch/round3/`: `inv.sh`, `req.sh`, `unneeded.sh`, outputs per host, leaf analysis) and 60 days of agent transcripts (strict count of MCP tool calls and skill invocations). SendUserFile refused (not a project thread); path given to Peter.
 - Security finding (item 1): schulpc `~/.local/bin/claude-zai` and `/usr/local/bin/claude-zai` (mode 755) hold a z.ai API token in plain text; not in yadm, not synced, not on xps13 or m11x. Peter should revoke it at z.ai regardless of the tick.

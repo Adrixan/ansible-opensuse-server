@@ -4,7 +4,7 @@
   ansible.builtin.command:
     argv: >-
       {{ ['/usr/bin/python3', '-I', workstation_packages_helper, 'remove', '--allow', workstation_packages_remove_allow, '--names']
-         + (workstation_packages_absent | difference(workstation_packages_keep))
+         + ((workstation_packages_absent + workstation_packages_absent_host) | unique | difference(workstation_packages_keep))
          + ([] if ansible_check_mode else ['--apply']) }}
   become: true
   check_mode: false
@@ -16,7 +16,7 @@
   ansible.builtin.command:
     argv: >-
       {{ ['/usr/bin/python3', '-I', workstation_packages_helper, 'lock', '--comment', workstation_packages_lock_comment, '--names']
-         + (workstation_packages_absent | difference(workstation_packages_keep))
+         + ((workstation_packages_absent + workstation_packages_absent_host) | unique | difference(workstation_packages_keep))
          + ([] if ansible_check_mode else ['--apply']) }}
   become: true
   check_mode: false

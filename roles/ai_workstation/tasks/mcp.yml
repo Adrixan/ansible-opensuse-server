@@ -310,7 +310,7 @@
 - name: Serve Phở Research Tools on loopback
   ansible.builtin.import_tasks: pho.yml
 
-- name: Serve Obsidian Hybrid Search per vault on loopback
+- name: Remove the retired Obsidian Hybrid Search services
   ansible.builtin.import_tasks: obsidian_search.yml
 
 - name: Serve Grounded Docs on loopback
