@@ -1,5 +1,16 @@
 # Session Handoff State
 
+## 2026-11-19 15:15 to 15:40: ws-sync run (Peter: "execute ws-sync now"); role stopped by the Greeter
+- `ws-sync sync` twice: role runs schulpc changed=8, xps13 changed=1, no failures; packages nothing to install. My hosts backups in the repo dirs of xps13 and m11x blocked the code sync; moved to `.scratch/` there. Second run: code and repos in sync.
+- `~/sync/ai/ws-sync/config.toml`: `user:aspirations.timer` added to `timers.host_specific.schulpc` (backup `.scratch/round3/do/ws-sync-config.bak-20261119`).
+- Left: Docker 29.7.2 on xps13 vs 29.9.2 on schulpc; clears with xps13's next nightly (602 upgrades pending).
+
+### Open decisions
+- None.
+
+### Next
+- Nothing open for this project. Peter's own items: revoke the z.ai token; link the Signal Flatpak on m11x.
+
 ## 2026-11-19 14:00 to 15:10: cleanup round 3 on xps13, merge (Peter: "Xps13 is awake now")
 - xps13: yadm synced; hosts `workstation_packages_absent_host` (transmission(-gtk/-qt/-common), cockpit-system, cockpit-ws, 4 CJK Noto fonts; backup `.hosts.bak-20261119-r3`); `fluid-soundfont-gs` added to the shared list (it requires the GM font). Roles workstation_packages, journald, cli_tools, ai_workstation: run 1 changed=20, run 2 changed=0 (96 locks). One-off: 21 packages (libspandsp3 kept: required, dup moves it to libspandsp4), Copilot, UltraStar, NSIS, gdeploy link, caches; rclone and docker-compose back on repo-oss, libpkgconf3 and repo `hstr` gone; kernel 7.3.1 + its VirtualBox KMP (GRUB lists 7.3.3 only); frontend-design plugin uninstalled; ~390 unneeded packages in 12 guarded passes (held back: pam_oath, krb5-devel; removed by hand: cockpit-bridge, jeos-firstboot); `zypper clean -a` last. `dup --dry-run` resolves (602 upgrades waiting for its nightly). Smoke ok except semgrep not on the non-interactive SSH PATH and the Python document modules (xps13's user site went in round 1).
 - Merged `feat/cleanup-round-3` into master (cb81fa2), branch deleted locally and on origin; m11x and xps13 clones on master. `AI/cleanup-round-3.md` deleted; record in WORKSTATION-details "Package decisions".
