@@ -1,5 +1,12 @@
 # Session Handoff State
 
+## 2026-11-19 14:00 to 15:10: cleanup round 3 on xps13, merge (Peter: "Xps13 is awake now")
+- xps13: yadm synced; hosts `workstation_packages_absent_host` (transmission(-gtk/-qt/-common), cockpit-system, cockpit-ws, 4 CJK Noto fonts; backup `.hosts.bak-20261119-r3`); `fluid-soundfont-gs` added to the shared list (it requires the GM font). Roles workstation_packages, journald, cli_tools, ai_workstation: run 1 changed=20, run 2 changed=0 (96 locks). One-off: 21 packages (libspandsp3 kept: required, dup moves it to libspandsp4), Copilot, UltraStar, NSIS, gdeploy link, caches; rclone and docker-compose back on repo-oss, libpkgconf3 and repo `hstr` gone; kernel 7.3.1 + its VirtualBox KMP (GRUB lists 7.3.3 only); frontend-design plugin uninstalled; ~390 unneeded packages in 12 guarded passes (held back: pam_oath, krb5-devel; removed by hand: cockpit-bridge, jeos-firstboot); `zypper clean -a` last. `dup --dry-run` resolves (602 upgrades waiting for its nightly). Smoke ok except semgrep not on the non-interactive SSH PATH and the Python document modules (xps13's user site went in round 1).
+- Merged `feat/cleanup-round-3` into master (cb81fa2), branch deleted locally and on origin; m11x and xps13 clones on master. `AI/cleanup-round-3.md` deleted; record in WORKSTATION-details "Package decisions".
+
+### Next
+- Nothing open from round 3. ws-sync reports "role run due" on both workstations until their next full role runs (nightly).
+
 ## 2026-11-19 03:50 to 04:20: Android emulator crash after round 3 (request from the taktfunke-android session)
 - Cause: the unneeded pass of 2026-11-18 15:56 removed `selinux-policy-targeted-gaming`, which had set `selinuxuser_execheap/execmod/execstack`; SELinux then denied `execheap` to the emulator's SwiftShader JIT (RenderThread SIGSEGV, SEGV_ACCERR; audit "denied { execheap }"). Not the nightly glibc/kernel.
 - Peter chose (AskUserQuestion, 2026-11-19): only `selinuxuser_execheap=on`, persistent, via `android_build` `tasks/selinux.yml`; execmod/execstack stay off. Runs 1/0, AVD sg-phone booted in 35 s. The classifier had blocked the change until Peter decided.
