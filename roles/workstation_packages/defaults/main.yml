@@ -22,6 +22,7 @@ workstation_packages_absent:
   - faad2
   - filezilla
   - fluid-soundfont-gm
+  - fluid-soundfont-gs
   - fpc
   - gemini-cli
   - gimp
