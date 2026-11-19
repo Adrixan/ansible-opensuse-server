@@ -1,5 +1,10 @@
 # Session Handoff State
 
+## 2026-11-19 03:50 to 04:20: Android emulator crash after round 3 (request from the taktfunke-android session)
+- Cause: the unneeded pass of 2026-11-18 15:56 removed `selinux-policy-targeted-gaming`, which had set `selinuxuser_execheap/execmod/execstack`; SELinux then denied `execheap` to the emulator's SwiftShader JIT (RenderThread SIGSEGV, SEGV_ACCERR; audit "denied { execheap }"). Not the nightly glibc/kernel.
+- Peter chose (AskUserQuestion, 2026-11-19): only `selinuxuser_execheap=on`, persistent, via `android_build` `tasks/selinux.yml`; execmod/execstack stay off. Runs 1/0, AVD sg-phone booted in 35 s. The classifier had blocked the change until Peter decided.
+- xps13: its round-3 pass must keep the boolean (android_build sets it wherever SELinux runs); run android_build there too.
+
 ## 2026-11-18 14:50 to 17:30: cleanup round 3 applied, /tmp fix (Peter's words: "1. schulpc: find the easiest automated solution for schulpc tmp 2. I've made the newest decisions in the markdown file. go ahead with the cleanup")
 - /tmp (schulpc 3.8 GB tmpfs, user quota): `ai_workstation` `tasks/tmp_cleanup.yml` writes `/etc/tmpfiles.d/tmp-tool-leftovers.conf` (`e` lines, age 1d: puppeteer and playwright profiles, playwright-artifacts, chrome-devtools-mcp, `tmp-<pid>-*` from npx/pnpm dlx; the systemd 10-day rule removes the emptied dirs). Applied: /tmp 1.6 GB to 1.1 GB. No GOTMPDIR needed.
 - Branch `feat/cleanup-round-3` (pushed, not merged yet): workstation_packages +35 leaf apps/patterns (85 locks), `workstation_packages_absent_host`, pattern solvables ignored in the helper's extra check; ai_workstation Obsidian Hybrid Search retired (`tasks/obsidian_search.yml` now removes it), tmp rule; cli_tools tintin++ removed; new role `journald` (1G). yadm 2000aa2 + e8ce749 (OSV, Semgrep, obsidian-* MCP entries, frontend-design plugin and its skill paths; plugins dev 1.3.0, research 1.1.0; e8ce749 untracks rendered `.mcp.json` I had added by mistake, no secrets in them).

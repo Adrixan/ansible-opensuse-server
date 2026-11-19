@@ -145,6 +145,9 @@
 - name: Give the emulator access to KVM
   ansible.builtin.import_tasks: kvm.yml
 
+- name: Let the emulator's renderer run under SELinux
+  ansible.builtin.import_tasks: selinux.yml
+
 - name: Report releases deferred by the cooldown
   ansible.builtin.debug:
     msg: >-
