@@ -1,5 +1,18 @@
 # Session Handoff State
 
+## 2026-11-20 04:15 to 05:30: Claude Code settings bug and 24 h cooldown (brief from code-vps-maintenance; Peter: "Keep the flag and verify that agentbox and edu-micro along with all other vms run nightly updates that include claude code"; decision "latest + 24 h everywhere")
+- Bug: `ai_workstation` `cleanup.yml` deleted the whole `env` key of `~/.claude/settings.json` (wiped `CLAUDE_CODE_EXPERIMENTAL_CODE_MODE` on schulpc at the 2026-11-20 nightly) and re-encoded non-ASCII as \u escapes. New `files/claude_settings_sanitize.py` drops only `ai_workstation_claude_legacy_env_keys` inside env (plus modelOverrides, autoCompactWindow, legacy models), atomic, `ensure_ascii=False`, keeps the mode, exits 1 on bad JSON. `remote_control.yml` writes with `ensure_ascii=False`. The same key list drives the `ai_env.j2` unsets and the shell rc purges (they no longer delete every ANTHROPIC_/CLAUDE_CODE_ export); that removed 3 old Qwen exports from schulpc's untracked `~/.bashrc` (backup `.scratch/bashrc.bak-20261120`).
+- Cooldown: `ai_desktop` deploys `/usr/local/libexec/release-past-cooldown` (unchanged copy of the VPS nightly helper) and `/usr/local/bin/claude-code-update <bin> <hours> [--check]` (`claude install <v>` only when newer, never downgrades, exit 1 on registry failure). Unit: `Environment=DISABLE_AUTOUPDATER=1`, prune ExecStartPost kept; the role's update task uses the script. yadm d8bbc1c: `env.DISABLE_AUTOUPDATER="1"` in settings.json (`autoUpdatesProtectedForNative` in ~/.claude.json makes autoUpdates=false unreliable for native installs).
+- Verified on schulpc: ai_desktop check 4 / live 4 / live 0; ai_workstation live 2 (Grounded Docs, unrelated) / live 0; cleanup-only 1/0; flag and DISABLE_AUTOUPDATER survive, yadm clean. `claude-code-update`: UP_TO_DATE 2.1.329 (newest past 24 h: 2.1.328); install path tested with a fake binary; `claude install <v>` tested in an isolated HOME (leaves settings.json alone). Timer next Sat 2026-11-21 00:29.
+- m11x: no Claude Code (ai_desktop not enabled; nightly runs only workstation_packages, so the cleanup task never ran there and its flag was intact). yadm-sync-all m11x done, clone on a253e5a. xps13 and htpc unreachable (tunnel handshake failed 05:10).
+- Merged a253e5a. nightly-routine session (feat/claude-step) agreed: this timer owns workstation updates until a workstation runs nightly-routine in active mode with `CLAUDE_USERS: [Adrixan]`; then the unit becomes prune-only (rule in AGENTS.md).
+
+### Open decisions
+- Peter: Claude Code on m11x (enable ai_desktop there or leave it out).
+
+### Next
+- xps13 when awake: `yadm-sync-all xps`, pull the repo, `ansible-playbook main.yml -e enable_ai_desktop=true` twice, check `claude --version` and the timer. htpc: check its Claude Code version when reachable.
+
 ## 2026-11-19 15:15 to 15:40: ws-sync run (Peter: "execute ws-sync now"); role stopped by the Greeter
 - `ws-sync sync` twice: role runs schulpc changed=8, xps13 changed=1, no failures; packages nothing to install. My hosts backups in the repo dirs of xps13 and m11x blocked the code sync; moved to `.scratch/` there. Second run: code and repos in sync.
 - `~/sync/ai/ws-sync/config.toml`: `user:aspirations.timer` added to `timers.host_specific.schulpc` (backup `.scratch/round3/do/ws-sync-config.bak-20261119`).
