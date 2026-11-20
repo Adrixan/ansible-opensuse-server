@@ -10,8 +10,11 @@
 ### Decisions
 - m11x stays with `ai_desktop` off, no Claude Code there (Peter, 2026-11-20).
 
+- xps13 (07:20 to 07:45, Peter: "Xps13 and htpc are online, proceed"): the old cleanup had wiped its env block too (yadm diff was only that plus \u2014 escapes; copy in `.scratch/settings.json.damaged-20261120` there); `yadm checkout -- .claude/settings.json`, `yadm-sync-all xps` (kept the unrelated local `.gemini/config/config.json` change `swarm.enabled`). ai_desktop 4/0, cleanup-only 0/0, ai_workstation 7/0 (env file value refresh, same names and unsets as schulpc; uv, MCP, services). Claude 2.1.329, updater UP_TO_DATE, timer ran 07:29 with the new unit, next Sat 00:22. Both env flags survive, `.bashrc` unchanged.
+- htpc: no Claude Code at all (users htpc, media), never part of the plan; nothing to do.
+
 ### Next
-- xps13 when awake: `yadm-sync-all xps`, pull the repo, `ansible-playbook main.yml -e enable_ai_desktop=true` twice, check `claude --version` and the timer. htpc: check its Claude Code version when reachable.
+- Nothing open. On xps13 `/usr/local/bin` is not on the non-interactive SSH PATH (call `/usr/local/bin/claude-code-update` there by full path).
 
 ## 2026-11-19 15:15 to 15:40: ws-sync run (Peter: "execute ws-sync now"); role stopped by the Greeter
 - `ws-sync sync` twice: role runs schulpc changed=8, xps13 changed=1, no failures; packages nothing to install. My hosts backups in the repo dirs of xps13 and m11x blocked the code sync; moved to `.scratch/` there. Second run: code and repos in sync.
