@@ -64,6 +64,19 @@
     mode: '0755'
   register: claude_prune_script_file
 
+# release-past-cooldown is an unchanged copy of the VPS nightly helper (stdlib only); keep the two in step
+- name: Deploy Claude Code cooldown helpers
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - { src: release-past-cooldown, dest: /usr/local/libexec/release-past-cooldown }
+    - { src: claude-code-update.sh, dest: "{{ claude_code_update_script }}" }
+  register: claude_code_update_helpers
+
 - name: Ensure user systemd directory exists
   ansible.builtin.file:
     path: "{{ ai_desktop_user_home }}/.config/systemd/user"
@@ -98,16 +111,17 @@
     XDG_RUNTIME_DIR: "/run/user/{{ ai_desktop_user_uid }}"
     DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ai_desktop_user_uid }}/bus"
 
-- name: Update Claude Code now
+- name: Update Claude Code now (newest latest-channel release past the cooldown)
   ansible.builtin.command:
-    cmd: "{{ claude_code_bin }} update"
+    argv: >-
+      {{ [claude_code_update_script, claude_code_bin, claude_code_cooldown_hours | string]
+         + (['--check'] if ansible_check_mode else []) }}
   become: true
   become_user: "{{ ai_desktop_user }}"
-  environment:
-    DISABLE_AUTOUPDATER: ""
+  check_mode: false
   register: claude_code_update
-  changed_when: "'is up to date' not in claude_code_update.stdout"
-  when: not ansible_check_mode
+  changed_when: "'CHANGED:' in claude_code_update.stdout"
+  when: not (ansible_check_mode and claude_code_update_helpers.changed)
 
 - name: Prune superseded native Claude Code versions
   ansible.builtin.command:

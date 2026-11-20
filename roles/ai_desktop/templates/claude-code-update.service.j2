@@ -1,6 +1,6 @@
 # {{ ansible_managed }}
 [Unit]
-Description=Update Claude Code CLI (native install)
+Description=Update Claude Code CLI (native install, {{ claude_code_cooldown_hours }} h cooldown)
 Wants=network-online.target
 After=network-online.target
 # A laptop's catch-up run right after a wake may come before the network: retry a few times
@@ -11,8 +11,9 @@ StartLimitBurst=4
 Type=oneshot
 Restart=on-failure
 RestartSec=5min
-UnsetEnvironment=DISABLE_AUTOUPDATER
-ExecStart={{ claude_code_bin }} update
+# Channel latest, only releases at least {{ claude_code_cooldown_hours }} h old; never downgrades
+Environment=DISABLE_AUTOUPDATER=1
+ExecStart={{ claude_code_update_script }} {{ claude_code_bin }} {{ claude_code_cooldown_hours }}
 ExecStartPost={{ claude_prune_script }} --dir {{ claude_code_versions_dir }} --keep-target {{ claude_code_bin }} --keep {{ claude_code_keep_versions }}
 ExecStartPost={{ claude_prune_script }} --dir {{ claude_code_desktop_bundled_dir }} --keep {{ claude_code_keep_versions }}
 Nice=10

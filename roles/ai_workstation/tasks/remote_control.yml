@@ -25,14 +25,15 @@
     data = {}
     if os.path.exists(p):
         try:
-            with open(p, "r") as f:
+            with open(p, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except Exception:
             data = {}
     if data.get("remoteControlAtStartup") != target_val:
         data["remoteControlAtStartup"] = target_val
-        with open(p, "w") as f:
-            json.dump(data, f, indent=2)
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write("\n")
         print("CONFIGURED")
     else:
         print("ALREADY_SET")

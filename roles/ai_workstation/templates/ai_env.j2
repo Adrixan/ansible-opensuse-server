@@ -36,16 +36,9 @@ export GIT_OPTIONAL_LOCKS=0
 [ -r "$HOME/.config/ai/env.local" ] && . "$HOME/.config/ai/env.local"
 
 # Ensure Claude Code CLI uses native first-party OAuth subscription without custom gateway overrides
-unset ANTHROPIC_BASE_URL
-unset ANTHROPIC_AUTH_TOKEN
-unset ANTHROPIC_API_KEY
-unset ANTHROPIC_MODEL
-unset ANTHROPIC_DEFAULT_SONNET_MODEL
-unset ANTHROPIC_DEFAULT_HAIKU_MODEL
-unset ANTHROPIC_DEFAULT_OPUS_MODEL
-unset CLAUDE_CODE_SUBAGENT_MODEL
-unset CLAUDE_CODE_MAX_CONTEXT_TOKENS
-unset CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT
+{% for key in ai_workstation_claude_legacy_env_keys %}
+unset {{ key }}
+{% endfor %}
 
 # Remote control aliases
 {% if ai_workstation_antigravity_remote_control | default(true) | bool %}
