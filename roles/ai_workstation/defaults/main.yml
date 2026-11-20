@@ -416,6 +416,21 @@ ai_workstation_claude_user_mcp_servers:
              "cd ~/nexcloud-offline-newspaper && exec ~/.local/bin/uv run --quiet offline-newspaper-mcp --vault-path /home/ubuntu/news_vault --allow-write"]
       env: {}
 # User-scope servers previously written to ~/.claude.json, now provided by the workstation-mcp plugin
+# Old gateway variables (Bailian era): unset in ~/.config/ai/env and purged from the "env" block of
+# ~/.claude/settings.json; every other env entry there belongs to yadm and stays
+ai_workstation_claude_legacy_env_keys:
+  - ANTHROPIC_BASE_URL
+  - ANTHROPIC_AUTH_TOKEN
+  - ANTHROPIC_API_KEY
+  - ANTHROPIC_MODEL
+  - ANTHROPIC_DEFAULT_SONNET_MODEL
+  - ANTHROPIC_DEFAULT_HAIKU_MODEL
+  - ANTHROPIC_DEFAULT_OPUS_MODEL
+  - CLAUDE_CODE_SUBAGENT_MODEL
+  - CLAUDE_CODE_MAX_CONTEXT_TOKENS
+  - CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT
+# Only these exports go from the shell rc files; other ANTHROPIC_ or CLAUDE_CODE_ lines (yadm) stay
+ai_workstation_claude_legacy_env_regexp: "^export ({{ ai_workstation_claude_legacy_env_keys | join('|') }})="
 ai_workstation_legacy_claude_mcp_servers: [github, puppeteer, sqlite, memory, fetch, git, arxiv, zotero]
 
 # The docker MCP server and its read-only docker-socket-proxy were dropped on Peter's review (2026-11-18);

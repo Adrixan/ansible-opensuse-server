@@ -4,51 +4,34 @@
     path: "{{ ai_workstation_user_home }}/code/.agents/skills"
     state: absent
 
-- name: Clean up inline ANTHROPIC exports from ~/.bashrc
+- name: Clean up legacy gateway exports from ~/.bashrc
   ansible.builtin.lineinfile:
     path: "{{ ai_workstation_user_home }}/.bashrc"
-    regexp: '^export ANTHROPIC_'
+    regexp: "{{ ai_workstation_claude_legacy_env_regexp }}"
     state: absent
 
-- name: Clean up inline ANTHROPIC exports from ~/.zshrc
+- name: Clean up legacy gateway exports from ~/.zshrc
   ansible.builtin.lineinfile:
     path: "{{ ai_workstation_user_home }}/.zshrc"
-    regexp: '^export ANTHROPIC_'
+    regexp: "{{ ai_workstation_claude_legacy_env_regexp }}"
     state: absent
 
-- name: Purge legacy custom gateway and model overrides from ~/.claude/settings.json
-  ansible.builtin.shell: |
-    python3 -c '
-    import json, os
-    p = os.path.expanduser("{{ ai_workstation_user_home }}/.claude/settings.json")
-    if os.path.exists(p):
-        try:
-            with open(p, "r") as f:
-                d = json.load(f)
-            changed = False
-            for k in ["env", "modelOverrides", "autoCompactWindow"]:
-                if k in d:
-                    del d[k]
-                    changed = True
-            if d.get("model") in ["qwen3.7-plus", "qwen3.8-max", "qwen3.8-flash", "deepseek-v4-pro", "glm-5.2"]:
-                del d["model"]
-                changed = True
-            if changed:
-                with open(p, "w") as f:
-                    json.dump(d, f, indent=2)
-                print("Sanitized ~/.claude/settings.json")
-        except Exception as e:
-            print("Error sanitizing settings.json:", e)
-    '
-  args:
-    executable: /bin/bash
+# Purges only the legacy gateway variables inside "env": the env block itself is yadm's and carries
+# live flags (CLAUDE_CODE_EXPERIMENTAL_CODE_MODE, DISABLE_AUTOUPDATER). Deleting the whole key wiped
+# them on every nightly run (2026-11-20).
+- name: Purge legacy gateway variables and model overrides from ~/.claude/settings.json
+  ansible.builtin.command:
+    argv: "{{ ['python3', '-I', role_path + '/files/claude_settings_sanitize.py', ai_workstation_user_home + '/.claude/settings.json'] + ai_workstation_claude_legacy_env_keys }}"
+  become: true
+  become_user: "{{ ai_workstation_user }}"
   register: sanitize_claude_settings
-  changed_when: "'Sanitized' in sanitize_claude_settings.stdout"
+  changed_when: "'CHANGED' in sanitize_claude_settings.stdout"
+  when: not ansible_check_mode
 
-- name: Clean up inline ANTHROPIC and CLAUDE_CODE exports from ~/.profile
+- name: Clean up legacy gateway exports from ~/.profile
   ansible.builtin.lineinfile:
     path: "{{ ai_workstation_user_home }}/.profile"
-    regexp: '^export (ANTHROPIC_|CLAUDE_CODE_)'
+    regexp: "{{ ai_workstation_claude_legacy_env_regexp }}"
     state: absent
 
 - name: Check if ~/.config/zsh/env exists
@@ -56,10 +39,10 @@
     path: "{{ ai_workstation_user_home }}/.config/zsh/env"
   register: ai_workstation_zsh_env_file
 
-- name: Clean up inline ANTHROPIC and CLAUDE_CODE exports from ~/.config/zsh/env
+- name: Clean up legacy gateway exports from ~/.config/zsh/env
   ansible.builtin.lineinfile:
     path: "{{ ai_workstation_user_home }}/.config/zsh/env"
-    regexp: '^export (ANTHROPIC_|CLAUDE_CODE_)'
+    regexp: "{{ ai_workstation_claude_legacy_env_regexp }}"
     state: absent
   when: ai_workstation_zsh_env_file.stat.exists
 
