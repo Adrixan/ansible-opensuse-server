@@ -15,6 +15,7 @@
 
 ### Next
 - Nothing open. On xps13 `/usr/local/bin` is not on the non-interactive SSH PATH (call `/usr/local/bin/claude-code-update` there by full path).
+- Role stopped by the Greeter (2026-11-20 ~07:50); work complete, master 3f94c18 pushed, tree clean.
 
 ## 2026-11-19 15:15 to 15:40: ws-sync run (Peter: "execute ws-sync now"); role stopped by the Greeter
 - `ws-sync sync` twice: role runs schulpc changed=8, xps13 changed=1, no failures; packages nothing to install. My hosts backups in the repo dirs of xps13 and m11x blocked the code sync; moved to `.scratch/` there. Second run: code and repos in sync.
