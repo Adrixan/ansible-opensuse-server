@@ -7,8 +7,8 @@
 - m11x: no Claude Code (ai_desktop not enabled; nightly runs only workstation_packages, so the cleanup task never ran there and its flag was intact). yadm-sync-all m11x done, clone on a253e5a. xps13 and htpc unreachable (tunnel handshake failed 05:10).
 - Merged a253e5a. nightly-routine session (feat/claude-step) agreed: this timer owns workstation updates until a workstation runs nightly-routine in active mode with `CLAUDE_USERS: [Adrixan]`; then the unit becomes prune-only (rule in AGENTS.md).
 
-### Open decisions
-- Peter: Claude Code on m11x (enable ai_desktop there or leave it out).
+### Decisions
+- m11x stays with `ai_desktop` off, no Claude Code there (Peter, 2026-11-20).
 
 ### Next
 - xps13 when awake: `yadm-sync-all xps`, pull the repo, `ansible-playbook main.yml -e enable_ai_desktop=true` twice, check `claude --version` and the timer. htpc: check its Claude Code version when reachable.
