@@ -1,5 +1,11 @@
 # Session Handoff State
 
+## 2026-11-23 05:45 to 06:10: non-interactive SSH PATH (Peter: fix it for xps13, deliver with the next update)
+- Cause: `ssh host cmd` runs a non-interactive zsh that reads only `/etc/zshenv` (comment only) and `~/.zshenv` (did not exist), so PATH stayed at sshd's compiled `/usr/bin:/bin:/usr/sbin:/sbin`; `/etc/profile` adds `/usr/local/bin` only for login shells. Same on m11x and schulpc, not only xps13.
+- Fix in yadm (merge 183cbf6): tracked `~/.zshenv` prepends `~/.local/bin` and `/usr/local/bin` with `typeset -U path` (no duplicates in interactive shells). Verified: `ssh schulpc` and `ssh m11x` (yadm-sync-all -u --no-decrypt m11x) now find `claude-code-update`, `update-system`, `yadm-sync-all`, `ws-sync`. xps13 was offline (tunnel handshake failed); the ws-sync timer on schulpc (auto steps yadm, code, rc, uv) pulls yadm there at its next run while xps13 is awake.
+- Phone: its yadm clone gets the file with the next `yadm pull` there; harmless (`/usr/local/bin` does not exist in Termux).
+- Termux shell access: guide given to Peter (own Cloudflare Tunnel on the phone, sshd on 127.0.0.1:8022, token gpg-encrypted to the phone key via `~/sync/ai/termux/`); waiting for his go. Reverse `ssh -R` to schulpc rejected: needs `ssh_hardening_tcp_forwarding` beyond `local` there, reaches the phone only from schulpc, and the phone needs cloudflared either way.
+
 ## 2026-11-20 04:15 to 05:30: Claude Code settings bug and 24 h cooldown (brief from code-vps-maintenance; Peter: "Keep the flag and verify that agentbox and edu-micro along with all other vms run nightly updates that include claude code"; decision "latest + 24 h everywhere")
 - Bug: `ai_workstation` `cleanup.yml` deleted the whole `env` key of `~/.claude/settings.json` (wiped `CLAUDE_CODE_EXPERIMENTAL_CODE_MODE` on schulpc at the 2026-11-20 nightly) and re-encoded non-ASCII as \u escapes. New `files/claude_settings_sanitize.py` drops only `ai_workstation_claude_legacy_env_keys` inside env (plus modelOverrides, autoCompactWindow, legacy models), atomic, `ensure_ascii=False`, keeps the mode, exits 1 on bad JSON. `remote_control.yml` writes with `ensure_ascii=False`. The same key list drives the `ai_env.j2` unsets and the shell rc purges (they no longer delete every ANTHROPIC_/CLAUDE_CODE_ export); that removed 3 old Qwen exports from schulpc's untracked `~/.bashrc` (backup `.scratch/bashrc.bak-20261120`).
 - Cooldown: `ai_desktop` deploys `/usr/local/libexec/release-past-cooldown` (unchanged copy of the VPS nightly helper) and `/usr/local/bin/claude-code-update <bin> <hours> [--check]` (`claude install <v>` only when newer, never downgrades, exit 1 on registry failure). Unit: `Environment=DISABLE_AUTOUPDATER=1`, prune ExecStartPost kept; the role's update task uses the script. yadm d8bbc1c: `env.DISABLE_AUTOUPDATER="1"` in settings.json (`autoUpdatesProtectedForNative` in ~/.claude.json makes autoUpdates=false unreliable for native installs).
@@ -14,7 +20,7 @@
 - htpc: no Claude Code at all (users htpc, media), never part of the plan; nothing to do.
 
 ### Next
-- Nothing open. On xps13 `/usr/local/bin` is not on the non-interactive SSH PATH (call `/usr/local/bin/claude-code-update` there by full path).
+- Nothing open. (Non-interactive SSH PATH fixed 2026-11-23 by yadm `~/.zshenv`.)
 - Role stopped by the Greeter (2026-11-20 ~07:50); work complete, master 3f94c18 pushed, tree clean.
 
 ## 2026-11-19 15:15 to 15:40: ws-sync run (Peter: "execute ws-sync now"); role stopped by the Greeter
