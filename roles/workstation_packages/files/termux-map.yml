@@ -5,7 +5,9 @@
 # for tools a role installs from upstream. Add a line here to extend the set; never list servers or GUI apps.
 7zip: 7zip
 aria2: aria2
+autossh: autossh
 bind-utils: dnsutils
+/usr/local/bin/cloudflared: cloudflared
 curl: curl
 fzf: fzf
 gh: gh
@@ -15,9 +17,12 @@ glab: glab-cli
 gpg2: gnupg
 htop: htop
 hugo: hugo
+isync: isync
 jq: jq
 less: less
 lsof: lsof
+make: make
+mdbtools: mdbtools
 ncdu: ncdu
 neovim: neovim
 openssh: openssh
@@ -28,7 +33,9 @@ rclone: rclone
 ripgrep: ripgrep
 rsync: rsync
 ShellCheck: shellcheck
+tealdeer: tealdeer
 tig: tig
+topgrade: topgrade
 tree: tree
 typst: typst
 unrar: unrar
