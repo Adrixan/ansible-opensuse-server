@@ -14,6 +14,15 @@
 - 08:35: Peter asked to rewrite helperscripts `setup-termux/setup-termux.sh` into a full restore of today's Termux state; handed to rc role `code-helperscripts` with a full brief (repo is public; old script has his email and the pointless repo).
 - (earlier) Open: the running phone sshd still carries the old PATH (inherited from the shell that started it) until Peter restarts Termux and runs `termux-ssh on` again; xps13 gets the yadm state via ws-sync.
 
+### Open decisions
+- None for this project.
+
+### Next
+- code-helperscripts session (started 08:35) owns the Termux restore script; nothing left here for it.
+- xps13 picks up the yadm changes of today (`.zshenv`, portable `.zshrc`, `system-defaults`, termux-ssh, `Host termux`) at the next ws-sync run while awake; verify there once: `ssh xps 'command -v claude-code-update'`.
+- Termux tunnel `termux` stays; sshd and cloudflared run on the phone only after `termux-ssh on` (auto-off 120 min).
+- Role stopped by the Greeter (2026-11-23 ~08:40); master pushed, tree clean.
+
 ## 2026-11-20 04:15 to 05:30: Claude Code settings bug and 24 h cooldown (brief from code-vps-maintenance; Peter: "Keep the flag and verify that agentbox and edu-micro along with all other vms run nightly updates that include claude code"; decision "latest + 24 h everywhere")
 - Bug: `ai_workstation` `cleanup.yml` deleted the whole `env` key of `~/.claude/settings.json` (wiped `CLAUDE_CODE_EXPERIMENTAL_CODE_MODE` on schulpc at the 2026-11-20 nightly) and re-encoded non-ASCII as \u escapes. New `files/claude_settings_sanitize.py` drops only `ai_workstation_claude_legacy_env_keys` inside env (plus modelOverrides, autoCompactWindow, legacy models), atomic, `ensure_ascii=False`, keeps the mode, exits 1 on bad JSON. `remote_control.yml` writes with `ensure_ascii=False`. The same key list drives the `ai_env.j2` unsets and the shell rc purges (they no longer delete every ANTHROPIC_/CLAUDE_CODE_ export); that removed 3 old Qwen exports from schulpc's untracked `~/.bashrc` (backup `.scratch/bashrc.bak-20261120`).
 - Cooldown: `ai_desktop` deploys `/usr/local/libexec/release-past-cooldown` (unchanged copy of the VPS nightly helper) and `/usr/local/bin/claude-code-update <bin> <hours> [--check]` (`claude install <v>` only when newer, never downgrades, exit 1 on registry failure). Unit: `Environment=DISABLE_AUTOUPDATER=1`, prune ExecStartPost kept; the role's update task uses the script. yadm d8bbc1c: `env.DISABLE_AUTOUPDATER="1"` in settings.json (`autoUpdatesProtectedForNative` in ~/.claude.json makes autoUpdates=false unreliable for native installs).
