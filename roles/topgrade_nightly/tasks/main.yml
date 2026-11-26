@@ -64,6 +64,15 @@
     group: root
     mode: '0755'
 
+- name: Create the hook directories (executables other roles add, run before and after the update)
+  ansible.builtin.file:
+    path: "/etc/topgrade/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: [pre.d, post.d]
+
 - name: Install the topgrade allow-list
   ansible.builtin.template:
     src: nightly.toml.j2

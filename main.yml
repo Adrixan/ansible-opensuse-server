@@ -231,3 +231,9 @@
         name: journald
       when: enable_journald | default(false) | bool
       tags: [journald]
+
+    - name: Include virtualbox role
+      ansible.builtin.include_role:
+        name: virtualbox
+      when: enable_virtualbox | default(false) | bool
+      tags: [virtualbox]

@@ -1,0 +1,14 @@
+[Unit]
+Description=Hold kernel updates while no VirtualBox KMP matches the new kernel
+Documentation=file:///usr/local/sbin/vbox-kernel-guard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vbox-kernel-guard
+TimeoutStartSec=20min
+Nice=10
+IOSchedulingClass=idle
+PrivateTmp=true
+NoNewPrivileges=true

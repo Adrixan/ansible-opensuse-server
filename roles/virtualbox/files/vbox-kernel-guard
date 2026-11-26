@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# vbox-kernel-guard: never let Tumbleweed install a kernel that has no VirtualBox host modules yet.
+# openSUSE ships the host modules as virtualbox-kmp-default, built for one kernel each. Now and then a
+# snapshot brings kernel-default before its KMP rebuild (2026-11-19: kernel 7.3.4 while the KMP was still
+# k7.3.3), and the new kernel boots without vboxdrv ("Kernel driver not installed (rc=-1908)").
+# While the newest kernel in the repos has no KMP build, this holds newer kernels with a zypper lock
+# (`kernel-default > <newest installed>`, the package manager's own hold); once the KMP is there the
+# lock goes again. Only the lock this tool added is ever removed.
+# Runs from the topgrade_nightly pre-update hooks (update-system) and from vbox-kernel-guard.timer.
+# Usage: vbox-kernel-guard [--no-refresh]
+# Exit: 0 decided (one status line on stdout), 1 error (nothing changed).
+set -euo pipefail
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+readonly KERNEL=kernel-default KMP=virtualbox-kmp-default
+readonly STATE=/var/lib/vbox-kernel-guard
+readonly MARK=$STATE/lockspec   # the lock spec this tool added
+export ZYPP_LOCK_TIMEOUT=${ZYPP_LOCK_TIMEOUT:-600}   # wait for a running zypper instead of failing
+
+die() { echo "vbox-kernel-guard: $*" >&2; exit 1; }
+[[ $EUID -eq 0 ]] || die "run as root"
+refresh=true
+case "${1:-}" in
+  "") ;;
+  --no-refresh) refresh=false ;;
+  *) die "usage: vbox-kernel-guard [--no-refresh]" ;;
+esac
+
+# Prints the versions of package $1 that the enabled repositories offer (installed-only entries left out).
+repo_versions() {
+  zypper -n -q se -s --match-exact -t package "$1" |
+    awk -F'|' -v n="$1" '{ for (i = 1; i <= NF; i++) gsub(/^ +| +$/, "", $i) }
+      $2 == n && $6 != "(System Packages)" { print $4 }'
+}
+# Kernel package version 7.3.5-1.1 -> KMP version marker _k7.3.5_1- (openSUSE KMP naming).
+kmp_tag() { local v=${1%-*} r=${1##*-}; printf '_k%s_%s-' "$v" "${r%%.*}"; }
+# Kernel package version 7.3.5-1.1 -> uname -r 7.3.5-1-default.
+kernel_uname() { local v=${1%-*} r=${1##*-}; printf '%s-%s-default' "$v" "${r%%.*}"; }
+
+release_lock() { # release_lock <reason>
+  if [[ -s $MARK ]]; then
+    local spec
+    spec=$(<"$MARK")
+    zypper -n -q removelock "$spec" >/dev/null || die "could not remove the lock '$spec'"
+    rm -f "$MARK"
+    echo "released the kernel hold '$spec': $1"
+  else
+    echo "no hold: $1"
+  fi
+}
+
+# Installed state: warn when the newest installed kernel (the one GRUB boots) has no vboxdrv.
+installed=$(rpm -q --qf '%{VERSION}-%{RELEASE}\n' "$KERNEL" 2>/dev/null | sort -V | tail -n 1) ||
+  die "$KERNEL is not installed"
+warn=""
+if rpm -q "$KMP" >/dev/null 2>&1 && ! modinfo -k "$(kernel_uname "$installed")" -F filename vboxdrv >/dev/null 2>&1; then
+  warn=" (warning: the installed kernel $installed has no vboxdrv; the next update with a matching KMP fixes it)"
+fi
+
+if ! rpm -q "$KMP" >/dev/null 2>&1; then
+  release_lock "$KMP is not installed"
+  exit 0
+fi
+
+if $refresh; then
+  zypper -n -q refresh >/dev/null || die "zypper refresh failed"
+fi
+
+candidate=$(repo_versions "$KERNEL" | sort -V | tail -n 1)
+[[ -n $candidate ]] || die "no $KERNEL in the enabled repositories"
+if [[ $(printf '%s\n%s\n' "$installed" "$candidate" | sort -V | tail -n 1) == "$installed" ]]; then
+  release_lock "no kernel newer than $installed in the repos$warn"
+  exit 0
+fi
+
+tag=$(kmp_tag "$candidate")
+if repo_versions "$KMP" | grep -qF -- "$tag"; then
+  release_lock "$KMP for kernel $candidate is available$warn"
+  exit 0
+fi
+
+# Hold: no KMP for the candidate kernel. Keep (or move) our lock to "newer than the newest installed".
+spec="$KERNEL > $installed"
+if [[ -s $MARK && $(<"$MARK") == "$spec" ]]; then
+  echo "holding kernels newer than $installed: no $KMP for $candidate yet$warn"
+  exit 0
+fi
+[[ -s $MARK ]] && release_lock "replaced by a new hold" >/dev/null
+install -d -m 0755 "$STATE"
+zypper -n -q addlock -m "vbox-kernel-guard: no $KMP for $candidate yet (ansible virtualbox role)" "$spec" >/dev/null ||
+  die "could not add the lock '$spec'"
+printf '%s\n' "$spec" >"$MARK"
+echo "added a kernel hold '$spec': no $KMP for $candidate yet$warn"

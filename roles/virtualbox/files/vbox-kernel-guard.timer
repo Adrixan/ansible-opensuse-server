@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for kernels without a VirtualBox KMP (also covers updates outside update-system)
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=6h
+RandomizedDelaySec=15min
+
+[Install]
+WantedBy=timers.target

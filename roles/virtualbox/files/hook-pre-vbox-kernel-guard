@@ -1,0 +1,3 @@
+#!/bin/sh
+# virtualbox role: hold a new kernel while it has no VirtualBox KMP (before zypper dup)
+exec /usr/local/sbin/vbox-kernel-guard

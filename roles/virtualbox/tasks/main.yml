@@ -1,0 +1,117 @@
+---
+# tasks file for virtualbox
+- name: Install VirtualBox with the openSUSE host modules (KMP)
+  community.general.zypper:
+    name: "{{ virtualbox_packages }}"
+    state: present
+
+- name: Add the users to vboxusers
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: vboxusers
+    append: true
+  loop: "{{ virtualbox_users }}"
+
+- name: Install the helpers
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop: [vbox-kernel-guard, vbox-extpack-sync]
+
+- name: Install the units
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - vbox-kernel-guard.service
+    - vbox-kernel-guard.timer
+    - vbox-extpack-sync.service
+    - vbox-extpack-sync.path
+  notify: Reload systemd
+
+- name: Install the Extension Pack settings
+  ansible.builtin.template:
+    src: vbox-extpack-sync.conf.j2
+    dest: /etc/vbox-extpack-sync.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create the update hook directories (topgrade_nightly runs them around zypper dup)
+  ansible.builtin.file:
+    path: "/etc/topgrade/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: [pre.d, post.d]
+
+- name: Install or remove the update hooks
+  ansible.builtin.copy:
+    src: "hook-{{ item.dir }}-{{ item.name }}"
+    dest: "/etc/topgrade/{{ item.dir }}.d/50-{{ item.name }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - { dir: pre, name: vbox-kernel-guard, on: "{{ virtualbox_kernel_guard }}" }
+    - { dir: post, name: vbox-extpack-sync, on: "{{ virtualbox_extpack }}" }
+  loop_control:
+    label: "{{ item.dir }}.d/50-{{ item.name }}"
+  when: item.on | bool
+
+- name: Remove disabled update hooks
+  ansible.builtin.file:
+    path: "/etc/topgrade/{{ item.dir }}.d/50-{{ item.name }}"
+    state: absent
+  loop:
+    - { dir: pre, name: vbox-kernel-guard, on: "{{ virtualbox_kernel_guard }}" }
+    - { dir: post, name: vbox-extpack-sync, on: "{{ virtualbox_extpack }}" }
+  loop_control:
+    label: "{{ item.dir }}.d/50-{{ item.name }}"
+  when: not item.on | bool
+
+- name: Reload systemd before enabling the units
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable the kernel guard timer
+  ansible.builtin.systemd_service:
+    name: vbox-kernel-guard.timer
+    enabled: "{{ virtualbox_kernel_guard | bool }}"
+    state: "{{ 'started' if virtualbox_kernel_guard | bool else 'stopped' }}"
+  when: not ansible_check_mode
+
+- name: Enable the Extension Pack sync (on package changes and at boot)
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: "{{ virtualbox_extpack | bool }}"
+    state: "{{ ('started' if virtualbox_extpack | bool else 'stopped') if item.endswith('.path') else omit }}"
+  loop: [vbox-extpack-sync.path, vbox-extpack-sync.service]
+  when: not ansible_check_mode
+
+- name: Run the kernel guard
+  ansible.builtin.command: /usr/local/sbin/vbox-kernel-guard
+  register: virtualbox_guard
+  changed_when: virtualbox_guard.stdout is match('^(added|released) ')
+  when:
+    - virtualbox_kernel_guard | bool
+    - not ansible_check_mode
+
+- name: Sync the Extension Pack
+  ansible.builtin.command: /usr/local/sbin/vbox-extpack-sync
+  register: virtualbox_extpack_run
+  changed_when: virtualbox_extpack_run.stdout is match('^Extension Pack updated')
+  when:
+    - virtualbox_extpack | bool
+    - not ansible_check_mode
+
+- name: Report the state
+  ansible.builtin.debug:
+    msg: "{{ [virtualbox_guard.stdout | default(''), virtualbox_extpack_run.stdout | default('')] | select | list }}"
+  when: not ansible_check_mode

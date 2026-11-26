@@ -1,0 +1,16 @@
+[Unit]
+Description=Keep the VirtualBox Extension Pack on the installed VirtualBox version
+Documentation=file:///usr/local/sbin/vbox-extpack-sync
+ConditionPathExists=/usr/bin/VBoxManage
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vbox-extpack-sync
+TimeoutStartSec=45min
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
