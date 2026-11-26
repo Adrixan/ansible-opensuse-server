@@ -8,6 +8,7 @@
 - Real fix: `update-system` on xps13 (exit 0): pre hook "no hold" (KMP k7.3.5 available), dup to kernel 7.3.5 plus `virtualbox-kmp-default-7.2.22_k7.3.5_1-3.6` and virtualbox 7.2.22-3.4, post hook "pack 7.2.22 matches", ansible ok. `modinfo -k 7.3.5-1-default` finds vboxdrv, vboxnetflt, vboxnetadp under updates/. GRUB default boots 7.3.5. Post hook fix (journal `-t`), role rerun changed=1 then 0.
 - Open: Peter reboots xps13 (reboot pending, LUKS passphrase; not done remotely while he works there). Afterwards check once: `lsmod | grep vboxdrv`, `systemctl status vboxdrv`, start a VM. purge-kernels then drops 7.3.3 and its KMP.
 - Note for Peter: the 7.2 Extension Pack only adds OCI integration and the PXE ROM (description of the installed pack); PUEL covers personal and educational use only.
+- Next: after Peter's reboot verify vboxdrv and a VM start on xps13; nothing else open. Open decisions: none (Extension Pack keep or drop is Peter's optional call). Role stopped by the Greeter 2026-11-26; master pushed, tree clean.
 - Simulation note: hiding the new KMP by lock made dup stop on the orphaned old KMP (rc 4); in a real hold the repo still has the old KMP, and a stop would only fail the run safely.
 
 ## 2026-11-24 07:20 to 07:50: yadm stalled on xps13 (Peter via Greeter: "Fix the yadm issue on xps13")
