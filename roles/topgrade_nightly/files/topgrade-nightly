@@ -3,8 +3,9 @@
 # (/etc/topgrade/nightly.toml), Healthchecks pings and an optional reboot inside a night window.
 # Runs as root from topgrade-nightly.service; interactive runs keep using ~/.config/topgrade.toml.
 # Optional per host (nightly.conf): wait for other nightly jobs, snapshot /etc and the package list,
-# an Ansible run of chosen roles as the desktop user, a firmware report, and reboot gates (a stick
-# that must be present, a pre-reboot check, no agent session in a turn, notes for restored sessions).
+# hooks in /etc/topgrade/pre.d and post.d around the update, an Ansible run of chosen roles as the
+# desktop user, a firmware report, and reboot gates (a stick that must be present, a pre-reboot check,
+# no agent session in a turn, notes for restored sessions).
 set -uo pipefail
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 umask 022
@@ -15,6 +16,7 @@ readonly STATE=/var/lib/topgrade-nightly
 readonly REBOOT_ONCE=$STATE/reboot-once   # touch it to force one reboot (gates still apply)
 readonly REBOOT_FLAG=$STATE/rebooted      # summary of the run that rebooted, for the post-boot report
 readonly STATUS=/var/lib/topgrade-status  # "<epoch> <ok|failed> <reboot-pending yes|no>", world-readable for the shell reminder
+readonly HOOKS=/etc/topgrade              # pre.d/ and post.d/: executables other roles drop in (e.g. virtualbox)
 
 HC_URL=""                 # Healthchecks ping URL; empty disables pings
 REBOOT=false              # reboot when zypper reports it is needed and the run succeeded
@@ -48,6 +50,22 @@ write_status() { # write_status <ok|failed> <reboot pending: yes|no>
 ping_hc() { # ping_hc [start|fail|""] [body]
   [[ -n $HC_URL ]] || return 0
   curl -fsS -m 15 --retry 3 -o /dev/null --data-binary "${2:-}" "${HC_URL}${1:+/$1}" || log "healthcheck ping failed"
+}
+# Runs the executables in $HOOKS/<phase>.d in name order; their last output line becomes a note.
+# False when one of them failed (the others still run).
+run_hooks() { # run_hooks <pre|post>
+  local hook hook_out ok=0
+  for hook in "$HOOKS/$1.d"/*; do
+    [[ -f $hook && -x $hook ]] || continue
+    if hook_out=$("$hook" </dev/null 2>&1); then
+      note "$1 hook ${hook##*/}: $(tail -n 1 <<<"$hook_out" | cut -c1-300)"
+    else
+      printf '%s\n' "$hook_out" | tail -n 20
+      note "$1 hook ${hook##*/}: failed ($(tail -n 1 <<<"$hook_out" | cut -c1-300))"
+      ok=1
+    fi
+  done
+  return "$ok"
 }
 # Runs a command as a user with that user's session bus, so `systemctl --user` works.
 as_user() {
@@ -169,6 +187,13 @@ if [[ -n $SNAPSHOT_DIR ]]; then
   fi
 fi
 
+# Pre-update hooks decide what zypper may do (e.g. hold a kernel without its KMP): a failure skips the update.
+if ! run_hooks pre; then
+  write_status failed no
+  ping_hc fail "$(printf '%s\n' "${NOTES[@]}")"
+  exit 1
+fi
+
 out=$(mktemp)
 trap 'rm -f "$out"' EXIT
 TERM=dumb /usr/bin/topgrade --config "$TOML" </dev/null 2>&1 | tee "$out"   # the package, never a stray copy in /usr/local
@@ -186,6 +211,9 @@ if command -v grub-usbkey-core >/dev/null; then
     rc=1
   fi
 fi
+
+# Post-update hooks follow up on what zypper installed (e.g. the VirtualBox Extension Pack).
+run_hooks post || rc=1
 
 # Ansible roles (npm prefixes with audit gates, uv tools, the MCP stack) from the user's clone,
 # only from a clean master so a half-done change of a session never runs unattended.

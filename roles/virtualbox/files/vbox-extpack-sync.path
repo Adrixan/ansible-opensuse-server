@@ -1,0 +1,10 @@
+[Unit]
+Description=Update the VirtualBox Extension Pack when the virtualbox package changes
+
+[Path]
+# rpm renames the new file into place; that counts as a change.
+PathChanged=/usr/lib/virtualbox/VBoxSVC
+Unit=vbox-extpack-sync.service
+
+[Install]
+WantedBy=paths.target

@@ -1,0 +1,12 @@
+---
+# virtualbox: VirtualBox with openSUSE's prebuilt host modules (virtualbox-kmp-default, the distribution's
+# way; no vboxconfig builds), a kernel hold while a new kernel has no KMP build yet (vbox-kernel-guard),
+# and the Oracle Extension Pack kept on the installed version (vbox-extpack-sync).
+virtualbox_packages: [virtualbox, virtualbox-qt, virtualbox-kmp-default]
+virtualbox_users: ["{{ target_user }}"]   # members of vboxusers (USB passthrough, host-only networks)
+virtualbox_kernel_guard: true
+virtualbox_extpack: true
+# sha256 of the pack's ExtPack-license.txt (Oracle PUEL) as accepted for 7.2.22 (Peter, 2026-11-26).
+# A release with another license text is refused until this is changed after reading it.
+virtualbox_extpack_license_sha256: eb31505e56e9b4d0fbca139104da41ac6f6b98f8e78968bdf01b1f3da3c4f9ae
+virtualbox_extpack_base_url: https://download.virtualbox.org/virtualbox

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# vbox-extpack-sync: keep the Oracle VirtualBox Extension Pack on the version of the installed
+# virtualbox package. Downloads the pack over HTTPS from download.virtualbox.org, checks it against that
+# release's SHA256SUMS, and installs it only when the license inside matches the hash accepted in
+# /etc/vbox-extpack-sync.conf: a changed license needs a human decision first.
+# Runs from vbox-extpack-sync.path (the virtualbox package changed), at boot and after update-system.
+# Exit: 0 up to date or updated, 1 error (the installed pack stays as it was).
+set -euo pipefail
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+umask 022
+readonly CONF=/etc/vbox-extpack-sync.conf
+readonly PACK_DIR=/usr/lib/virtualbox/ExtensionPacks/Oracle_VirtualBox_Extension_Pack
+ACCEPTED_LICENSE_SHA256=""   # sha256 of ExtPack-license.txt that the owner accepted
+BASE_URL=https://download.virtualbox.org/virtualbox
+# shellcheck source=/dev/null
+[[ -r $CONF ]] && . "$CONF"
+
+die() { echo "vbox-extpack-sync: $*" >&2; exit 1; }
+[[ $EUID -eq 0 ]] || die "run as root"
+if ! rpm -q virtualbox >/dev/null 2>&1; then
+  echo "virtualbox is not installed, nothing to do"
+  exit 0
+fi
+[[ $ACCEPTED_LICENSE_SHA256 =~ ^[0-9a-f]{64}$ ]] || die "ACCEPTED_LICENSE_SHA256 is not set in $CONF"
+
+# A path-triggered run starts while zypper is still installing: wait for it to finish (max 30 min).
+for _ in $(seq 360); do
+  pid=$(cat /run/zypp.pid 2>/dev/null || true)
+  if [[ -z $pid ]] || ! kill -0 "$pid" 2>/dev/null; then break; fi
+  sleep 5
+done
+
+# Prints the version of the installed pack, nothing when there is none.
+pack_version() { [[ -r $PACK_DIR/ExtPack.xml ]] && sed -n 's:.*<Version[^>]*>\([^<]*\)</Version>.*:\1:p' "$PACK_DIR/ExtPack.xml" | head -n 1 || true; }
+
+want=$(rpm -q --qf '%{VERSION}' virtualbox)
+[[ $want =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "unexpected virtualbox version '$want'"
+have=$(pack_version)
+if [[ $have == "$want" ]]; then
+  echo "Extension Pack $have matches virtualbox $want"
+  exit 0
+fi
+
+file="Oracle_VirtualBox_Extension_Pack-$want.vbox-extpack"
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+# VBoxManage checks that the file name matches the pack name inside, so keep the upstream name.
+fetch() { curl -fsSL --proto '=https' --tlsv1.2 --retry 3 --max-time 600 -o "$tmp/$2" "$BASE_URL/$want/$1"; }
+fetch SHA256SUMS SHA256SUMS || die "could not download $BASE_URL/$want/SHA256SUMS"
+expected=$(awk -v f="$file" '$2 == f || $2 == "*" f { print $1; exit }' "$tmp/SHA256SUMS")
+[[ $expected =~ ^[0-9a-f]{64}$ ]] || die "$file is not listed in SHA256SUMS of $want"
+fetch "$file" "$file" || die "could not download $BASE_URL/$want/$file"
+actual=$(sha256sum "$tmp/$file" | cut -d' ' -f1)
+[[ $actual == "$expected" ]] || die "checksum mismatch for $file (got $actual, want $expected)"
+
+license=$(tar -xzOf "$tmp/$file" --wildcards '*ExtPack-license.txt' 2>/dev/null | sha256sum | cut -d' ' -f1)
+if [[ $license != "$ACCEPTED_LICENSE_SHA256" ]]; then
+  die "the license of $file changed (sha256 $license); read it, then set virtualbox_extpack_license_sha256 to accept it"
+fi
+
+VBoxManage extpack install --replace --accept-license="$license" "$tmp/$file" >/dev/null ||
+  die "VBoxManage extpack install failed"
+VBoxManage extpack cleanup >/dev/null 2>&1 || true
+now=$(pack_version)
+[[ $now == "$want" ]] || die "installed, but the pack reports version '${now:-none}'"
+echo "Extension Pack updated: ${have:-none} -> $now"
