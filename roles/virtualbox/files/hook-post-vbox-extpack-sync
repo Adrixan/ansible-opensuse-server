@@ -2,4 +2,4 @@
 # virtualbox role: bring the Extension Pack to the VirtualBox version this update installed
 # (joins a run the path unit started; the journal of vbox-extpack-sync.service has the details)
 systemctl start vbox-extpack-sync.service || exit 1
-journalctl -q -o cat -n 1 -u vbox-extpack-sync.service --no-pager 2>/dev/null || true
+journalctl -q -o cat -n 1 -u vbox-extpack-sync.service -t vbox-extpack-sync --no-pager 2>/dev/null || true
