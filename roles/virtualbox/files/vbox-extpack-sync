@@ -30,9 +30,12 @@ for _ in $(seq 360); do
   sleep 5
 done
 
+# Prints the version of the installed pack, nothing when there is none.
+pack_version() { [[ -r $PACK_DIR/ExtPack.xml ]] && sed -n 's:.*<Version[^>]*>\([^<]*\)</Version>.*:\1:p' "$PACK_DIR/ExtPack.xml" | head -n 1 || true; }
+
 want=$(rpm -q --qf '%{VERSION}' virtualbox)
 [[ $want =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "unexpected virtualbox version '$want'"
-have=$(sed -n 's:.*<Version[^>]*>\([^<]*\)</Version>.*:\1:p' "$PACK_DIR/ExtPack.xml" 2>/dev/null | head -n 1)
+have=$(pack_version)
 if [[ $have == "$want" ]]; then
   echo "Extension Pack $have matches virtualbox $want"
   exit 0
@@ -41,22 +44,23 @@ fi
 file="Oracle_VirtualBox_Extension_Pack-$want.vbox-extpack"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
+# VBoxManage checks that the file name matches the pack name inside, so keep the upstream name.
 fetch() { curl -fsSL --proto '=https' --tlsv1.2 --retry 3 --max-time 600 -o "$tmp/$2" "$BASE_URL/$want/$1"; }
 fetch SHA256SUMS SHA256SUMS || die "could not download $BASE_URL/$want/SHA256SUMS"
 expected=$(awk -v f="$file" '$2 == f || $2 == "*" f { print $1; exit }' "$tmp/SHA256SUMS")
 [[ $expected =~ ^[0-9a-f]{64}$ ]] || die "$file is not listed in SHA256SUMS of $want"
-fetch "$file" pack || die "could not download $BASE_URL/$want/$file"
-actual=$(sha256sum "$tmp/pack" | cut -d' ' -f1)
+fetch "$file" "$file" || die "could not download $BASE_URL/$want/$file"
+actual=$(sha256sum "$tmp/$file" | cut -d' ' -f1)
 [[ $actual == "$expected" ]] || die "checksum mismatch for $file (got $actual, want $expected)"
 
-license=$(tar -xzOf "$tmp/pack" --wildcards '*ExtPack-license.txt' 2>/dev/null | sha256sum | cut -d' ' -f1)
+license=$(tar -xzOf "$tmp/$file" --wildcards '*ExtPack-license.txt' 2>/dev/null | sha256sum | cut -d' ' -f1)
 if [[ $license != "$ACCEPTED_LICENSE_SHA256" ]]; then
   die "the license of $file changed (sha256 $license); read it, then set virtualbox_extpack_license_sha256 to accept it"
 fi
 
-VBoxManage extpack install --replace --accept-license="$license" "$tmp/pack" >/dev/null ||
+VBoxManage extpack install --replace --accept-license="$license" "$tmp/$file" >/dev/null ||
   die "VBoxManage extpack install failed"
 VBoxManage extpack cleanup >/dev/null 2>&1 || true
-now=$(sed -n 's:.*<Version[^>]*>\([^<]*\)</Version>.*:\1:p' "$PACK_DIR/ExtPack.xml" 2>/dev/null | head -n 1)
+now=$(pack_version)
 [[ $now == "$want" ]] || die "installed, but the pack reports version '${now:-none}'"
 echo "Extension Pack updated: ${have:-none} -> $now"

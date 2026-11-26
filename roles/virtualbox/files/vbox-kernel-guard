@@ -4,7 +4,7 @@
 # snapshot brings kernel-default before its KMP rebuild (2026-11-19: kernel 7.3.4 while the KMP was still
 # k7.3.3), and the new kernel boots without vboxdrv ("Kernel driver not installed (rc=-1908)").
 # While the newest kernel in the repos has no KMP build, this holds newer kernels with a zypper lock
-# (`kernel-default > <newest installed>`, the package manager's own hold); once the KMP is there the
+# (`kernel-default* > <newest installed>`, the package manager's own hold); once the KMP is there the
 # lock goes again. Only the lock this tool added is ever removed.
 # Runs from the topgrade_nightly pre-update hooks (update-system) and from vbox-kernel-guard.timer.
 # Usage: vbox-kernel-guard [--no-refresh]
@@ -79,7 +79,7 @@ if repo_versions "$KMP" | grep -qF -- "$tag"; then
 fi
 
 # Hold: no KMP for the candidate kernel. Keep (or move) our lock to "newer than the newest installed".
-spec="$KERNEL > $installed"
+spec="$KERNEL* > $installed"   # with -base/-extra/-devel: else the solver takes kernel-default-base
 if [[ -s $MARK && $(<"$MARK") == "$spec" ]]; then
   echo "holding kernels newer than $installed: no $KMP for $candidate yet$warn"
   exit 0
