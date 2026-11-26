@@ -60,22 +60,22 @@
     group: root
     mode: '0755'
   loop:
-    - { dir: pre, name: vbox-kernel-guard, on: "{{ virtualbox_kernel_guard }}" }
-    - { dir: post, name: vbox-extpack-sync, on: "{{ virtualbox_extpack }}" }
+    - { dir: pre, name: vbox-kernel-guard, enabled: "{{ virtualbox_kernel_guard }}" }
+    - { dir: post, name: vbox-extpack-sync, enabled: "{{ virtualbox_extpack }}" }
   loop_control:
     label: "{{ item.dir }}.d/50-{{ item.name }}"
-  when: item.on | bool
+  when: item.enabled | bool
 
 - name: Remove disabled update hooks
   ansible.builtin.file:
     path: "/etc/topgrade/{{ item.dir }}.d/50-{{ item.name }}"
     state: absent
   loop:
-    - { dir: pre, name: vbox-kernel-guard, on: "{{ virtualbox_kernel_guard }}" }
-    - { dir: post, name: vbox-extpack-sync, on: "{{ virtualbox_extpack }}" }
+    - { dir: pre, name: vbox-kernel-guard, enabled: "{{ virtualbox_kernel_guard }}" }
+    - { dir: post, name: vbox-extpack-sync, enabled: "{{ virtualbox_extpack }}" }
   loop_control:
     label: "{{ item.dir }}.d/50-{{ item.name }}"
-  when: not item.on | bool
+  when: not item.enabled | bool
 
 - name: Reload systemd before enabling the units
   ansible.builtin.meta: flush_handlers
