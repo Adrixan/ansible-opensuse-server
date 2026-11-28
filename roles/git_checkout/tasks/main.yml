@@ -1,0 +1,36 @@
+---
+# Helper role: keep a user's git checkout present and current.
+# Inputs: git_checkout_repo (URL), git_checkout_dest, git_checkout_user, git_checkout_branch (default main),
+# git_checkout_pull (default true). Clones as the user when the directory is missing; afterwards only
+# fast-forwards while the checkout is clean on that branch (git-ff-clean.sh), never resets or switches.
+
+- name: Check for the checkout {{ git_checkout_dest }}
+  ansible.builtin.stat:
+    path: "{{ git_checkout_dest }}/.git"
+  register: git_checkout_stat
+
+- name: Clone {{ git_checkout_repo }}
+  ansible.builtin.git:
+    repo: "{{ git_checkout_repo }}"
+    dest: "{{ git_checkout_dest }}"
+    version: "{{ git_checkout_branch | default('main') }}"
+    update: false
+  environment:
+    GIT_TERMINAL_PROMPT: "0"
+  become: true
+  become_user: "{{ git_checkout_user }}"
+  when: not git_checkout_stat.stat.exists
+
+- name: Fast-forward {{ git_checkout_dest }} while it is clean on its branch
+  ansible.builtin.command:
+    argv: [bash, "{{ role_path }}/files/git-ff-clean.sh", "{{ git_checkout_dest }}", "{{ git_checkout_branch | default('main') }}"]
+  environment:
+    GIT_TERMINAL_PROMPT: "0"
+  become: true
+  become_user: "{{ git_checkout_user }}"
+  register: git_checkout_pull_result
+  changed_when: "'CHANGED' in git_checkout_pull_result.stdout"
+  when:
+    - git_checkout_stat.stat.exists
+    - git_checkout_pull | default(true) | bool
+    - not ansible_check_mode

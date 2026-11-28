@@ -1,0 +1,21 @@
+---
+# pocket_newspaper: the phone newspaper tool for manual runs on the workstations (Peter, 2026-11-28: install
+# only, no schedule; `newspaper install` refuses outside Termux). Credentials are Peter's: he runs
+# `newspaper-login` once per machine; the role never writes or reads them. Runbook: the repo's
+# docs/runbook.md, section "Workstations".
+pocket_newspaper_user: "{{ target_user | default('Adrixan') }}"
+pocket_newspaper_user_home: "{{ target_user_home | default('/home/' + pocket_newspaper_user) }}"
+# Private repository: cloned over SSH as the user when missing, then fast-forwarded only while clean on main
+pocket_newspaper_repo_url: "git@github.com:Adrixan/pocket-newspaper.git"
+pocket_newspaper_repo_dir: "{{ pocket_newspaper_user_home }}/code/pocket-newspaper"
+pocket_newspaper_branch: main
+pocket_newspaper_pull: true
+# Build tools and media helpers (Node from ai_workstation runs the YouTube challenges; python3-yt-dlp brings
+# the yt-dlp-ejs solver; Deno is not in OSS)
+pocket_newspaper_packages: [rust, cargo, aria2, yt-dlp]
+# ffmpeg comes from multimedia_codecs (Packman ffmpeg-N); installed here only where no ffmpeg binary exists,
+# so the role never swaps an installed ffmpeg-N for another
+pocket_newspaper_ffmpeg_package: ffmpeg
+pocket_newspaper_bin: "{{ pocket_newspaper_user_home }}/.local/bin/newspaper"
+# Revision the installed binary was built from: scripts/install-linux.sh reruns when HEAD moves
+pocket_newspaper_stamp: "{{ pocket_newspaper_user_home }}/.local/state/ansible-opensuse-server/pocket-newspaper.rev"

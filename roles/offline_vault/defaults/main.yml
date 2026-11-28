@@ -1,0 +1,15 @@
+---
+# offline_vault: Offline Vault (repo mobile-encyclopedia, Textual TUI and CLI `offline-vault`) for manual
+# use on the workstations (Peter, 2026-11-28: install only, no schedule). run.sh builds .venv from the
+# project's hash-pinned locks and reinstalls when they change; the role only provides the checkout, the
+# system tools and a PATH wrapper.
+offline_vault_user: "{{ target_user | default('Adrixan') }}"
+offline_vault_user_home: "{{ target_user_home | default('/home/' + offline_vault_user) }}"
+# Public repository: cloned over SSH like the other ~/code checkouts, then fast-forwarded only while clean on main
+offline_vault_repo_url: "git@github.com:Adrixan/mobile-encyclopedia.git"
+offline_vault_repo_dir: "{{ offline_vault_user_home }}/code/mobile-encyclopedia"
+offline_vault_branch: main
+offline_vault_pull: true
+# aria2 for downloads, kiwix-tools for `offline-vault serve --kiwix` (kiwix-serve, kiwix-manage)
+offline_vault_packages: [aria2, kiwix-tools]
+offline_vault_wrapper: "{{ offline_vault_user_home }}/.local/bin/offline-vault"
