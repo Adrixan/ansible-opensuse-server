@@ -218,8 +218,6 @@ ai_workstation_ohs_syncthing_root: "{{ ai_workstation_user_home }}/Obsidian"
 # 1.9 GB per Claude Code session before). URL: http://127.0.0.1:<port>/servers/<name>/mcp.
 # Servers that hold per-session state or resolve paths against the session's working directory
 # (playwright) stay stdio in the harness configs.
-# newspaper-testground stays stdio too: locally it is only an ssh client, and a network drop would
-# make it exit, which stops every shared server.
 # mcp-proxy stops every server when one exits, so the launcher skips an entry whose command is not
 # installed, whose `requires_env` variable is empty or whose `requires_path` is missing.
 # `default_env` applies only where ~/.config/ai/env leaves the variable unset.
@@ -408,13 +406,9 @@ ai_workstation_claude_user_mcp_servers:
   - name: petersgasse-wordpress
     config: { type: stdio, command: "{{ ai_workstation_user_home }}/code/website-wordpress/tools/mcp-wp.sh", args: [], env: {} }
     requires_path: ["{{ ai_workstation_user_home }}/code/website-wordpress/tools/mcp-wp.sh"]
-  - name: newspaper-testground
-    config:
-      type: stdio
-      command: ssh
-      args: ["-T", "-o", "BatchMode=yes", "ubuntu@testground.code-alongsi.de",
-             "cd ~/nexcloud-offline-newspaper && exec ~/.local/bin/uv run --quiet offline-newspaper-mcp --vault-path /home/ubuntu/news_vault --allow-write"]
-      env: {}
+# Retired user-scope servers: removed from ~/.claude.json where present (newspaper-testground: the
+# testground newspaper server was shut down on 2026-11-28; its phone successor has no MCP server)
+ai_workstation_claude_user_mcp_retired: [newspaper-testground]
 # User-scope servers previously written to ~/.claude.json, now provided by the workstation-mcp plugin
 # Old gateway variables (Bailian era): unset in ~/.config/ai/env and purged from the "env" block of
 # ~/.claude/settings.json; every other env entry there belongs to yadm and stays

@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """Declare Claude Code user-scope MCP servers: add or fix the listed ones through the claude CLI.
 
-Input: argv[1] a JSON list of {"name", "config", "requires_path"?}, argv[2] the claude binary. A server
-whose required path is missing on this machine is skipped; servers not in the list are never touched.
-Prints CHANGED when anything was written.
+Input: argv[1] a JSON list of {"name", "config", "requires_path"?}, argv[2] the claude binary, argv[3]
+(optional) a JSON list of retired server names to remove. A server whose required path is missing on
+this machine is skipped; servers in neither list are never touched. Prints CHANGED when anything was
+written.
 """
 from __future__ import annotations
 
@@ -19,7 +20,13 @@ def main() -> int:
     claude = sys.argv[2]
     state = json.loads((Path.home() / ".claude.json").read_text())
     current = state.get("mcpServers", {})
+    retired = json.loads(sys.argv[3]) if len(sys.argv) > 3 else []
     changed = False
+    for name in retired:
+        if name in current:
+            subprocess.run([claude, "mcp", "remove", "--scope", "user", name],
+                           capture_output=True, text=True, check=True)
+            changed = True
     for entry in spec:
         need = [os.path.expanduser(p) for p in entry.get("requires_path", [])]
         if not all(os.path.exists(p) for p in need):

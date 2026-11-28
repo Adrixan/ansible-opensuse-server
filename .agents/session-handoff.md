@@ -1,5 +1,12 @@
 # Session Handoff State
 
+## 2026-11-28 09:30 to 09:50: retire the newspaper-testground MCP server (brief from the newspaper session: testground server retired, remove it from the harness configs)
+- yadm (merge 06acc07): entry removed from the OpenCode and Antigravity templates; OpenCode keeps strict JSON by moving the nextcloud if/else block to the end of the server map. Both render variants (workstation, Termux) checked as valid JSON with a local renderer (30 and 10 servers); rendered copies 0600; OpenCode service restarted, `opencode mcp list` without it (thunderbird fails only because Thunderbird is not running, unrelated).
+- This repo: `ai_workstation_claude_user_mcp_retired` (list) plus argv[3] in `files/claude_user_mcp.py` removes retired user-scope servers from `~/.claude.json` (the old script never removed anything, so dropping the list entry alone would have left it). Scratch run of `tasks_from: remote_control`: check ok, live changed=1, second live changed=0; `~/.claude.json` now holds file-accountant, garmin, petersgasse-wordpress, ptsd.
+- Knowledge map line "per session only playwright, chrome-devtools" (12265 bytes); details file Harnesses and Claude Code lines updated.
+- yadm-sync-all: schulpc and m11x OK (m11x has no Claude Code or OpenCode); xps13 offline: its ws-sync run pulls yadm and runs the role when it wakes (then restart OpenCode there if it runs).
+- Open: nothing for Peter. Next: on xps13's next ws-sync check that `opencode mcp list` and `~/.claude.json` no longer list it.
+
 ## 2026-11-27 06:00 to 07:10: topgrade FAILED steps on the phone (Peter via Greeter: "Fix these issue in topgrade on my phone")
 - uv step: `uv tool upgrade file-accountant` needed pydantic-core 2.50.5 (pydantic 2.14.4 pins it); PyPI has no Android wheels for pydantic-core or maturin (TUR's pip index ends at 2.35/cp312), so uv builds from sdist; maturin then tried rustup, which has no `aarch64-linux-android` host. Cause: Termux cleanup round 4 (2026-11-23) purged rust and clang; 2.50.4 had been built locally before. Fix: `pkg install rust` (pulls clang; kept permanently, Peter 2026-11-27). Build 49 min (maturin plus pydantic-core), `fa version` 0.3.5 with pydantic 2.14.4 / core 2.50.5.
 - Hardlink warning: Android denies hard links in app storage (same filesystem, so not a cache placement issue). yadm `.zshenv` exports `UV_LINK_MODE=copy` only in Termux (yadm merge df84e19); the warning is gone.
