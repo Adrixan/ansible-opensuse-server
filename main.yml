@@ -237,3 +237,15 @@
         name: virtualbox
       when: enable_virtualbox | default(false) | bool
       tags: [virtualbox]
+
+    - name: Include pocket_newspaper role
+      ansible.builtin.include_role:
+        name: pocket_newspaper
+      when: enable_pocket_newspaper | default(false) | bool
+      tags: [pocket_newspaper]
+
+    - name: Include offline_vault role
+      ansible.builtin.include_role:
+        name: offline_vault
+      when: enable_offline_vault | default(false) | bool
+      tags: [offline_vault]

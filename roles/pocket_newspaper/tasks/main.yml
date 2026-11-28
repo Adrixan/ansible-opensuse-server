@@ -1,0 +1,80 @@
+---
+# tasks file for pocket_newspaper (install only: no timer, service or job)
+
+- name: Install the build tools and media helpers
+  community.general.zypper:
+    name: "{{ pocket_newspaper_packages }}"
+    state: present
+
+- name: Check for an ffmpeg binary
+  ansible.builtin.stat:
+    path: /usr/bin/ffmpeg
+  register: pocket_newspaper_ffmpeg
+
+- name: Install ffmpeg where none exists
+  community.general.zypper:
+    name: "{{ pocket_newspaper_ffmpeg_package }}"
+    state: present
+  when: not pocket_newspaper_ffmpeg.stat.exists
+
+- name: Keep the pocket-newspaper checkout present and current
+  ansible.builtin.include_role:
+    name: git_checkout
+  vars:
+    git_checkout_repo: "{{ pocket_newspaper_repo_url }}"
+    git_checkout_dest: "{{ pocket_newspaper_repo_dir }}"
+    git_checkout_user: "{{ pocket_newspaper_user }}"
+    git_checkout_branch: "{{ pocket_newspaper_branch }}"
+    git_checkout_pull: "{{ pocket_newspaper_pull }}"
+
+- name: Read the checkout revision
+  ansible.builtin.command:
+    argv: [git, -C, "{{ pocket_newspaper_repo_dir }}", rev-parse, HEAD]
+  become: true
+  become_user: "{{ pocket_newspaper_user }}"
+  register: pocket_newspaper_head
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Read the revision of the installed build
+  ansible.builtin.slurp:
+    src: "{{ pocket_newspaper_stamp }}"
+  register: pocket_newspaper_built
+  failed_when: false
+
+- name: Check for the installed binary
+  ansible.builtin.stat:
+    path: "{{ pocket_newspaper_bin }}"
+  register: pocket_newspaper_bin_stat
+
+- name: Build and install pocket-newspaper (cargo build --release --locked, binaries, config when missing)
+  ansible.builtin.command:
+    argv: ["{{ pocket_newspaper_repo_dir }}/scripts/install-linux.sh"]
+    chdir: "{{ pocket_newspaper_repo_dir }}"
+  become: true
+  become_user: "{{ pocket_newspaper_user }}"
+  environment:
+    HOME: "{{ pocket_newspaper_user_home }}"
+  register: pocket_newspaper_install
+  when:
+    - not ansible_check_mode
+    - (not pocket_newspaper_bin_stat.stat.exists)
+      or ((pocket_newspaper_built.content | default('') | b64decode | trim) != (pocket_newspaper_head.stdout | default('') | trim))
+
+- name: Record the installed revision
+  when: pocket_newspaper_install is changed
+  become: true
+  become_user: "{{ pocket_newspaper_user }}"
+  block:
+    - name: Create the state directory for the revision stamp
+      ansible.builtin.file:
+        path: "{{ pocket_newspaper_stamp | dirname }}"
+        state: directory
+        mode: '0700'
+
+    - name: Write the revision stamp
+      ansible.builtin.copy:
+        dest: "{{ pocket_newspaper_stamp }}"
+        content: "{{ pocket_newspaper_head.stdout | trim }}\n"
+        mode: '0600'

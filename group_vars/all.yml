@@ -44,6 +44,8 @@ enable_android_build: false
 enable_workstation_packages: false
 enable_journald: false
 enable_virtualbox: false
+enable_pocket_newspaper: false
+enable_offline_vault: false
 
 # Docker group members (docker role); grants root-equivalent access
 docker_users:

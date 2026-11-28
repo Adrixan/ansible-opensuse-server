@@ -1,0 +1,40 @@
+---
+# tasks file for offline_vault (install only: no timer or service)
+
+- name: Install the download and Kiwix tools
+  community.general.zypper:
+    name: "{{ offline_vault_packages }}"
+    state: present
+
+- name: Keep the mobile-encyclopedia checkout present and current
+  ansible.builtin.include_role:
+    name: git_checkout
+  vars:
+    git_checkout_repo: "{{ offline_vault_repo_url }}"
+    git_checkout_dest: "{{ offline_vault_repo_dir }}"
+    git_checkout_user: "{{ offline_vault_user }}"
+    git_checkout_branch: "{{ offline_vault_branch }}"
+    git_checkout_pull: "{{ offline_vault_pull }}"
+
+- name: Put offline-vault on PATH (wrapper that execs run.sh)
+  ansible.builtin.copy:
+    dest: "{{ offline_vault_wrapper }}"
+    content: |
+      #!/bin/sh
+      # offline_vault (ansible-opensuse-server): run.sh keeps .venv in step with the hash-pinned locks
+      exec "{{ offline_vault_repo_dir }}/run.sh" "$@"
+    mode: '0755'
+  become: true
+  become_user: "{{ offline_vault_user }}"
+
+# run.sh prints "[SUCCESS] Environment ready!" only when it (re)built the venv
+- name: Build or refresh the virtual environment
+  ansible.builtin.command:
+    argv: ["{{ offline_vault_wrapper }}", --help]
+  become: true
+  become_user: "{{ offline_vault_user }}"
+  environment:
+    HOME: "{{ offline_vault_user_home }}"
+  register: offline_vault_venv
+  changed_when: "'Environment ready' in offline_vault_venv.stdout"
+  when: not ansible_check_mode
